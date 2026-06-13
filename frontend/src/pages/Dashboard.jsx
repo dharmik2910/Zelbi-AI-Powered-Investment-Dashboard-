@@ -337,9 +337,10 @@ useEffect(() => {
         4. Short-term outlook
         Keep the analysis concise but comprehensive.keep output data as small as possible`;
 
-      const response = await axios.post('http://localhost:3000/ai/analyze', {
-        prompt
-      });
+const response = await axios.post(
+  `${process.env.REACT_APP_API_URL}/ai/analyze`,
+  { prompt }
+);
 
       if (response.data && response.data.result) {
         setAiAnalysis(response.data.result);

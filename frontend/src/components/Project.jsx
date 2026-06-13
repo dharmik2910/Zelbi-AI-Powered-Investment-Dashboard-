@@ -161,7 +161,10 @@ const Project = () => {
     // Simulate bot response
     setTimeout(async () => {
       try {
-        const response = await axios.post("http://localhost:3000/ai/get-result", { prompt });
+        const response = await axios.post(
+  `${process.env.REACT_APP_API_URL}/ai/get-result`,
+  { prompt }
+);
         console.log(response);
         setMessages((prev) => [
           ...prev,
