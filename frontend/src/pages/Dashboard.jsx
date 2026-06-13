@@ -1,16 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import ReactApexChart from 'react-apexcharts';
 import axios from 'axios';
-import { FaSearch, FaChartLine, FaArrowUp, FaArrowDown, FaVolumeUp, FaStar, FaRegStar, FaRobot } from 'react-icons/fa';
 import debounce from 'lodash/debounce';
-import {ImStatsBars} from 'react-icons/im'
+import { useEffect, useState } from 'react';
+import ReactApexChart from 'react-apexcharts';
+import { FaArrowDown, FaArrowUp, FaChartLine, FaRegStar, FaRobot, FaSearch, FaStar } from 'react-icons/fa';
+import { ImStatsBars } from 'react-icons/im';
 
 const Dashboard = () => {
-  const mockUser = {
-    firstName: "Demo",
-    lastName: "User",
-    email: "demo@example.com",
-  };
 
   const [stockData, setStockData] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,6 +13,7 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [timeframe, setTimeframe] = useState("1day");
   const [selectedStock, setSelectedStock] = useState("AAPL");
+
   const [favorites, setFavorites] = useState(() => {
     const saved = localStorage.getItem('favoriteStocks');
     return saved ? JSON.parse(saved) : [];
@@ -136,17 +132,14 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    fetchStockData(selectedStock);
-  }, [timeframe]);
+useEffect(() => {
+  fetchStockData(selectedStock);
+}, [timeframe, selectedStock]);
 
   // Debounced search handler
-  const debouncedSearch = useCallback(
-    debounce((value) => {
-      setSearchQuery(value);
-    }, 300),
-    []
-  );
+  const debouncedSearch = debounce((value) => {
+  setSearchQuery(value);
+}, 300);
 
   const handleSearchInput = (e) => {
     const value = e.target.value;

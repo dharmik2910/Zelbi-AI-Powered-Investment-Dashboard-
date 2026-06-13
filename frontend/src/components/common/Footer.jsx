@@ -1,6 +1,5 @@
-import React from "react";
+import { FaDiscord, FaGithub, FaTelegram, FaXTwitter } from "react-icons/fa6";
 import { Link } from "react-router-dom";
-import { FaXTwitter, FaTelegram, FaDiscord, FaGithub } from "react-icons/fa6";
 import logo from "../../assets/Zelbi.png";
 
 const Footer = () => {
@@ -34,22 +33,22 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><Link to="/" className="text-gray-400 hover:text-cyan-400 transition-colors">Home</Link></li>
-              <li><Link to="/ai" className="text-gray-400 hover:text-cyan-400 transition-colors">AI Trading</Link></li>
+              <li><Link to="/dashboard" className="text-gray-400 hover:text-cyan-400 transition-colors">Dashboard</Link></li>
+              <li><Link to="/tax-calculator" className="text-gray-400 hover:text-cyan-400 transition-colors">Tax Calculator</Link></li>
               <li><Link to="/blog" className="text-gray-400 hover:text-cyan-400 transition-colors">Blog</Link></li>
-              <li><Link to="/project" className="text-gray-400 hover:text-cyan-400 transition-colors">Projects</Link></li>
+              <li><Link to="/project" className="text-gray-400 hover:text-cyan-400 transition-colors">Zelbi AI</Link></li>
             </ul>
           </div>
 
           {/* Resources */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Resources</h3>
-            <ul className="space-y-2">
-              <li><Link to="/trading-guide" className="text-gray-400 hover:text-cyan-400 transition-colors">Trading Guide</Link></li>
-              <li><Link to="/market-analysis" className="text-gray-400 hover:text-cyan-400 transition-colors">Market Analysis</Link></li>
-              <li><Link to="/api-docs" className="text-gray-400 hover:text-cyan-400 transition-colors">API Documentation</Link></li>
-              <li><Link to="/faq" className="text-gray-400 hover:text-cyan-400 transition-colors">FAQ</Link></li>
-            </ul>
+              <ul className="space-y-2">
+                <li className="text-gray-400 hover:text-cyan-400 transition-colors">Trading Guide</li>
+                <li className="text-gray-400 hover:text-cyan-400 transition-colors">Market Analysis</li>
+                <li className="text-gray-400 hover:text-cyan-400 transition-colors">API Documentation</li>
+                <li className="text-gray-400 hover:text-cyan-400 transition-colors">FAQ</li>
+              </ul>
           </div>
 
           {/* Contact */}
@@ -70,9 +69,9 @@ const Footer = () => {
               © 2024 Zelbi. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link to="/privacy" className="text-gray-400 hover:text-cyan-400 transition-colors text-sm">Privacy Policy</Link>
-              <Link to="/terms" className="text-gray-400 hover:text-cyan-400 transition-colors text-sm">Terms of Service</Link>
-              <Link to="/cookies" className="text-gray-400 hover:text-cyan-400 transition-colors text-sm">Cookie Policy</Link>
+              <div className="text-gray-400 hover:text-cyan-400 transition-colors text-sm">Privacy Policy</div>
+              <div className="text-gray-400 hover:text-cyan-400 transition-colors text-sm">Terms of Service</div>
+              <div className="text-gray-400 hover:text-cyan-400 transition-colors text-sm">Cookie Policy</div>
             </div>
           </div>
         </div>

@@ -1,18 +1,15 @@
-import React from 'react';
-import img from '../assets/Zelbi.png';
-import img1 from '../assets/screen.png';
+import { FaChartLine, FaCreditCard, FaRobot, FaRocket, FaShieldAlt, FaUsers } from "react-icons/fa";
+import { FaDiscord, FaTelegram, FaXTwitter } from "react-icons/fa6";
 import { Link } from 'react-router-dom';
-import img2 from '../assets/texture.png';
-import { FaXTwitter, FaTelegram, FaDiscord } from "react-icons/fa6";
-import Card from '../components/Card';
-import Footer from '../components/common/Footer';
-import { FaChartLine, FaRobot, FaShieldAlt, FaUsers, FaCreditCard, FaRocket } from "react-icons/fa";
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay, EffectCards } from 'swiper';
 import 'swiper/css';
+import 'swiper/css/effect-cards';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import 'swiper/css/effect-cards';
+import img from '../assets/Zelbi.png';
+import img1 from '../assets/screen.png';
+import img2 from '../assets/texture.png';
+import Card from '../components/Card';
+import Footer from '../components/common/Footer';
 import '../styles/testimonials.css';
 
 const Home = () => {
@@ -21,7 +18,7 @@ const Home = () => {
       {/* Hero Section */}
       <div className='flex flex-col w-full h-fit mt-[80px] bg-black'>
         <div className='fixed left-[183px] bg-cover bg-center z-0'>
-          <img src={img} className='w-[1552px] h-[280px] mx-auto' />
+          <img src={img} className='w-[1552px] h-[280px] mx-auto' alt="banner" />
           <div className='flex justify-between text-sm'>
             <div className='text-white mt-3 font-edu-sa tracking-tighter'>AI ENHANCED TRADING</div>
             <div className='text-white mt-3 font-edu-sa tracking-tighter'>PREDICT TOP COURSES</div>
@@ -32,7 +29,7 @@ const Home = () => {
         </div>
 
         <div className='mt-[250px]'>
-          <img src={img1} className='mx-auto relative w-[1030px] h-[700px] z-40' />
+          <img src={img1} className='mx-auto relative w-[1030px] h-[700px] z-40' alt="feature" />
         </div>
         <Link className='flex justify-center mt-10 relative' to='/trade'>
           <button className='text-black bg-[#3affa3] rounded-md p-4 font-semibold py-2 relative z-40 text-[11px] hover:bg-[#2de88f] transition-colors duration-300'>TRADE NOW</button>
@@ -41,7 +38,7 @@ const Home = () => {
 
       {/* Mission Statement */}
       <div className='w-screen relative text-white h-full bg-black z-40'>
-        <img src={img2} className='w-screen h-[500px] absolute brightness-90' />
+        <img src={img2} className='w-screen h-[500px] absolute brightness-90' alt="investment" />
         <div className='flex w-full justify-end pt-[200px] pr-[220px] bg-center bg-cover'>
           <div className='relative flex max-w-[700px] text-[24px] tracking-tighter'> 
             <div className='bg-[#3affa3] absolute w-[4px] left-[1px] h-6'></div>

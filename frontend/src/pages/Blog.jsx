@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { FaChartLine, FaRobot, FaArrowRight, FaSearch, FaTags } from "react-icons/fa";
+import { FaArrowRight, FaSearch } from "react-icons/fa";
 import img1 from "../assets/second.jpeg";
 import img2 from "../assets/third.jpeg";
 import img3 from "../assets/fourth.jpeg";
