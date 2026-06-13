@@ -1,7 +1,8 @@
 {
   "scripts": {
-    "dev": "nodemon index.js"
-  },
+  "start": "node index.js",
+  "dev": "nodemon index.js"
+},
   "type": "module",
   "dependencies": {
     "@google/generative-ai": "^0.24.0",

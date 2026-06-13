@@ -1,19 +1,27 @@
-import express from 'express';
-import dbConnect from './config/db.js'
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from "dotenv";
-import userRoutes from "./routes/User.js";
+import express from 'express';
 import fileUpload from "express-fileupload";
-import profileRoutes from "./routes/Profile.js";
-import {cloudinaryConnect} from "./config/cloudinary.js";
+import { cloudinaryConnect } from "./config/cloudinary.js";
+import dbConnect from './config/db.js';
 import aiRoutes from "./routes/Ai.js";
+import profileRoutes from "./routes/Profile.js";
+import userRoutes from "./routes/User.js";
 //import projectRoutes from "./routes/Project.js";
 
 dotenv.config(); 
 dbConnect();
 const app=express();
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://your-netlify-site.netlify.app"
+    ],
+    credentials: true,
+  })
+);
 cloudinaryConnect();
 
 app.use(express.json());
