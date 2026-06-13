@@ -18,6 +18,6 @@ router.post('/analyze', async (req, res) => {
     }
 });
 
-router.post('/get-result',aiController.getResult);
+router.post('/get-result', aiController.getResult);
 
 export default router;

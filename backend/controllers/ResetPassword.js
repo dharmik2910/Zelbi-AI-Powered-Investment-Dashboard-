@@ -1,7 +1,7 @@
-import User from "../models/User.js";
-import mailSender from "../utils/mailSender.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import User from "../models/User.js";
+import mailSender from "../utils/mailSender.js";
 
 export const resetPasswordToken = async (req, res) => {
 	try {
@@ -27,10 +27,41 @@ export const resetPasswordToken = async (req, res) => {
 
 		const url = `http://localhost:4000/update-password/${token}`;
 
+		// await mailSender(
+		// 	email,
+		// 	"Password Reset",
+		// 	`Your Link for email verification is ${url}. Please click this url to reset your password.`
+		// );
+		const htmlTemplate = `
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px">
+  <h2 style="color:#2563eb">Reset Your Password</h2>
+
+  <p>We received a request to reset your password.</p>
+
+  <a href="${url}"
+     style="
+       background:#2563eb;
+       color:white;
+       padding:12px 24px;
+       text-decoration:none;
+       border-radius:5px;
+       display:inline-block;
+     ">
+     Reset Password
+  </a>
+
+  <p style="margin-top:20px">
+    This link will expire in 1 hour.
+  </p>
+
+  <p>If you didn't request this, you can safely ignore this email.</p>
+</div>
+`;
+
 		await mailSender(
 			email,
 			"Password Reset",
-			`Your Link for email verification is ${url}. Please click this url to reset your password.`
+			htmlTemplate
 		);
 
 		res.json({
