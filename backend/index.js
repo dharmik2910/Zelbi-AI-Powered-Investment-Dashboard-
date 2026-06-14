@@ -17,7 +17,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://your-netlify-site.netlify.app"
+      "https://zelbi-ai-powered-investment-dashboard.netlify.app/"
     ],
     credentials: true,
   })
