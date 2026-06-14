@@ -11,16 +11,26 @@ const mailSender = async (email, title, body) => {
 
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
-      port: Number(process.env.MAIL_PORT),
+      port: Number(process.env.MAIL_PORT) || 587,
       secure: false,
+      requireTLS: true,
+
       auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
       },
+
+      connectionTimeout: 60000,
+      greetingTimeout: 60000,
+      socketTimeout: 60000,
     });
 
+    // Verify SMTP connection
+    await transporter.verify();
+    console.log("✅ SMTP Connected Successfully");
+
     const info = await transporter.sendMail({
-      from: '"Zelbi" <djrabadiya2910@gmail.com>',
+      from: '"Zelbi" <djrabadiya2910@gmail.com>', // Use a verified sender email in Brevo
       to: email,
       subject: title,
       html: body,
