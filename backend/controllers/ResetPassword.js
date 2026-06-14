@@ -25,7 +25,13 @@ export const resetPasswordToken = async (req, res) => {
 		);
 		console.log("DETAILS", updatedDetails);
 
-		const url = `${process.env.FRONTEND_URL}/update-password/${token}`;
+		const frontendUrl =
+  process.env.FRONTEND_URL ||
+  "https://zelbi-ai-powered-investment-dashboard.netlify.app";
+
+const url = `${frontendUrl}/update-password/${token}`;
+
+console.log("Reset URL:", url);
 
 		// await mailSender(
 		// 	email,
