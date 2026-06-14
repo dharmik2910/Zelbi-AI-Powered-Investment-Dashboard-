@@ -5,17 +5,15 @@ dotenv.config();
 
 const mailSender = async (email, title, body) => {
   try {
-const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST,
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-});
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
 
-    // Check SMTP connection
+    // Verify SMTP connection
     await transporter.verify();
     console.log("SMTP Connected Successfully");
 
@@ -27,10 +25,12 @@ const transporter = nodemailer.createTransport({
     });
 
     console.log("Email Sent:", info.messageId);
+
     return info;
   } catch (error) {
-    console.error("Mail Error:", error);
-    throw error;
+    console.error("Email Sending Error:", error);
+
+    throw new Error(error.message);
   }
 };
 
