@@ -14,16 +14,16 @@ const Footer = () => {
               Empowering traders with AI-driven insights and advanced trading tools.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-cyan-400 transition-colors">
+              <a href="/" className="text-gray-400 hover:text-cyan-400 transition-colors">
                 <FaXTwitter size={20} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-cyan-400 transition-colors">
+              <a href="/" className="text-gray-400 hover:text-cyan-400 transition-colors">
                 <FaTelegram size={20} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-cyan-400 transition-colors">
+              <a href="/" className="text-gray-400 hover:text-cyan-400 transition-colors">
                 <FaDiscord size={20} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-cyan-400 transition-colors">
+              <a href="/" className="text-gray-400 hover:text-cyan-400 transition-colors">
                 <FaGithub size={20} />
               </a>
             </div>
