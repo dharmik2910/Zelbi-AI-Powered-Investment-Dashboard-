@@ -9,28 +9,27 @@ const mailSender = async (email, title, body) => {
     console.log("MAIL_PORT:", process.env.MAIL_PORT);
     console.log("MAIL_USER:", process.env.MAIL_USER);
 
-const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST,
-  port: Number(process.env.MAIL_PORT),
-  secure: true,
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-});
-    // Verify SMTP connection
-    await transporter.verify();
-    console.log("✅ SMTP Connected Successfully");
+    const transporter = nodemailer.createTransport({
+      host: process.env.MAIL_HOST,
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
 
     const info = await transporter.sendMail({
-      from: '"Zelbi" <djrabadiya2910@gmail.com>', // Use a verified sender email in Brevo
+      from: '"Zelbi" <djrabadiya2910@gmail.com>',
       to: email,
       subject: title,
       html: body,
     });
 
     console.log("✅ Email Sent:", info.messageId);
-
     return info;
   } catch (error) {
     console.error("❌ Email Error:", error);
