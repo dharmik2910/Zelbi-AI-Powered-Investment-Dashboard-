@@ -9,22 +9,15 @@ const mailSender = async (email, title, body) => {
     console.log("MAIL_PORT:", process.env.MAIL_PORT);
     console.log("MAIL_USER:", process.env.MAIL_USER);
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.MAIL_HOST,
-      port: Number(process.env.MAIL_PORT) || 587,
-      secure: false,
-      requireTLS: true,
-
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
-
-      connectionTimeout: 60000,
-      greetingTimeout: 60000,
-      socketTimeout: 60000,
-    });
-
+const transporter = nodemailer.createTransport({
+  host: process.env.MAIL_HOST,
+  port: Number(process.env.MAIL_PORT),
+  secure: true,
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
+  },
+});
     // Verify SMTP connection
     await transporter.verify();
     console.log("✅ SMTP Connected Successfully");
