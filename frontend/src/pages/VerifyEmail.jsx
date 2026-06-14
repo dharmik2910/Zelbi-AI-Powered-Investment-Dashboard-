@@ -13,12 +13,11 @@ function VerifyEmail() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!signupData) {
-      navigate("/signup");
-    }
-  }, []);
-
+useEffect(() => {
+  if (!signupData) {
+    navigate("/signup");
+  }
+}, [navigate, signupData]);
   const handleVerifyAndSignup = (e) => {
     e.preventDefault();
     const { email, password, confirmPassword } = signupData;
