@@ -4,37 +4,29 @@ import nodemailer from "nodemailer";
 dotenv.config();
 
 const mailSender = async (email, title, body) => {
-    try {
-        console.log("MAIL_HOST:", process.env.MAIL_HOST);
-        console.log("MAIL_PORT:", process.env.MAIL_PORT);
-        console.log("MAIL_USER:", process.env.MAIL_USER);
+    try{
+            let transporter = nodemailer.createTransport({
+                host:process.env.MAIL_HOST,
+                auth:{
+                    user: process.env.MAIL_USER,
+                    pass: process.env.MAIL_PASS,
+                }
+            })
 
-        const transporter = nodemailer.createTransport({
-            host: process.env.MAIL_HOST,
-            port: 587,
-            secure: false,
-            auth: {
-                user: process.env.MAIL_USER,
-                pass: process.env.MAIL_PASS,
-            },
-            tls: {
-                rejectUnauthorized: false,
-            },
-        });
 
-        const info = await transporter.sendMail({
-            from: '"Zelbi" <djrabadiya2910@gmail.com>',
-            to: email,
-            subject: title,
-            html: body,
-        });
-
-        console.log("✅ Email Sent:", info.messageId);
-        return info;
-    } catch (error) {
-        console.error("❌ Email Error:", error);
-        throw error;
+            let info = await transporter.sendMail({
+                from: 'NIGGA || By Kuldeep',
+                to:`${email}`,
+                subject: `${title}`,
+                html: `${body}`,
+            })
+            console.log(info);
+            return info;
     }
-};
+    catch(error) {
+        console.log(error.message);
+    }
+}
+
 
 export default mailSender;
