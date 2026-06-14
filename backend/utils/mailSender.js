@@ -10,11 +10,16 @@ const mailSender = async (email, title, body) => {
     console.log("MAIL_PASS EXISTS:", !!process.env.MAIL_PASS);
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
       },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
     });
 
     console.log("Verifying SMTP connection...");
@@ -35,9 +40,7 @@ const mailSender = async (email, title, body) => {
 
     return info;
   } catch (error) {
-    console.error("❌ Email Sending Error:");
-    console.error(error);
-
+    console.error("❌ Email Sending Error:", error);
     throw error;
   }
 };
