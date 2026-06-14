@@ -618,7 +618,7 @@ const response = await axios.post(
       {/* AI Analysis Modal */}
       {showAIModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#141414] rounded-lg p-6 max-w-2xl w-full mx-4 relative">
+          <div className="bg-[#141414] rounded-lg p-6 max-w-2xl h-full w-full mx-4 relative">
             <button
               onClick={() => setShowAIModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-white"
