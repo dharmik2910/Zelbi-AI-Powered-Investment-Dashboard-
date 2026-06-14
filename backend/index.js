@@ -1,3 +1,4 @@
+import nodemailer from "nodemailer";
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from "dotenv";
@@ -47,7 +48,26 @@ app.get('/', (req, res) => {
   res.send('<h1>Hello</h1>');
 });
 
+app.get("/test", async (req, res) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.MAIL_HOST,
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
 
+    await transporter.verify();
+
+    res.send("SMTP OK");
+  } catch (err) {
+    console.error(err);
+    res.send(err.message);
+  }
+});
 const PORT=process.env.PORT || 3000;
 
 
