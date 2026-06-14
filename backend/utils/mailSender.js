@@ -5,6 +5,10 @@ dotenv.config();
 
 const mailSender = async (email, title, body) => {
   try {
+    console.log("MAIL_HOST:", process.env.MAIL_HOST);
+    console.log("MAIL_PORT:", process.env.MAIL_PORT);
+    console.log("MAIL_USER:", process.env.MAIL_USER);
+
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: Number(process.env.MAIL_PORT),
@@ -15,11 +19,8 @@ const mailSender = async (email, title, body) => {
       },
     });
 
-    await transporter.verify();
-    console.log("✅ Brevo SMTP Connected");
-
     const info = await transporter.sendMail({
-      from: `"Zelbi" <${process.env.MAIL_USER}>`,
+      from: '"Zelbi" <djrabadiya2910@gmail.com>',
       to: email,
       subject: title,
       html: body,
