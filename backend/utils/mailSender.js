@@ -1,32 +1,39 @@
+import axios from "axios";
 import dotenv from "dotenv";
-import nodemailer from "nodemailer";
 
 dotenv.config();
 
 const mailSender = async (email, title, body) => {
-    try{
-            let transporter = nodemailer.createTransport({
-                host:process.env.MAIL_HOST,
-                auth:{
-                    user: process.env.MAIL_USER,
-                    pass: process.env.MAIL_PASS,
-                }
-            })
+    try {
+        const response = await axios.post(
+            "https://api.brevo.com/v3/smtp/email",
+            {
+                sender: {
+                    name: "Zelbi",
+                    email: "djrabadiya2910@gmail.com",
+                },
+                to: [{ email }],
+                subject: title,
+                htmlContent: body,
+            },
+            {
+                headers: {
+                    accept: "application/json",
+                    "api-key": process.env.BREVO_API_KEY,
+                    "content-type": "application/json",
+                },
+            }
+        );
 
-
-            let info = await transporter.sendMail({
-                from: 'NIGGA || By Kuldeep',
-                to:`${email}`,
-                subject: `${title}`,
-                html: `${body}`,
-            })
-            console.log(info);
-            return info;
+        console.log("✅ Email sent:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error(
+            "❌ Email Error:",
+            error.response?.data || error.message
+        );
+        throw error;
     }
-    catch(error) {
-        console.log(error.message);
-    }
-}
-
+};
 
 export default mailSender;
