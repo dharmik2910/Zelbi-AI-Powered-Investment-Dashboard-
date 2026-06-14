@@ -13,12 +13,14 @@ import userRoutes from "./routes/User.js";
 dotenv.config(); 
 dbConnect();
 const app=express();
+
 app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://zelbi-ai-powered-investment-dashboard.netlify.app/"
+      "https://zelbi-ai-powered-investment-dashboard.netlify.app"
     ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
