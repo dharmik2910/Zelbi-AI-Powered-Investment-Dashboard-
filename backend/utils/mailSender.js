@@ -3,32 +3,35 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-
 const mailSender = async (email, title, body) => {
-    try{
-            let transporter = nodemailer.createTransport({
-                host:process.env.MAIL_HOST,
-                auth:{
-                    user: process.env.MAIL_USER,
-                    pass: process.env.MAIL_PASS,
-                }
-            })
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.MAIL_HOST,
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
 
+    // Check SMTP connection
+    await transporter.verify();
+    console.log("SMTP Connected Successfully");
 
-            let info = await transporter.sendMail({
-                from: 'NIGGA || By Kuldeep',
-                to:`${email}`,
-                subject: `${title}`,
-                html: `${body}`,
-            })
-            console.log(info);
-            return info;
-    }
-catch(error) {
-    console.log("Mail Error:", error);
+    const info = await transporter.sendMail({
+      from: `"Zelbi" <${process.env.MAIL_USER}>`,
+      to: email,
+      subject: title,
+      html: body,
+    });
+
+    console.log("Email Sent:", info.messageId);
+    return info;
+  } catch (error) {
+    console.error("Mail Error:", error);
     throw error;
-}
-}
-
+  }
+};
 
 export default mailSender;
