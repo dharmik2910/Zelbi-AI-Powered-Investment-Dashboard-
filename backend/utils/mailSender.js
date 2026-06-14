@@ -5,6 +5,10 @@ dotenv.config();
 
 const mailSender = async (email, title, body) => {
   try {
+    console.log("========== MAIL DEBUG ==========");
+    console.log("MAIL_USER:", process.env.MAIL_USER);
+    console.log("MAIL_PASS EXISTS:", !!process.env.MAIL_PASS);
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -13,9 +17,11 @@ const mailSender = async (email, title, body) => {
       },
     });
 
-    // Verify SMTP connection
+    console.log("Verifying SMTP connection...");
+
     await transporter.verify();
-    console.log("SMTP Connected Successfully");
+
+    console.log("✅ SMTP Connected Successfully");
 
     const info = await transporter.sendMail({
       from: `"Zelbi" <${process.env.MAIL_USER}>`,
@@ -24,13 +30,15 @@ const mailSender = async (email, title, body) => {
       html: body,
     });
 
-    console.log("Email Sent:", info.messageId);
+    console.log("✅ Email Sent Successfully");
+    console.log("Message ID:", info.messageId);
 
     return info;
   } catch (error) {
-    console.error("Email Sending Error:", error);
+    console.error("❌ Email Sending Error:");
+    console.error(error);
 
-    throw new Error(error.message);
+    throw error;
   }
 };
 
