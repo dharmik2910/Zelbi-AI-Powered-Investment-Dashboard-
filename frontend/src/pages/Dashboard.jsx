@@ -134,8 +134,9 @@ const Dashboard = () => {
 
 useEffect(() => {
   fetchStockData(selectedStock);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [timeframe, selectedStock]);
-
+  
   // Debounced search handler
   const debouncedSearch = debounce((value) => {
   setSearchQuery(value);
