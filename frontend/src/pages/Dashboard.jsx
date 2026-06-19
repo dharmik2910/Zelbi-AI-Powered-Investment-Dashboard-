@@ -54,12 +54,11 @@ const Dashboard = () => {
   };
 
   const isFavorite = (symbol) => favorites.includes(symbol);
-
   const timeframes = [
     { label: "1min", value: "1min" },
     { label: "5min", value: "5min" },
     { label: "15min", value: "15min" },
-    { label: "1hour", value: "1hour" },
+    { label: "1h", value: "1h" },
     { label: "1day", value: "1day" },
   ];
 
@@ -70,7 +69,7 @@ const Dashboard = () => {
         mas.push(null);
         continue;
       }
-      
+
       let sum = 0;
       for (let j = 0; j < period; j++) {
         sum += data[i - j];
@@ -84,7 +83,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const API_KEY = "73b158b9a1f149acb0aeb5c6ce64df55";
       const response = await axios.get(
         `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${timeframe}&outputsize=500&apikey=${API_KEY}`
@@ -144,22 +143,21 @@ const Dashboard = () => {
     }
   };
 
-useEffect(() => {
-  fetchStockData(selectedStock);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+  useEffect(() => {
+    fetchStockData(selectedStock);
+  }, [selectedStock, timeframe]);
 
-useEffect(() => {
-  document.title = "Zelbi | AI";
-  return () => {
-    document.title = "Zelbi";
-  };
-}, []);
+  useEffect(() => {
+    document.title = "Zelbi | AI";
+    return () => {
+      document.title = "Zelbi";
+    };
+  }, []);
 
   // Debounced search handler
   const debouncedSearch = debounce((value) => {
-  setSearchQuery(value);
-}, 300);
+    setSearchQuery(value);
+  }, 300);
 
   const handleSearchInput = (e) => {
     const value = e.target.value;
@@ -184,7 +182,7 @@ useEffect(() => {
         allowMouseWheelZoom: false,
       },
       toolbar: {
-        show: !isMobile,
+        show: true,
         tools: {
           download: true,
           selection: true,
@@ -213,6 +211,9 @@ useEffect(() => {
     grid: {
       borderColor: '#1a1a1a',
       strokeDashArray: 4,
+      padding: {
+        right: 30,
+      },
     },
     title: {
       text: `${selectedStock} Stock Price`,
@@ -232,12 +233,15 @@ useEffect(() => {
     },
     xaxis: {
       type: 'datetime',
+      tickAmount: isMobile ? 8 : 12,
       labels: {
+        show: true,
+        hideOverlappingLabels: false,
+        rotate: isMobile ? -45 : 0,
         style: {
           colors: '#fff',
           fontSize: isMobile ? '10px' : '12px',
-        },
-        rotate: isMobile ? -45 : 0,
+        }
       }
     },
     yaxis: [
@@ -258,9 +262,9 @@ useEffect(() => {
       },
       {
         opposite: true,
-        show: !isMobile,
+        show: true,
         title: {
-          text: 'Volume',
+          text: isMobile ? '' : 'Volume',
           style: {
             color: '#fff'
           }
@@ -268,9 +272,9 @@ useEffect(() => {
         labels: {
           style: {
             colors: '#fff',
-            fontSize: isMobile ? '10px' : '12px',
+            fontSize: isMobile ? '8px' : '12px',
           },
-          formatter: (value) => `${(value / 1000000).toFixed(1)}M`
+          formatter: (value) => `${(value / 1000000).toFixed(0)}M`
         }
       }
     ],
@@ -299,7 +303,7 @@ useEffect(() => {
         allowMouseWheelZoom: false,
       },
       toolbar: {
-        show: !isMobile,
+        show: true,
         tools: {
           download: true,
           selection: true,
@@ -329,12 +333,15 @@ useEffect(() => {
     },
     xaxis: {
       type: 'datetime',
+      tickAmount: isMobile ? 8 : 12,
       labels: {
+        show: true,
+        hideOverlappingLabels: false,
+        rotate: isMobile ? -45 : 0,
         style: {
           colors: '#fff',
           fontSize: isMobile ? '10px' : '12px',
-        },
-        rotate: isMobile ? -45 : 0,
+        }
       }
     },
     yaxis: {
@@ -385,10 +392,10 @@ useEffect(() => {
         4. Short-term outlook
         Keep the analysis concise but comprehensive.keep output data as small as possible`;
 
-const response = await axios.post(
-  `${process.env.REACT_APP_API_URL}/ai/analyze`,
-  { prompt }
-);
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/ai/analyze`,
+        { prompt }
+      );
 
       if (response.data && response.data.result) {
         setAiAnalysis(response.data.result);
@@ -429,7 +436,7 @@ const response = await axios.post(
                 <p className="text-gray-400 text-sm sm:text-base">Track your investments in real-time</p>
               </div>
             </div>
-            
+
             <div className="w-full md:w-auto">
               <form onSubmit={handleSearch} className="flex items-stretch w-full">
                 <div className="relative flex-1 min-w-0">
@@ -451,7 +458,7 @@ const response = await axios.post(
               </form>
             </div>
           </div>
-          
+
           <div className="bg-gray-800/50 backdrop-blur-sm p-3 sm:p-4 rounded-xl border border-gray-700 w-full md:w-auto">
             <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 flex items-center">
               <FaStar className="text-cyan-400 mr-2" />
@@ -487,9 +494,8 @@ const response = await axios.post(
           </div>
           <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a]">
             <h3 className="text-gray-400 mb-1 sm:mb-2 text-xs sm:text-sm">Price Change</h3>
-            <p className={`text-lg sm:text-2xl font-bold flex items-center ${
-              stockData?.priceChanges?.[0] >= 0 ? "text-green-500" : "text-red-500"
-            }`}>
+            <p className={`text-lg sm:text-2xl font-bold flex items-center ${stockData?.priceChanges?.[0] >= 0 ? "text-green-500" : "text-red-500"
+              }`}>
               {stockData?.priceChanges?.[0] >= 0 ? <FaArrowUp className="mr-1 sm:mr-2 text-sm sm:text-base" /> : <FaArrowDown className="mr-1 sm:mr-2 text-sm sm:text-base" />}
               {Math.abs(stockData?.priceChanges?.[0]).toFixed(2)}%
             </p>
@@ -509,7 +515,8 @@ const response = await axios.post(
           </div>
         </div>
 
-        <div className="bg-[#141414] rounded-lg p-3 sm:p-6 mb-6 md:mb-8 overflow-hidden">
+        {/* <div className="bg-[#141414] rounded-lg p-3 sm:p-6 mb-6 md:mb-8 overflow-hidden"> */}
+        <div className="bg-[#141414] rounded-lg p-3 sm:p-6 mb-6 md:mb-8">
           <div className="flex flex-col gap-4 mb-4 sm:mb-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center space-x-3">
               <h2 className="text-xl sm:text-2xl font-bold">{selectedStock}</h2>
@@ -536,9 +543,8 @@ const response = await axios.post(
                   <button
                     key={tf.value}
                     onClick={() => setTimeframe(tf.value)}
-                    className={`flex-1 min-w-[calc(33%-0.5rem)] md:flex-none md:min-w-0 px-3 md:px-4 py-2 rounded-lg text-sm md:text-base whitespace-nowrap ${
-                      timeframe === tf.value ? 'bg-[#3affa3] text-black' : 'bg-gray-800 text-white'
-                    }`}
+                    className={`flex-1 min-w-[calc(33%-0.5rem)] md:flex-none md:min-w-0 px-3 md:px-4 py-2 rounded-lg text-sm md:text-base whitespace-nowrap ${timeframe === tf.value ? 'bg-[#3affa3] text-black' : 'bg-gray-800 text-white'
+                      }`}
                   >
                     {tf.label}
                   </button>
@@ -557,7 +563,8 @@ const response = await axios.post(
             </div>
           ) : stockData ? (
             <div className="space-y-4 sm:space-y-8">
-              <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a] overflow-hidden">
+              {/* <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a] overflow-hidden"> */}
+              <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a]">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 sm:mb-4">
                   <h3 className="text-lg sm:text-xl font-semibold">Trading View</h3>
                   <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm">
@@ -581,57 +588,77 @@ const response = await axios.post(
                     </label>
                   </div>
                 </div>
-                <div className="w-full -mx-1 sm:mx-0">
-                <ReactApexChart
-                  options={tradingViewOptions}
-                  series={[
-                    {
-                      name: "Price",
-                      type: 'line',
-                      data: stockData.timestamps.map((timestamp, i) => ({
-                        x: timestamp,
-                        y: stockData.prices[i]
-                      }))
-                    },
-                    ...(showMAs.ma50 ? [{
-                      name: "50 MA",
-                      type: 'line',
-                      data: stockData.timestamps.map((timestamp, i) => ({
-                        x: timestamp,
-                        y: stockData.ma50[i]
-                      }))
-                    }] : []),
-                    ...(showMAs.ma200 ? [{
-                      name: "200 MA",
-                      type: 'line',
-                      data: stockData.timestamps.map((timestamp, i) => ({
-                        x: timestamp,
-                        y: stockData.ma200[i]
-                      }))
-                    }] : []),
-                    {
-                      name: "Volume",
-                      type: 'bar',
-                      data: stockData.timestamps.map((timestamp, i) => ({
-                        x: timestamp,
-                        y: stockData.volumes[i]
-                      }))
-                    }
-                  ]}
-                  height={chartHeight}
-                />
+
+
+                {/* <div style={{ minWidth: isMobile ? '800px' : '100%' }}> */}
+                <div className={isMobile ? "overflow-x-auto" : ""}>
+                  <div
+                    style={{
+                      width: isMobile ? "1200px" : "100%",
+                    }}
+                  >
+                    <ReactApexChart
+                      options={tradingViewOptions}
+                      series={[
+                        {
+                          name: "Price",
+                          type: "line",
+                          data: stockData.timestamps.map((timestamp, i) => ({
+                            x: timestamp,
+                            y: stockData.prices[i]
+                          }))
+                        },
+
+                        ...(showMAs.ma50
+                          ? [{
+                            name: "50 MA",
+                            type: "line",
+                            data: stockData.timestamps.map((timestamp, i) => ({
+                              x: timestamp,
+                              y: stockData.ma50[i]
+                            }))
+                          }]
+                          : []),
+
+                        ...(showMAs.ma200
+                          ? [{
+                            name: "200 MA",
+                            type: "line",
+                            data: stockData.timestamps.map((timestamp, i) => ({
+                              x: timestamp,
+                              y: stockData.ma200[i]
+                            }))
+                          }]
+                          : []),
+
+                        {
+                          name: "Volume",
+                          type: "bar",
+                          data: stockData.timestamps.map((timestamp, i) => ({
+                            x: timestamp,
+                            y: stockData.volumes[i]
+                          }))
+                        }
+                      ]}
+                      width={isMobile ? 1200 : "100%"}
+                      height={chartHeight}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a] overflow-hidden">
+              {/* <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a] overflow-hidden"> */}
+              <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a]">
                 <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Price Chart</h3>
-                <div className="w-full -mx-1 sm:mx-0">
-                <ReactApexChart
-                  options={candlestickOptions}
-                  series={[{ data: stockData.candlestickData }]}
-                  type="candlestick"
-                  height={candlestickHeight}
-                />
+                <div className="overflow-x-auto">
+                  <div style={{ minWidth: isMobile ? '800px' : '100%' }}>
+                    <ReactApexChart
+                      options={candlestickOptions}
+                      series={[{ data: stockData.candlestickData }]}
+                      type="candlestick"
+                      height={candlestickHeight}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
