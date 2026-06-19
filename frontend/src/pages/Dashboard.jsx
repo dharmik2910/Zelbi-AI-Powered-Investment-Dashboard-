@@ -1,6 +1,6 @@
 import axios from 'axios';
 import debounce from 'lodash/debounce';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { FaArrowDown, FaArrowUp, FaChartLine, FaRegStar, FaRobot, FaSearch, FaStar } from 'react-icons/fa';
 import { ImStatsBars } from 'react-icons/im';
@@ -25,6 +25,18 @@ const Dashboard = () => {
   const [showAIModal, setShowAIModal] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const handleChange = (event) => setIsMobile(event.matches);
+    setIsMobile(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  const chartHeight = isMobile ? 320 : 600;
+  const candlestickHeight = isMobile ? 260 : 350;
 
   // Save favorites to localStorage whenever they change
   useEffect(() => {
@@ -137,6 +149,13 @@ useEffect(() => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
+useEffect(() => {
+  document.title = "Zelbi | AI";
+  return () => {
+    document.title = "Zelbi";
+  };
+}, []);
+
   // Debounced search handler
   const debouncedSearch = debounce((value) => {
   setSearchQuery(value);
@@ -154,13 +173,18 @@ useEffect(() => {
     }
   };
 
-  const tradingViewOptions = {
+  const tradingViewOptions = useMemo(() => ({
     chart: {
       type: 'line',
-      height: 600,
+      height: chartHeight,
+      width: '100%',
       background: '#0a0a0a',
+      zoom: {
+        enabled: !isMobile,
+        allowMouseWheelZoom: false,
+      },
       toolbar: {
-        show: true,
+        show: !isMobile,
         tools: {
           download: true,
           selection: true,
@@ -194,45 +218,59 @@ useEffect(() => {
       text: `${selectedStock} Stock Price`,
       align: 'left',
       style: {
-        color: '#fff'
+        color: '#fff',
+        fontSize: isMobile ? '14px' : '16px',
       }
+    },
+    legend: {
+      position: 'bottom',
+      fontSize: isMobile ? '10px' : '12px',
+      itemMargin: {
+        horizontal: isMobile ? 6 : 12,
+        vertical: 4,
+      },
     },
     xaxis: {
       type: 'datetime',
       labels: {
         style: {
-          colors: '#fff'
-        }
+          colors: '#fff',
+          fontSize: isMobile ? '10px' : '12px',
+        },
+        rotate: isMobile ? -45 : 0,
       }
     },
     yaxis: [
       {
         title: {
-          text: "Price",
+          text: isMobile ? '' : 'Price',
           style: {
             color: '#fff'
           }
         },
         labels: {
           style: {
-            colors: '#fff'
+            colors: '#fff',
+            fontSize: isMobile ? '10px' : '12px',
           },
-          formatter: (value) => `$${value.toFixed(2)}`
+          formatter: (value) => `$${value.toFixed(isMobile ? 0 : 2)}`
         }
       },
       {
         opposite: true,
+        show: !isMobile,
         title: {
-          text: "Volume",
+          text: 'Volume',
           style: {
             color: '#fff'
           }
         },
         labels: {
           style: {
-            colors: '#fff'
+            colors: '#fff',
+            fontSize: isMobile ? '10px' : '12px',
           },
-          formatter: (value) => `$${(value / 1000000).toFixed(1)}M`
+          formatter: (value) => `${(value / 1000000).toFixed(1)}M`
         }
       }
     ],
@@ -248,15 +286,20 @@ useEffect(() => {
         }
       }]
     }
-  };
+  }), [selectedStock, isMobile, chartHeight]);
 
-  const candlestickOptions = {
+  const candlestickOptions = useMemo(() => ({
     chart: {
       type: 'candlestick',
-      height: 350,
+      height: candlestickHeight,
+      width: '100%',
       background: '#0a0a0a',
+      zoom: {
+        enabled: !isMobile,
+        allowMouseWheelZoom: false,
+      },
       toolbar: {
-        show: true,
+        show: !isMobile,
         tools: {
           download: true,
           selection: true,
@@ -280,15 +323,18 @@ useEffect(() => {
     title: {
       text: 'Price Chart',
       style: {
-        color: '#fff'
+        color: '#fff',
+        fontSize: isMobile ? '14px' : '16px',
       }
     },
     xaxis: {
       type: 'datetime',
       labels: {
         style: {
-          colors: '#fff'
-        }
+          colors: '#fff',
+          fontSize: isMobile ? '10px' : '12px',
+        },
+        rotate: isMobile ? -45 : 0,
       }
     },
     yaxis: {
@@ -297,7 +343,8 @@ useEffect(() => {
       },
       labels: {
         style: {
-          colors: '#fff'
+          colors: '#fff',
+          fontSize: isMobile ? '10px' : '12px',
         }
       }
     },
@@ -319,7 +366,7 @@ useEffect(() => {
         }
       }
     }
-  };
+  }), [isMobile, candlestickHeight]);
 
   const analyzeStock = async () => {
     try {
@@ -367,37 +414,37 @@ const response = await axios.post(
   };
 
   return (
-    <div className="min-h-full bg-black text-white p-8 mt-10">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6 w-full md:w-auto">
-            <div className="flex items-center space-x-4">
-              <div className="bg-cyan-600 p-3 rounded-xl shadow-lg shadow-cyan-500/20">
-                <FaChartLine className="text-2xl" />
+    <div className="min-h-full bg-black text-white px-3 py-4 sm:px-6 sm:py-6 md:p-8 mt-16 md:mt-10 overflow-x-hidden">
+      <div className="max-w-7xl mx-auto w-full">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4 md:gap-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 w-full md:w-auto">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <div className="bg-cyan-600 p-2 sm:p-3 rounded-xl shadow-lg shadow-cyan-500/20 shrink-0">
+                <FaChartLine className="text-xl sm:text-2xl" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-cyan-400">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-cyan-400">
                   Stock Dashboard
                 </h1>
-                <p className="text-gray-400">Track your investments in real-time</p>
+                <p className="text-gray-400 text-sm sm:text-base">Track your investments in real-time</p>
               </div>
             </div>
             
             <div className="w-full md:w-auto">
-              <form onSubmit={handleSearch} className="flex items-center">
-                <div className="relative flex-1">
+              <form onSubmit={handleSearch} className="flex items-stretch w-full">
+                <div className="relative flex-1 min-w-0">
                   <input
                     type="text"
                     //value={searchQuery}
                     onChange={handleSearchInput}
-                    placeholder="Search stock symbol (e.g., AAPL, MSFT)"
-                    className="w-full bg-black text-white pl-12 pr-4 py-3 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 border border-white/20 placeholder-gray-400 caret-white"
+                    placeholder={isMobile ? 'Search symbol' : 'Search stock symbol (e.g., AAPL, MSFT)'}
+                    className="w-full bg-black text-white pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 border border-white/20 placeholder-gray-400 caret-white text-sm sm:text-base"
                   />
-                  <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <FaSearch className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 </div>
                 <button
                   type="submit"
-                  className="bg-black hover:bg-white hover:text-black px-6 py-3 rounded-r-xl hover:bg-cyan-700 transition-all duration-200 font-medium shadow-lg shadow-cyan-500/20"
+                  className="bg-black hover:bg-white hover:text-black px-4 sm:px-6 py-2.5 sm:py-3 rounded-r-xl hover:bg-cyan-700 transition-all duration-200 font-medium shadow-lg shadow-cyan-500/20 text-sm sm:text-base shrink-0"
                 >
                   Search
                 </button>
@@ -405,8 +452,8 @@ const response = await axios.post(
             </div>
           </div>
           
-          <div className="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl border border-gray-700 w-full md:w-auto">
-            <h2 className="text-lg font-semibold mb-3 flex items-center">
+          <div className="bg-gray-800/50 backdrop-blur-sm p-3 sm:p-4 rounded-xl border border-gray-700 w-full md:w-auto">
+            <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 flex items-center">
               <FaStar className="text-cyan-400 mr-2" />
               Favorites
             </h2>
@@ -433,68 +480,39 @@ const response = await axios.post(
           </div>
         </div>
 
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 mb-6 border border-gray-700">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex items-center space-x-4">
-              <h2 className="text-2xl font-bold text-cyan-400">{selectedStock}</h2>
-              <button
-                onClick={() => toggleFavorite(selectedStock)}
-                className="text-2xl text-cyan-400 hover:text-cyan-300 transition-colors transform hover:scale-110"
-              >
-                {isFavorite(selectedStock) ? <FaStar /> : <FaRegStar />}
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {timeframes.map((tf) => (
-                <button
-                  key={tf.value}
-                  onClick={() => setTimeframe(tf.value)}
-                  className={`px-4 py-2 rounded-lg transition-all duration-200 ${
-                    timeframe === tf.value
-                      ? 'bg-white text-black shadow-lg shadow-cyan-500/20'
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  {tf.label}
-                </button>
-              ))}
-            </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-6 md:mb-8">
+          <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a]">
+            <h3 className="text-gray-400 mb-1 sm:mb-2 text-xs sm:text-sm">Current Price</h3>
+            <p className="text-lg sm:text-2xl font-bold">${stockData?.currentPrice?.toFixed(2)}</p>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-[#0a0a0a] rounded-2xl p-6 border border-[#1a1a1a]">
-            <h3 className="text-gray-400 mb-2">Current Price</h3>
-            <p className="text-2xl font-bold">${stockData?.currentPrice?.toFixed(2)}</p>
-          </div>
-          <div className="bg-[#0a0a0a] rounded-2xl p-6 border border-[#1a1a1a]">
-            <h3 className="text-gray-400 mb-2">Price Change</h3>
-            <p className={`text-2xl font-bold flex items-center ${
+          <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a]">
+            <h3 className="text-gray-400 mb-1 sm:mb-2 text-xs sm:text-sm">Price Change</h3>
+            <p className={`text-lg sm:text-2xl font-bold flex items-center ${
               stockData?.priceChanges?.[0] >= 0 ? "text-green-500" : "text-red-500"
             }`}>
-              {stockData?.priceChanges?.[0] >= 0 ? <FaArrowUp className="mr-2" /> : <FaArrowDown className="mr-2" />}
+              {stockData?.priceChanges?.[0] >= 0 ? <FaArrowUp className="mr-1 sm:mr-2 text-sm sm:text-base" /> : <FaArrowDown className="mr-1 sm:mr-2 text-sm sm:text-base" />}
               {Math.abs(stockData?.priceChanges?.[0]).toFixed(2)}%
             </p>
           </div>
-          <div className="bg-[#0a0a0a] rounded-2xl p-6 border border-[#1a1a1a]">
-            <h3 className="text-gray-400 mb-2">Volume</h3>
-            <p className="text-2xl font-bold flex items-center">
-              <ImStatsBars className="mr-2" />
+          <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a]">
+            <h3 className="text-gray-400 mb-1 sm:mb-2 text-xs sm:text-sm">Volume</h3>
+            <p className="text-lg sm:text-2xl font-bold flex items-center">
+              <ImStatsBars className="mr-1 sm:mr-2 text-sm sm:text-base" />
               {(stockData?.currentVolume / 1000000).toFixed(2)}M
             </p>
           </div>
-          <div className="bg-[#0a0a0a] rounded-2xl p-6 border border-[#1a1a1a]">
-            <h3 className="text-gray-400 mb-2">High/Low</h3>
-            <p className="text-2xl font-bold">
+          <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a]">
+            <h3 className="text-gray-400 mb-1 sm:mb-2 text-xs sm:text-sm">High/Low</h3>
+            <p className="text-base sm:text-2xl font-bold">
               ${stockData?.currentHigh?.toFixed(2)} / ${stockData?.currentLow?.toFixed(2)}
             </p>
           </div>
         </div>
 
-        <div className="bg-[#141414] rounded-lg p-6 mb-8">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-            <div className="flex items-center space-x-4 mb-4 md:mb-0">
-              <h2 className="text-2xl font-bold">{selectedStock}</h2>
+        <div className="bg-[#141414] rounded-lg p-3 sm:p-6 mb-6 md:mb-8 overflow-hidden">
+          <div className="flex flex-col gap-4 mb-4 sm:mb-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center space-x-3">
+              <h2 className="text-xl sm:text-2xl font-bold">{selectedStock}</h2>
               <button
                 onClick={() => toggleFavorite(selectedStock)}
                 className="text-yellow-500 hover:text-yellow-400"
@@ -502,28 +520,30 @@ const response = await axios.post(
                 {isFavorite(selectedStock) ? <FaStar /> : <FaRegStar />}
               </button>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3 md:shrink-0">
               <button
                 onClick={() => {
                   setShowAIModal(true);
                   analyzeStock();
                 }}
-                className="flex items-center px-4 py-2 bg-[#3affa3] text-black rounded-lg hover:bg-[#3affa3]/90 transition-colors duration-300"
+                className="flex items-center justify-center w-full md:w-auto px-4 py-2.5 bg-[#3affa3] text-black rounded-lg hover:bg-[#3affa3]/90 transition-colors duration-300 text-sm md:text-base font-medium whitespace-nowrap"
               >
                 <FaRobot className="mr-2" />
                 ASK ZELBI AI
               </button>
-              {timeframes.map((tf) => (
-                <button
-                  key={tf.value}
-                  onClick={() => setTimeframe(tf.value)}
-                  className={`px-4 py-2 rounded-lg ${
-                    timeframe === tf.value ? 'bg-[#3affa3] text-black' : 'bg-gray-800 text-white'
-                  }`}
-                >
-                  {tf.label}
-                </button>
-              ))}
+              <div className="flex flex-wrap gap-2 md:flex-nowrap">
+                {timeframes.map((tf) => (
+                  <button
+                    key={tf.value}
+                    onClick={() => setTimeframe(tf.value)}
+                    className={`flex-1 min-w-[calc(33%-0.5rem)] md:flex-none md:min-w-0 px-3 md:px-4 py-2 rounded-lg text-sm md:text-base whitespace-nowrap ${
+                      timeframe === tf.value ? 'bg-[#3affa3] text-black' : 'bg-gray-800 text-white'
+                    }`}
+                  >
+                    {tf.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -536,11 +556,11 @@ const response = await axios.post(
               {error}
             </div>
           ) : stockData ? (
-            <div className="space-y-8">
-              <div className="bg-[#0a0a0a] rounded-2xl p-6 border border-[#1a1a1a]">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold">Trading View</h3>
-                  <div className="flex items-center space-x-4">
+            <div className="space-y-4 sm:space-y-8">
+              <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a] overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 sm:mb-4">
+                  <h3 className="text-lg sm:text-xl font-semibold">Trading View</h3>
+                  <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm">
                     <label className="flex items-center space-x-2">
                       <input
                         type="checkbox"
@@ -561,6 +581,7 @@ const response = await axios.post(
                     </label>
                   </div>
                 </div>
+                <div className="w-full -mx-1 sm:mx-0">
                 <ReactApexChart
                   options={tradingViewOptions}
                   series={[
@@ -597,18 +618,21 @@ const response = await axios.post(
                       }))
                     }
                   ]}
-                  height={600}
+                  height={chartHeight}
                 />
+                </div>
               </div>
 
-              <div className="bg-[#0a0a0a] rounded-2xl p-6 border border-[#1a1a1a]">
-                <h3 className="text-xl font-semibold mb-4">Price Chart</h3>
+              <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a] overflow-hidden">
+                <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Price Chart</h3>
+                <div className="w-full -mx-1 sm:mx-0">
                 <ReactApexChart
                   options={candlestickOptions}
                   series={[{ data: stockData.candlestickData }]}
                   type="candlestick"
-                  height={350}
+                  height={candlestickHeight}
                 />
+                </div>
               </div>
             </div>
           ) : null}

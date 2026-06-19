@@ -1,9 +1,9 @@
-import nodemailer from "nodemailer";
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from "dotenv";
 import express from 'express';
 import fileUpload from "express-fileupload";
+import nodemailer from "nodemailer";
 import { cloudinaryConnect } from "./config/cloudinary.js";
 import dbConnect from './config/db.js';
 import aiRoutes from "./routes/Ai.js";
@@ -18,7 +18,7 @@ const app=express();
 app.use(
   cors({
     origin: [
-      "http://localhost:3000",
+      "http://localhost:3001",
       "https://zelbi-ai-powered-investment-dashboard.netlify.app"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

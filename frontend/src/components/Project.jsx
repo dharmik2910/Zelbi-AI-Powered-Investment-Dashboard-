@@ -26,6 +26,13 @@ const Project = () => {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    document.title = "Zelbi | AI";
+    return () => {
+      document.title = "Zelbi";
+    };
+  }, []);
+
   const normalizeAIResponse = (text) => text?.replace(/\*\*/g, "") ?? "No response generated";
 
   const isLikelyHeading = (line) => {

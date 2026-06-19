@@ -36,15 +36,22 @@ const Home = () => {
         </Link>
       </div>
 
-      {/* Mission Statement */}
-      <div className='w-screen relative text-white h-full bg-black z-40'>
-        <img src={img2} className='w-screen h-[500px] absolute brightness-90' alt="investment" />
-        <div className='flex w-full justify-end pt-[200px] pr-[220px] bg-center bg-cover'>
-          <div className='relative flex max-w-[700px] text-[24px] tracking-tighter'> 
-            <div className='bg-[#3affa3] absolute w-[4px] left-[1px] h-6'></div>
-            <span className='leading-none'>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AT ZELBI, OUR MISSION IS TO MAKE THE COMPLEX WORLD OF BLOCKCHAIN SIMPLE AND INTUITIVE. CRYPTO EXCHANGE WITH AI-POWERED TRADING TOOLS TO HELP TRADERS MAKE THE BEST DATA-DRIVEN DECISIONS.
-            </span>
+      <div className="w-full relative text-white bg-black z-40">
+        <img
+          src={img2}
+          className="w-full h-[500px] object-cover absolute brightness-90"
+          alt="investment"
+        />
+
+        <div className="relative flex justify-center lg:justify-end pt-16 lg:pt-[200px] px-6 lg:pr-[220px]">
+          <div className="relative max-w-[700px]">
+            <div className="bg-[#3affa3] absolute left-0 top-1 w-[4px] h-full"></div>
+
+            <p className="pl-6 sm:text-white text-base sm:text-lg lg:text-2xl leading-relaxed font-medium">
+              AT ZELBI, OUR MISSION IS TO MAKE THE COMPLEX WORLD OF
+              BLOCKCHAIN SIMPLE AND INTUITIVE. OUR AI-POWERED TRADING
+              PLATFORM HELPS TRADERS MAKE SMARTER, DATA-DRIVEN DECISIONS.
+            </p>
           </div>
         </div>
       </div>
@@ -172,26 +179,30 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Community Section */}
-      <div className="bg-white relative z-40 h-[900px] flex flex-col items-center pt-28">
-        <div className="w-full px-20 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-black whitespace-nowrap ml-40">
-            EVOLVE WITH US
-          </h1>
-          <p className="text-black text-right max-w-md font-medium border-t-4 border-green-400 leading-tight pl-5 mr-10">
-            JOIN OUR COMMUNITY TO STAY UP TO DATE WITH THE LATEST NEWS AND ENJOY FREE EDUCATIONAL TRADING RESOURCES.
-          </p>
-        </div>
 
-        <div className="flex gap-10 mt-32 relative z-50">
-          <Card title="YOUTUBE" count="39K" Icon={FaXTwitter} />
-          <Card title="TELEGRAM" count="102K" Icon={FaTelegram} />
-          <Card title="DISCORD" count="32K" Icon={FaDiscord} />
-        </div>
-      </div>
+      {/* Community Section */}
+<div className="bg-white relative z-40 h-auto lg:h-[900px] flex flex-col items-center py-12 lg:pt-28">
+  <div className="w-full px-5 md:px-10 lg:px-20 flex flex-col lg:flex-row items-center justify-between gap-8">
+    
+    <h1 className="text-2xl md:text-3xl lg:text-3xl font-bold text-black text-center lg:text-left lg:ml-40">
+      EVOLVE WITH US
+    </h1>
+
+    <p className="text-black text-center lg:text-right max-w-md font-medium border-t-4 border-green-400 pt-4 lg:pl-5 lg:mr-10">
+      JOIN OUR COMMUNITY TO STAY UP TO DATE WITH THE LATEST NEWS AND ENJOY
+      FREE EDUCATIONAL TRADING RESOURCES.
+    </p>
+  </div>
+
+  <div className="flex flex-col md:flex-row flex-wrap justify-center gap-6 lg:gap-10 mt-12 lg:mt-32 relative z-50 px-4">
+    <Card title="YOUTUBE" count="39K" Icon={FaXTwitter} />
+    <Card title="TELEGRAM" count="102K" Icon={FaTelegram} />
+    <Card title="DISCORD" count="32K" Icon={FaDiscord} />
+  </div>
+</div>
 
       {/* CTA Section */}
-      <div className="bg-black relative z-40 py-20">
+      <div className="bg-black relative z-40 py-20 min-h-[386px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-white mb-8">Ready to Start Trading?</h2>
           <p className="text-white mb-8 max-w-2xl mx-auto">
@@ -204,7 +215,7 @@ const Home = () => {
           </Link>
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 };

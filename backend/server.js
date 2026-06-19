@@ -1,9 +1,9 @@
 import 'dotenv/config';
 import http from 'http';
-import app from './index.js';
-import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import { Server } from 'socket.io';
+import app from './index.js';
 import projectModel from './models/Project.js';
 import { generateResult } from './services/ai.service.js';
 

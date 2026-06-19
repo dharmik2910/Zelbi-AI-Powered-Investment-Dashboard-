@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { FaCalculator, FaExchangeAlt, FaClock, FaInfoCircle, FaChartLine, FaMoneyBillWave, FaPercentage } from "react-icons/fa";
 
@@ -106,6 +106,13 @@ const TaxCalculator = () => {
       effectiveRate: ((tax + stt) / gains) * 100 || 0
     });
   };
+
+  useEffect(() => {
+    document.title = "Zelbi | Tax Calculator";
+    return () => {
+      document.title = "Zelbi";
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-black text-white p-6">

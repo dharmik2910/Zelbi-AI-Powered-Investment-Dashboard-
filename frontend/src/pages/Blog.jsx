@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { FaArrowRight, FaSearch } from "react-icons/fa";
 import img1 from "../assets/second.jpeg";
@@ -22,6 +22,12 @@ const Blog = () => {
     }));
   };
 
+  useEffect(() => {
+    document.title = "Zelbi | Blog";
+    return () => {
+      document.title = "Zelbi";
+    };
+  }, []);
   const categories = [
     "Market Analysis",
     "AI Trading",
