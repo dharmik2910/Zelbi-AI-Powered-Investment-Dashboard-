@@ -140,6 +140,139 @@ const Home = () => {
         </div>
       </div>
 
+      {/* Pricing Section */}
+      <div style={{ backgroundColor: "#000", position: "relative", zIndex: 40, padding: "80px 16px" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          {/* Header */}
+          <h2 className="text-4xl font-bold text-center text-white mb-4">Simple &amp; Affordable Pricing</h2>
+          <p style={{ color: "#a1a1aa", textAlign: "center", marginBottom: 48, fontSize: 15 }}>
+            Pick a plan that matches your workflow. Upgrade anytime as you grow.
+          </p>
+
+          {/* Cards */}
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 24, alignItems: "stretch" }}>
+            {[
+              {
+                id: "free", name: "Free", price: "₹0", priceLabel: "/month",
+                description: "Explore the core features and get a feel for the platform.",
+                buttonText: "Get Started Free", buttonLink: "/signup",
+                pro: false, popular: false,
+                features: ["5 AI prompts per month", "Basic market insights", "Dashboard access", "Tax calculator"],
+              },
+              {
+                id: "pro", name: "Pro", price: "₹499", priceLabel: "/month",
+                description: "Everything you need to trade smarter and stay ahead of the market.",
+                buttonText: "Upgrade to Pro", buttonLink: "/pricing",
+                pro: true, popular: true,
+                features: ["Everything in Free", "100 AI prompts / month", "Advanced market analysis", "Portfolio tracking", "Priority support"],
+              },
+              {
+                id: "elite", name: "Elite", price: "₹999", priceLabel: "/month",
+                description: "Unlimited AI power for serious traders with no prompt caps.",
+                buttonText: "Get Elite Access", buttonLink: "/pricing",
+                pro: false, popular: false,
+                features: ["All Pro features", "Unlimited AI prompts", "Real-time AI insights", "Custom trading strategies", "Dedicated support"],
+              },
+            ].map((plan) => (
+              <div
+                key={plan.id}
+                style={{
+                  backgroundColor: plan.pro ? "#0a0a0a" : "#000",
+                  border: "1px solid #27272a",
+                  borderRadius: 12,
+                  padding: 24,
+                  flex: "1 1 240px",
+                  maxWidth: 300,
+                  display: "flex",
+                  flexDirection: "column",
+                  transition: "border-color 0.2s",
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = "#3affa3"}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = "#27272a"}
+              >
+                {/* Name + badge */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                  <span style={{ fontSize: 15, fontWeight: 500, color: "#fff" }}>{plan.name}</span>
+                  {plan.popular && (
+                    <span style={{ fontSize: 11, color: "#3affa3", border: "1px solid rgba(58,255,163,0.3)", padding: "3px 8px", borderRadius: 999 }}>
+                      Popular
+                    </span>
+                  )}
+                </div>
+
+                {/* Price */}
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 12 }}>
+                  <span style={{ fontSize: 32, fontWeight: 700, color: "#fff" }}>{plan.price}</span>
+                  <span style={{ fontSize: 12, color: "#71717a" }}>{plan.priceLabel}</span>
+                </div>
+
+                {/* Description */}
+                <p style={{ fontSize: 13, color: "#a1a1aa", marginBottom: 20, lineHeight: 1.6 }}>{plan.description}</p>
+
+                {/* Button */}
+                <Link to={plan.buttonLink}>
+                  <button
+                    style={{
+                      width: "100%", padding: "10px 0", borderRadius: 8,
+                      fontSize: 13, fontWeight: 500, cursor: "pointer",
+                      marginBottom: 24, transition: "opacity 0.2s",
+                      ...(plan.pro
+                        ? { backgroundColor: "#3affa3", color: "#000", border: "none" }
+                        : { backgroundColor: "transparent", border: "1px solid #3f3f46", color: "#fff" }
+                      ),
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = "0.8"}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+                  >
+                    {plan.buttonText}
+                  </button>
+                </Link>
+
+                {/* Divider */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                  <div style={{ flex: 1, height: 1, backgroundColor: "#27272a" }} />
+                  <span style={{ fontSize: 12, color: "#d4d4d8", fontWeight: 500 }}>Features</span>
+                  <div style={{ flex: 1, height: 1, backgroundColor: "#27272a" }} />
+                </div>
+
+                {/* Features */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
+                  {plan.features.map((f, fi) => (
+                    <div key={fi} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g clipPath="url(#pc)">
+                          <path d="M7 12.83A5.833 5.833 0 1 0 7 1.165a5.833 5.833 0 0 0 0 11.667" stroke="#3affa3" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="m5.25 7.003 1.167 1.166L8.75 5.836" stroke="#3affa3" strokeLinecap="round" strokeLinejoin="round"/>
+                        </g>
+                        <defs><clipPath id="pc"><path fill="#fff" d="M0 0h14v14H0z"/></clipPath></defs>
+                      </svg>
+                      <span style={{ fontSize: 13, color: "#d4d4d8" }}>{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* View all plans CTA */}
+          <div style={{ textAlign: "center", marginTop: 40 }}>
+            <Link to="/pricing">
+              <button
+                style={{
+                  backgroundColor: "transparent", border: "1px solid #3affa3",
+                  color: "#3affa3", padding: "10px 32px", borderRadius: 999,
+                  fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#3affa3"; e.currentTarget.style.color = "#000"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#3affa3"; }}
+              >
+                View all plans →
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* News Section */}
       <div className="bg-[#141414] relative z-40 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

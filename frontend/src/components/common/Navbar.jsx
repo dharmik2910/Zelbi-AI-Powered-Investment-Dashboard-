@@ -12,7 +12,7 @@ const Navbar = () => {
 
   return (
     // <nav className="fixed top-0 left-0 w-full h-16 bg-[#050505] text-white z-50 border-b border-gray-800">
-    <nav className="fixed top-0 left-0 w-full h-16 bg-black text-white z-50 border-b border-white/10">
+    <nav className="fixed top-0 left-0 w-full h-16 bg-black text-white z-[100] border-b border-white/10">
       <div className="max-w-7xl mx-auto h-full px-4 md:px-8 flex items-center justify-between">
 
         {/* Logo */}
@@ -26,8 +26,9 @@ const Navbar = () => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-6">
-          <Link to="/project">AI</Link>
-          <Link to="/blog">BLOGS</Link>
+          <Link to="/ai">AI</Link>
+          <Link to="/blog">Blogs</Link>
+          <Link to="/pricing" className="text-white ">Pricing</Link>
 
           {token ? (
             <>
@@ -77,6 +78,10 @@ const Navbar = () => {
       {isOpen && (
         <div className="
 md:hidden
+absolute
+top-16
+left-0
+w-full
 text-[14px]
 font-semibold
 tracking-[0.08em]
@@ -86,15 +91,22 @@ hover:text-[#3affa3]
 transition-colors
 duration-300
 bg-black
+border-b
+border-white/10
+shadow-xl
 ">
           <div className="flex flex-col p-4 gap-4">
 
-            <Link to="/project" onClick={() => setIsOpen(false)}>
+            <Link to="/ai" onClick={() => setIsOpen(false)}>
               AI
             </Link>
 
             <Link to="/blog" onClick={() => setIsOpen(false)}>
               BLOGS
+            </Link>
+
+            <Link to="/pricing" onClick={() => setIsOpen(false)} className="text-white">
+              PRICING
             </Link>
 
             {token ? (

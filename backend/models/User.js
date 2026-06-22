@@ -41,6 +41,22 @@ const userSchema=new mongoose.Schema({
         type: String,
     },
 
+    aiPromptCount: {
+        type: Number,
+        default: 0,
+    },
+
+    subscriptionPlan: {
+        type: String,
+        enum: ["free", "pro", "elite"],
+        default: "free",
+    },
+
+    subscriptionExpiry: {
+        type: Date,
+        default: null,
+    },
+
 })
 
 export default mongoose.model('user',userSchema);

@@ -10,9 +10,9 @@ import VerifyEmail from "./pages/VerifyEmail.jsx";
 import Error from "./pages/Error.jsx"
 import Blog from './pages/Blog.jsx';
 import Ai from './pages/Ai.jsx';
-import Project from './components/Project.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import TaxCalculator from './pages/TaxCalculator.jsx';
+import Pricing from './pages/Pricing.jsx';
 import { useSelector } from "react-redux";
 
 const ProtectedRoute = ({ children }) => {
@@ -86,8 +86,23 @@ function App() {
                 }
               />
             <Route path="/blog" element={<Blog/>}/>
-            <Route path="/ai" element={<Ai/>}/>
-            <Route path='/project' element={<Project/>}/>
+            <Route path="/pricing" element={<Pricing/>}/>
+            <Route 
+              path="/ai" 
+              element={
+                <ProtectedRoute>
+                  <Ai/>
+                </ProtectedRoute>
+              } 
+            />
+            {/* <Route 
+              path="/project" 
+              element={
+                <ProtectedRoute>
+                  <Project/>
+                </ProtectedRoute>
+              } 
+            /> */}
             
             <Route path="*" element={<Error />} />
         </Routes>

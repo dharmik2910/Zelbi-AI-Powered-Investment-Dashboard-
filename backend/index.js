@@ -9,6 +9,7 @@ import dbConnect from './config/db.js';
 import aiRoutes from "./routes/Ai.js";
 import profileRoutes from "./routes/Profile.js";
 import userRoutes from "./routes/User.js";
+import subscriptionRoutes from "./routes/Subscription.js";
 //import projectRoutes from "./routes/Project.js";
 
 dotenv.config(); 
@@ -41,6 +42,7 @@ app.use(fileUpload({
 app.use("/auth", userRoutes);
 app.use("/profile", profileRoutes);
 app.use('/ai', aiRoutes);
+app.use('/subscription', subscriptionRoutes);
 //app.use('/projects', projectRoutes);
 
 

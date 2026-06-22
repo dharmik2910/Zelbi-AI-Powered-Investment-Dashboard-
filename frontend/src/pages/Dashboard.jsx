@@ -4,8 +4,14 @@ import { useEffect, useMemo, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { FaArrowDown, FaArrowUp, FaChartLine, FaRegStar, FaRobot, FaSearch, FaStar } from 'react-icons/fa';
 import { ImStatsBars } from 'react-icons/im';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUser } from '../slices/profileSlice';
 
 const Dashboard = () => {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.profile);
+  const { token } = useSelector((state) => state.auth);
+  const promptCount = user?.aiPromptCount || 0;
 
   const [stockData, setStockData] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -145,10 +151,11 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchStockData(selectedStock);
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStock, timeframe]);
 
   useEffect(() => {
-    document.title = "Zelbi | AI";
+    document.title = "Zelbi | Dashboard";
     return () => {
       document.title = "Zelbi";
     };
@@ -376,6 +383,10 @@ const Dashboard = () => {
   }), [isMobile, candlestickHeight]);
 
   const analyzeStock = async () => {
+    if (promptCount >= 5) {
+      setAiAnalysis("LIMIT_REACHED");
+      return;
+    }
     try {
       setIsAnalyzing(true);
       const prompt = `Analyze the stock ${selectedStock} based on the following data:
@@ -394,25 +405,33 @@ const Dashboard = () => {
 
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/ai/analyze`,
-        { prompt }
+        { prompt },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.data && response.data.result) {
         setAiAnalysis(response.data.result);
+        
+        const newCount = response.data.aiPromptCount;
+        if (typeof newCount === "number" && user) {
+          const updatedUser = { ...user, aiPromptCount: newCount };
+          dispatch(setUser(updatedUser));
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+        }
       } else {
         throw new Error('Invalid response format');
       }
     } catch (error) {
       console.error('Error analyzing stock:', error);
       if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
         setAiAnalysis(`Error: ${error.response.data.error || 'Server error occurred'}`);
       } else if (error.request) {
-        // The request was made but no response was received
         setAiAnalysis('Error: No response received from server. Please check if the server is running.');
       } else {
-        // Something happened in setting up the request that triggered an Error
         setAiAnalysis(`Error: ${error.message}`);
       }
     } finally {
