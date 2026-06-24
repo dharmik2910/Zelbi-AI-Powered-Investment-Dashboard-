@@ -2,6 +2,7 @@ import axios from 'axios';
 import debounce from 'lodash/debounce';
 import { useEffect, useMemo, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
+import ReactMarkdown from 'react-markdown';
 import { FaArrowDown, FaArrowUp, FaChartLine, FaRegStar, FaRobot, FaSearch, FaStar } from 'react-icons/fa';
 import { ImStatsBars } from 'react-icons/im';
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,9 +13,14 @@ const Dashboard = () => {
   const { user } = useSelector((state) => state.profile);
   const { token } = useSelector((state) => state.auth);
   const promptCount = user?.aiPromptCount || 0;
+  const currentPlan = user?.subscriptionPlan || "free";
+  const planLimits = { free: 5, pro: 100, elite: Infinity };
+  const promptLimit = planLimits[currentPlan] || 5;
 
   const [stockData, setStockData] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [timeframe, setTimeframe] = useState("1day");
@@ -89,6 +95,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       setError(null);
+      setStockData(null);
 
       const API_KEY = "73b158b9a1f149acb0aeb5c6ce64df55";
       const response = await axios.get(
@@ -161,14 +168,43 @@ const Dashboard = () => {
     };
   }, []);
 
+  const fetchSearchResults = async (query) => {
+    if (!query) {
+      setSearchResults([]);
+      return;
+    }
+    try {
+      const response = await axios.get(`https://api.twelvedata.com/symbol_search?symbol=${query}`);
+      if (response.data && response.data.data) {
+        setSearchResults(response.data.data.slice(0, 6));
+        setShowDropdown(true);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Debounced search handler
-  const debouncedSearch = debounce((value) => {
-    setSearchQuery(value);
-  }, 300);
+  const debouncedFetchResults = useMemo(
+    () => debounce((value) => fetchSearchResults(value), 400),
+    []
+  );
 
   const handleSearchInput = (e) => {
     const value = e.target.value;
-    debouncedSearch(value);
+    setSearchQuery(value);
+    if (value.trim().length > 0) {
+      debouncedFetchResults(value.trim());
+    } else {
+      setSearchResults([]);
+      setShowDropdown(false);
+    }
+  };
+
+  const handleSelectStock = (symbol) => {
+    setSearchQuery("");
+    setShowDropdown(false);
+    fetchStockData(symbol);
   };
 
   const handleSearch = (e) => {
@@ -231,10 +267,12 @@ const Dashboard = () => {
       }
     },
     legend: {
+      show: true,
       position: 'bottom',
+      horizontalAlign: 'center',
       fontSize: isMobile ? '10px' : '12px',
       itemMargin: {
-        horizontal: isMobile ? 6 : 12,
+        horizontal: 16,
         vertical: 4,
       },
     },
@@ -382,9 +420,56 @@ const Dashboard = () => {
     }
   }), [isMobile, candlestickHeight]);
 
+  const tradingSeries = useMemo(() => {
+    if (!stockData) return [];
+    return [
+      {
+        name: "Price",
+        type: "line",
+        data: stockData.timestamps.map((timestamp, i) => ({
+          x: timestamp,
+          y: stockData.prices[i]
+        }))
+      },
+      ...(showMAs.ma50
+        ? [{
+          name: "50 MA",
+          type: "line",
+          data: stockData.timestamps.map((timestamp, i) => ({
+            x: timestamp,
+            y: stockData.ma50[i]
+          }))
+        }]
+        : []),
+      ...(showMAs.ma200
+        ? [{
+          name: "200 MA",
+          type: "line",
+          data: stockData.timestamps.map((timestamp, i) => ({
+            x: timestamp,
+            y: stockData.ma200[i]
+          }))
+        }]
+        : []),
+      {
+        name: "Volume",
+        type: "bar",
+        data: stockData.timestamps.map((timestamp, i) => ({
+          x: timestamp,
+          y: stockData.volumes[i]
+        }))
+      }
+    ];
+  }, [stockData, showMAs]);
+
+  const candlestickSeries = useMemo(() => {
+    if (!stockData) return [];
+    return [{ data: stockData.candlestickData }];
+  }, [stockData]);
+
   const analyzeStock = async () => {
-    if (promptCount >= 5) {
-      setAiAnalysis("LIMIT_REACHED");
+    if (promptCount >= promptLimit) {
+      setAiAnalysis(`You have reached your limit of ${promptLimit} AI prompts for the ${currentPlan} plan. Please upgrade your plan to continue using ZELBI AI.`);
       return;
     }
     try {
@@ -396,12 +481,12 @@ const Dashboard = () => {
         High: $${stockData?.currentHigh?.toFixed(2)}
         Low: $${stockData?.currentLow?.toFixed(2)}
         
-        Please provide a detailed analysis including:
-        1. Current market position
-        2. Technical indicators interpretation
-        3. Risk assessment and future buying/selling
-        4. Short-term outlook
-        Keep the analysis concise but comprehensive.keep output data as small as possible`;
+        Please provide a structured analysis formatted nicely in Markdown. Use headings (###) for the following sections and bullet points for the key takeaways:
+        ### Current Market Position
+        ### Technical Indicators
+        ### Risk Assessment & Action
+        ### Short-Term Outlook
+        Keep the analysis concise, insightful, and easy to read.`;
 
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/ai/analyze`,
@@ -441,6 +526,28 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-full bg-black text-white px-3 py-4 sm:px-6 sm:py-6 md:p-8 mt-16 md:mt-10 overflow-x-hidden">
+      <style>{`
+        .apexcharts-legend {
+          display: flex !important;
+          flex-direction: row !important;
+          flex-wrap: wrap !important;
+          justify-content: center !important;
+          align-items: center !important;
+          gap: 16px !important;
+          padding-top: 20px !important;
+        }
+        .apexcharts-legend > div {
+          display: flex !important;
+          flex-direction: row !important;
+          gap: 16px !important;
+          margin: 0 !important;
+        }
+        .apexcharts-legend-series {
+          display: inline-flex !important;
+          align-items: center !important;
+          margin: 0 !important;
+        }
+      `}</style>
       <div className="max-w-7xl mx-auto w-full">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4 md:gap-6">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 w-full md:w-auto">
@@ -461,12 +568,29 @@ const Dashboard = () => {
                 <div className="relative flex-1 min-w-0">
                   <input
                     type="text"
-                    //value={searchQuery}
+                    value={searchQuery}
                     onChange={handleSearchInput}
+                    onFocus={() => { if (searchResults.length > 0) setShowDropdown(true); }}
+                    onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                     placeholder={isMobile ? 'Search symbol' : 'Search stock symbol (e.g., AAPL, MSFT)'}
                     className="w-full bg-black text-white pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 border border-white/20 placeholder-gray-400 caret-white text-sm sm:text-base"
                   />
                   <FaSearch className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  
+                  {showDropdown && searchResults.length > 0 && (
+                    <ul className="absolute z-50 w-full mt-1 bg-[#141414] border border-[#333] rounded-xl shadow-lg max-h-60 overflow-y-auto custom-scrollbar">
+                      {searchResults.map((result, idx) => (
+                        <li 
+                          key={idx}
+                          className="px-4 py-2 hover:bg-gray-800 cursor-pointer text-sm border-b border-[#222] last:border-b-0 flex justify-between items-center"
+                          onClick={() => handleSelectStock(result.symbol)}
+                        >
+                          <span className="font-bold text-cyan-400">{result.symbol}</span>
+                          <span className="text-gray-400 text-xs truncate ml-2 text-right">{result.instrument_name} ({result.exchange})</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
                 <button
                   type="submit"
@@ -509,27 +633,34 @@ const Dashboard = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-6 md:mb-8">
           <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a]">
             <h3 className="text-gray-400 mb-1 sm:mb-2 text-xs sm:text-sm">Current Price</h3>
-            <p className="text-lg sm:text-2xl font-bold">${stockData?.currentPrice?.toFixed(2)}</p>
+            <p className="text-lg sm:text-2xl font-bold">{stockData ? `$${stockData.currentPrice?.toFixed(2)}` : '--'}</p>
           </div>
           <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a]">
             <h3 className="text-gray-400 mb-1 sm:mb-2 text-xs sm:text-sm">Price Change</h3>
-            <p className={`text-lg sm:text-2xl font-bold flex items-center ${stockData?.priceChanges?.[0] >= 0 ? "text-green-500" : "text-red-500"
-              }`}>
-              {stockData?.priceChanges?.[0] >= 0 ? <FaArrowUp className="mr-1 sm:mr-2 text-sm sm:text-base" /> : <FaArrowDown className="mr-1 sm:mr-2 text-sm sm:text-base" />}
-              {Math.abs(stockData?.priceChanges?.[0]).toFixed(2)}%
+            <p className={`text-lg sm:text-2xl font-bold flex items-center ${!stockData ? "text-gray-500" : stockData.priceChanges?.[stockData.priceChanges.length - 1] >= 0 ? "text-green-500" : "text-red-500"}`}>
+              {stockData ? (
+                <>
+                  {stockData.priceChanges?.[stockData.priceChanges.length - 1] >= 0 ? <FaArrowUp className="mr-1 sm:mr-2 text-sm sm:text-base" /> : <FaArrowDown className="mr-1 sm:mr-2 text-sm sm:text-base" />}
+                  {Math.abs(stockData.priceChanges?.[stockData.priceChanges.length - 1]).toFixed(2)}%
+                </>
+              ) : '--'}
             </p>
           </div>
           <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a]">
             <h3 className="text-gray-400 mb-1 sm:mb-2 text-xs sm:text-sm">Volume</h3>
             <p className="text-lg sm:text-2xl font-bold flex items-center">
-              <ImStatsBars className="mr-1 sm:mr-2 text-sm sm:text-base" />
-              {(stockData?.currentVolume / 1000000).toFixed(2)}M
+              {stockData ? (
+                <>
+                  <ImStatsBars className="mr-1 sm:mr-2 text-sm sm:text-base" />
+                  {(stockData.currentVolume / 1000000).toFixed(2)}M
+                </>
+              ) : '--'}
             </p>
           </div>
           <div className="bg-[#0a0a0a] rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-[#1a1a1a]">
             <h3 className="text-gray-400 mb-1 sm:mb-2 text-xs sm:text-sm">High/Low</h3>
             <p className="text-base sm:text-2xl font-bold">
-              ${stockData?.currentHigh?.toFixed(2)} / ${stockData?.currentLow?.toFixed(2)}
+              {stockData ? `$${stockData.currentHigh?.toFixed(2)} / $${stockData.currentLow?.toFixed(2)}` : '--'}
             </p>
           </div>
         </div>
@@ -618,47 +749,7 @@ const Dashboard = () => {
                   >
                     <ReactApexChart
                       options={tradingViewOptions}
-                      series={[
-                        {
-                          name: "Price",
-                          type: "line",
-                          data: stockData.timestamps.map((timestamp, i) => ({
-                            x: timestamp,
-                            y: stockData.prices[i]
-                          }))
-                        },
-
-                        ...(showMAs.ma50
-                          ? [{
-                            name: "50 MA",
-                            type: "line",
-                            data: stockData.timestamps.map((timestamp, i) => ({
-                              x: timestamp,
-                              y: stockData.ma50[i]
-                            }))
-                          }]
-                          : []),
-
-                        ...(showMAs.ma200
-                          ? [{
-                            name: "200 MA",
-                            type: "line",
-                            data: stockData.timestamps.map((timestamp, i) => ({
-                              x: timestamp,
-                              y: stockData.ma200[i]
-                            }))
-                          }]
-                          : []),
-
-                        {
-                          name: "Volume",
-                          type: "bar",
-                          data: stockData.timestamps.map((timestamp, i) => ({
-                            x: timestamp,
-                            y: stockData.volumes[i]
-                          }))
-                        }
-                      ]}
+                      series={tradingSeries}
                       width={isMobile ? 1200 : "100%"}
                       height={chartHeight}
                     />
@@ -673,7 +764,7 @@ const Dashboard = () => {
                   <div style={{ minWidth: isMobile ? '800px' : '100%' }}>
                     <ReactApexChart
                       options={candlestickOptions}
-                      series={[{ data: stockData.candlestickData }]}
+                      series={candlestickSeries}
                       type="candlestick"
                       height={candlestickHeight}
                     />
@@ -687,26 +778,26 @@ const Dashboard = () => {
 
       {/* AI Analysis Modal */}
       {showAIModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#141414] rounded-lg p-6 max-w-2xl w-full mx-4 relative">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#141414] rounded-lg p-6 max-w-2xl w-full relative flex flex-col max-h-[90vh]">
             <button
               onClick={() => setShowAIModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white z-10 bg-[#141414] rounded-full p-1"
             >
               ✕
             </button>
-            <div className="flex items-center mb-4">
+            <div className="flex items-center mb-4 shrink-0">
               <FaRobot className="text-[#3affa3] text-2xl mr-2" />
               <h3 className="text-xl font-bold">ZELBI AI Analysis</h3>
             </div>
             {isAnalyzing ? (
-              <div className="flex items-center justify-center py-8">
+              <div className="flex items-center justify-center py-8 shrink-0">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#3affa3]"></div>
                 <span className="ml-2">Analyzing {selectedStock}...</span>
               </div>
             ) : (
-              <div className="prose prose-invert max-w-none">
-                <p className="whitespace-pre-wrap">{aiAnalysis}</p>
+              <div className="prose prose-invert max-w-none overflow-y-auto pr-2 custom-scrollbar text-sm sm:text-base leading-relaxed">
+                <ReactMarkdown>{aiAnalysis}</ReactMarkdown>
               </div>
             )}
           </div>

@@ -62,8 +62,10 @@ const Ai = () => {
   }, [messages]);
 
   useEffect(() => {
-    document.title = "Zelbi | AI";
-    return () => { document.title = "Zelbi"; };
+    document.title = "Zelbi | Blog";
+    return () => {
+      document.title = "Zelbi";
+    };
   }, []);
 
   const normalizeAIResponse = (text) => text?.replace(/\*\*/g, "") ?? "No response generated";
@@ -299,7 +301,7 @@ const Ai = () => {
                   </div>
                   <div>
                     <p className="text-white text-sm font-semibold">Prompt limit reached</p>
-                    <p className="text-gray-500 text-xs">
+                    <p className="text-white text-xs">
                       {promptLimit} / {promptLimit} prompts used on <span className="capitalize text-[#3affa3]">{plan}</span> plan
                     </p>
                   </div>
