@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import Payment from '../models/Payment.js';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
@@ -193,25 +194,35 @@ export const verifyRazorpayPayment = async (req, res) => {
         }
 
         const secret = process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET;
-        
+
         // Create the expected signature
         const hmac = crypto.createHmac("sha256", secret);
         hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
         const generatedSignature = hmac.digest("hex");
 
+        const planDetails = PLANS.find(p => p.id === plan);
+        const amountInPaise = planDetails ? planDetails.price * 100 : 0;
+
+        // --- Signature mismatch: log a failed payment and return error ---
         if (generatedSignature !== razorpay_signature) {
+            await Payment.create({
+                userId: req.user.id,
+                plan,
+                amount: amountInPaise,
+                currency: planDetails?.currency || "INR",
+                razorpay_order_id,
+                razorpay_payment_id,
+                razorpay_signature,
+                status: "failed",
+            });
             return res.status(400).json({ success: false, error: "Payment verification failed" });
         }
 
-        // Payment is valid, now upgrade the user's plan
+        // Payment is valid — upgrade the user's plan
         const user = await User.findById(req.user.id);
         if (!user) {
             return res.status(404).json({ success: false, error: "User not found" });
         }
-
-        const validPlans = ["free", "pro", "elite"];
-        const currentPlanIndex = validPlans.indexOf(user.subscriptionPlan || "free");
-        const newPlanIndex = validPlans.indexOf(plan);
 
         // 30-day expiry
         const expiry = new Date();
@@ -223,6 +234,18 @@ export const verifyRazorpayPayment = async (req, res) => {
 
         await user.save();
 
+        // --- Persist the successful payment record ---
+        await Payment.create({
+            userId: req.user.id,
+            plan,
+            amount: amountInPaise,
+            currency: planDetails?.currency || "INR",
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature,
+            status: "success",
+        });
+
         return res.status(200).json({
             success: true,
             message: `Successfully upgraded to ${plan} plan`,
@@ -233,6 +256,19 @@ export const verifyRazorpayPayment = async (req, res) => {
 
     } catch (err) {
         console.error("Error in verifyRazorpayPayment:", err);
+        return res.status(500).json({ success: false, error: "Internal server error" });
+    }
+};
+
+export const getPaymentHistory = async (req, res) => {
+    try {
+        const payments = await Payment.find({ userId: req.user.id })
+            .sort({ createdAt: -1 })
+            .select("-__v");
+
+        return res.status(200).json({ success: true, payments });
+    } catch (err) {
+        console.error("Error in getPaymentHistory:", err);
         return res.status(500).json({ success: false, error: "Internal server error" });
     }
 };
