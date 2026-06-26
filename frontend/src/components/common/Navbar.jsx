@@ -26,14 +26,32 @@ const Navbar = () => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-6">
-          <Link to="/ai">AI</Link>
-          <Link to="/blog">Blogs</Link>
-          <Link to="/pricing" className="text-white ">Pricing</Link>
+          <Link
+            to="/ai-assistant"
+            className="relative group py-1"
+          >
+            AI Assistant
+            <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-[#3affa3] transition-all duration-300 group-hover:w-full"></span>
+          </Link>
+          <Link to="/blog" className="relative group py-1">
+            Blogs
+            <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-[#3affa3] transition-all duration-300 group-hover:w-full"></span>
+          </Link>
+          <Link to="/pricing" className="relative group py-1">
+            Pricing
+            <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-[#3affa3] transition-all duration-300 group-hover:w-full"></span>
+          </Link>
 
           {token ? (
             <>
-              <Link to="/dashboard">Dashboard</Link>
-              <Link to="/tax-calculator">Tax Calculator</Link>
+              <Link to="/dashboard" className="relative group py-1">
+                Dashboard
+                <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-[#3affa3] transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+              <Link to="/tax-calculator" className="relative group py-1">
+                Tax Calculator
+                <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-[#3affa3] transition-all duration-300 group-hover:w-full"></span>
+              </Link>
 
               <button
                 onClick={() => dispatch(logout())}
@@ -54,11 +72,14 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Link to="/login">Login</Link>
+              <Link to="/login" className="relative group py-1">
+                Login
+                <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-[#3affa3] transition-all duration-300 group-hover:w-full"></span>
+              </Link>
 
               <Link to="/signup">
                 <button className="bg-[#3affa3] text-black font-semibold px-4 py-2 rounded-sm tracking-tighter hover:bg-[#2de88f] transition-all duration-300">
-                  TRADE NOW
+                  Trade Now
                 </button>
               </Link>
             </>
@@ -97,8 +118,8 @@ shadow-xl
 ">
           <div className="flex flex-col p-4 gap-4">
 
-            <Link to="/ai" onClick={() => setIsOpen(false)}>
-              AI
+            <Link to="/ai-assistant" onClick={() => setIsOpen(false)}>
+              AI Assistant
             </Link>
 
             <Link to="/blog" onClick={() => setIsOpen(false)}>
@@ -154,12 +175,12 @@ shadow-xl
     font-semibold
     px-4
     py-2
-    rounded-lg
+    rounded-sm
     hover:bg-[#2de88f]
     transition-all
     duration-300
   ">
-                    TRADE NOW
+                    Trade Now
                   </button>
 
                 </Link>

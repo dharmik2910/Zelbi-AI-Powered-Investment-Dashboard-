@@ -30,7 +30,7 @@ const PlanBadge = ({ plan }) => {
   );
 };
 
-const Ai = () => {
+const AiAssistant = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.profile);
@@ -62,7 +62,7 @@ const Ai = () => {
   }, [messages]);
 
   useEffect(() => {
-    document.title = "Zelbi | Blog";
+    document.title = "Zelbi | AI Assistant";
     return () => {
       document.title = "Zelbi";
     };
@@ -356,4 +356,4 @@ const Ai = () => {
   );
 };
 
-export default Ai;
+export default AiAssistant;

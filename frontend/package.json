@@ -6,7 +6,7 @@
     "@ramonak/react-progress-bar": "^5.0.3",
     "@reduxjs/toolkit": "^1.9.5",
     "apexcharts": "^4.5.0",
-    "axios": "^1.4.0",
+    "axios": "^1.18.1",
     "chart.js": "^4.3.0",
     "concurrently": "^8.0.1",
     "copy-to-clipboard": "^3.3.3",
@@ -50,7 +50,8 @@
     "build": "react-scripts build",
     "eject": "react-scripts eject",
     "server": "cd ../backend && npm run dev",
-    "dev": "concurrently -n \"client,server\" -c \"bgBlue,bgYellow\" \"npm start\" \"npm run server\""
+    "dev": "concurrently -n \"client,server\" -c \"bgBlue,bgYellow\" \"npm start\" \"npm run server\"",
+    "doctor": "npx react-doctor@latest"
   },
   "eslintConfig": {
     "extends": [

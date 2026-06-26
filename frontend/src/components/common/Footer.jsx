@@ -33,10 +33,10 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><Link to="/dashboard" className="text-gray-400 hover:text-cyan-400 transition-colors">Dashboard</Link></li>
-              <li><Link to="/tax-calculator" className="text-gray-400 hover:text-cyan-400 transition-colors">Tax Calculator</Link></li>
-              <li><Link to="/blog" className="text-gray-400 hover:text-cyan-400 transition-colors">Blog</Link></li>
-              <li><Link to="/ai" className="text-gray-400 hover:text-cyan-400 transition-colors">Zelbi AI</Link></li>
+              <li><Link to="/dashboard" onClick={() => window.scrollTo(0, 0)} className="text-gray-400 hover:text-cyan-400 transition-colors">Dashboard</Link></li>
+              <li><Link to="/ai-assistant" className="text-gray-400 hover:text-cyan-400 transition-colors">AI Assistant</Link></li>
+              <li><Link to="/blog" onClick={() => window.scrollTo(0, 0)} className="text-gray-400 hover:text-cyan-400 transition-colors">Blogs</Link></li>
+              <li><Link to="/tax-calculator" onClick={() => window.scrollTo(0, 0)} className="text-gray-400 hover:text-cyan-400 transition-colors">Tax Calculator</Link></li>
             </ul>
           </div>
 
@@ -56,7 +56,6 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">Contact</h3>
             <ul className="space-y-2">
               <li className="text-gray-400">Email: support@zelbi.com</li>
-              <li className="text-gray-400">Phone: +1 (555) 123-4567</li>
               <li className="text-gray-400">Address: 123 Trading Street, NY</li>
             </ul>
           </div>

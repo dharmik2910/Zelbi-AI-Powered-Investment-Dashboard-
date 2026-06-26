@@ -60,22 +60,22 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold text-center text-white mb-16">Why Choose Zelbi?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-[#141414] p-6 rounded-lg text-center">
+            <div className="bg-[#141414] p-6 rounded-lg text-center hover:scale-105 transition-all duration-300 border border-[#3affa3]/10 hover:border-[#3affa3]/30">
               <FaChartLine className="text-4xl text-[#3affa3] mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Advanced Analytics</h3>
               <p className="text-white">Real-time market data and advanced charting tools for informed trading decisions.</p>
             </div>
-            <div className="bg-[#141414] p-6 rounded-lg text-center">
+            <div className="bg-[#141414] p-6 rounded-lg text-center hover:scale-105 transition-all duration-300 border border-[#3affa3]/10 hover:border-[#3affa3]/30">
               <FaRobot className="text-4xl text-[#3affa3] mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">AI-Powered Insights</h3>
               <p className="text-white">Machine learning algorithms analyze market trends and predict potential opportunities.</p>
             </div>
-            <div className="bg-[#141414] p-6 rounded-lg text-center">
+            <div className="bg-[#141414] p-6 rounded-lg text-center hover:scale-105 transition-all duration-300 border border-[#3affa3]/10 hover:border-[#3affa3]/30">
               <FaShieldAlt className="text-4xl text-[#3affa3] mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Secure Trading</h3>
               <p className="text-white">State-of-the-art security measures to protect your assets and trading activities.</p>
             </div>
-            <div className="bg-[#141414] p-6 rounded-lg text-center">
+            <div className="bg-[#141414] p-6 rounded-lg text-center hover:scale-105 transition-all duration-300 border border-[#3affa3]/10 hover:border-[#3affa3]/30">
               <FaUsers className="text-4xl text-[#3affa3] mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Community Driven</h3>
               <p className="text-white">Join a thriving community of traders and share insights with like-minded individuals.</p>
@@ -184,29 +184,7 @@ const Home = () => {
           </div>
         </div>
       </div>
-
-
-      {/* Community Section */}
-      {/* <div className="bg-white relative z-40 h-auto lg:h-[900px] flex flex-col items-center py-12 lg:pt-28">
-  <div className="w-full px-5 md:px-10 lg:px-20 flex flex-col lg:flex-row items-center justify-between gap-8">
-    
-    <h1 className="text-2xl md:text-3xl lg:text-3xl font-bold text-black text-center lg:text-left lg:ml-40">
-      EVOLVE WITH US
-    </h1>
-
-    <p className="text-black text-center lg:text-right max-w-md font-medium border-t-4 border-green-400 pt-4 lg:pl-5 lg:mr-10">
-      JOIN OUR COMMUNITY TO STAY UP TO DATE WITH THE LATEST NEWS AND ENJOY
-      FREE EDUCATIONAL TRADING RESOURCES.
-    </p>
-  </div>
-
-  <div className="flex flex-col md:flex-row flex-wrap justify-center gap-6 lg:gap-10 mt-12 lg:mt-32 relative z-50 px-4">
-    <Card title="YOUTUBE" count="39K" Icon={FaXTwitter} />
-    <Card title="TELEGRAM" count="102K" Icon={FaTelegram} />
-    <Card title="DISCORD" count="32K" Icon={FaDiscord} />
-  </div>
-</div> */}
-
+      
       {/* CTA Section */}
       <div className="bg-black relative z-40 py-20 min-h-[386px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

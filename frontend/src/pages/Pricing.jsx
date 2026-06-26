@@ -183,9 +183,6 @@ const Pricing = () => {
       setLoadingPlan(null);
     }
   };
-  const planRank = { free: 0, pro: 1, elite: 2 };
-  const isActive = (id) => currentPlan === id;
-  const isDowngrade = (id) => planRank[id] < planRank[currentPlan];
 
   return (
     <section

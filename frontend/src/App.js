@@ -9,7 +9,7 @@ import UpdatePassword from "./pages/UpdatePassword.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
 import Error from "./pages/Error.jsx"
 import Blog from './pages/Blog.jsx';
-import Ai from './pages/Ai.jsx';
+import AiAssistant from './pages/AiAssistant.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import TaxCalculator from './pages/TaxCalculator.jsx';
 import Pricing from './pages/Pricing.jsx';
@@ -50,37 +50,37 @@ function App() {
               } 
             />
             <Route
-                path="signup"
+                path="/signup"
                 element={
                     <Signup />
                 }
               />
             <Route
-                path="login"
+                path="/login"
                 element={
                     <Login />
                 }
               />
             <Route
-                path="forgot-password"
+                path="/forgot-password"
                 element={
                     <ForgotPassword />
                 }
               />  
             <Route
-              path="update-password/:id"
+              path="/update-password/:id"
               element={
                   <UpdatePassword />
               }
             />  
             <Route
-                path="verify-email"
+                path="/verify-email"
                 element={
                     <VerifyEmail />
                 }
               />  
             <Route
-                path="update-password/:id"
+                path="/update-password/:id"
                 element={
                     <UpdatePassword />
                 }
@@ -88,10 +88,10 @@ function App() {
             <Route path="/blog" element={<Blog/>}/>
             <Route path="/pricing" element={<Pricing/>}/>
             <Route 
-              path="/ai" 
+              path="/ai-assistant" 
               element={
                 <ProtectedRoute>
-                  <Ai/>
+                  <AiAssistant/>
                 </ProtectedRoute>
               } 
             />
