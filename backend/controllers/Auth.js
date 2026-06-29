@@ -7,6 +7,7 @@ import mailSender from "../utils/mailSender.js";
 import passwordUpdated  from "../mail/templates/passwordUpdate.js";
 import Profile from "../models/Profile.js";
 import dotenv from "dotenv";
+import { populateUserImage } from "../utils/userHelper.js";
 
 dotenv.config();
 
@@ -77,9 +78,10 @@ export const signup = async (req, res) => {
       additionalDetails: profileDetails._id,
     })
 
+    const populatedUser = await populateUserImage(user);
     return res.status(200).json({
       success: true,
-      user,
+      user: populatedUser,
       message: "User registered successfully",
     })
   } catch (error) {
@@ -127,10 +129,11 @@ export const login = async (req, res) => {
         expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
         httpOnly: true,
       }
+      const populatedUser = await populateUserImage(user);
       res.cookie("token", token, options).status(200).json({
         success: true,
         token,
-        user,
+        user: populatedUser,
         message: `User Login Success`,
       })
     } else {
