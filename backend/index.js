@@ -39,11 +39,10 @@ app.use(fileUpload({
 }));
 
 
-app.use("/auth", userRoutes);
-app.use("/profile", profileRoutes);
-app.use('/ai', aiRoutes);
-app.use('/subscription', subscriptionRoutes);
-//app.use('/projects', projectRoutes);
+app.use("/api/auth", userRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/subscription", subscriptionRoutes);
 
 
 app.get('/', (req, res) => {   
