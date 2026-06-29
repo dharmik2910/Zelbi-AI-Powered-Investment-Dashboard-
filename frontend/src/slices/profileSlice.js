@@ -11,6 +11,11 @@ const profileSlice = createSlice({
     reducers: {
         setUser(state, value) {
             state.user = value.payload;
+            if (value.payload) {
+                localStorage.setItem("user", JSON.stringify(value.payload));
+            } else {
+                localStorage.removeItem("user");
+            }
         },
         setLoading(state, value) {
             state.loading = value.payload;

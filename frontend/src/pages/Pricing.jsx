@@ -192,7 +192,7 @@ const Pricing = () => {
       <h1 style={{ fontSize: "clamp(28px, 5vw, 42px)", fontWeight: 500, color: "#fff", textAlign: "center", margin: 0 }}>
         Simple &amp; affordable pricing
       </h1>
-      <p style={{ fontSize: 15, color: "#a1a1aa", textAlign: "center", marginTop: 12, maxWidth: 380 }}>
+      <p style={{ fontSize: 15, color: "#a1a1aa", textAlign: "center", marginTop: 4, maxWidth: 380 }}>
         Pick a plan that matches your workflow today and scale anytime as you grow.
       </p>
 

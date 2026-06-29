@@ -1,14 +1,29 @@
 import { useState } from "react";
+import {
+  FaCalculator,
+  FaChartLine,
+  FaNewspaper,
+  FaRobot,
+  FaRocket,
+  FaSignInAlt,
+  FaTag,
+} from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
-import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/Zelbi.png";
-import { logout } from "../../services/operations/authAPI";
 
 const Navbar = () => {
   const { token } = useSelector((state) => state.auth);
-  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.profile);
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const isActive = (path) => location.pathname === path;
+
+  const profileImage =
+    user?.image ||
+    `https://api.dicebear.com/5.x/initials/svg?seed=${user?.firstName || "User"} ${user?.lastName || ""}`;
+  const isProfileActive = location.pathname === "/profile";
 
   return (
     // <nav className="fixed top-0 left-0 w-full h-16 bg-[#050505] text-white z-50 border-b border-gray-800">
@@ -31,51 +46,134 @@ const Navbar = () => {
             className="relative group py-1"
           >
             AI Assistant
-            <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-[#3affa3] transition-all duration-300 group-hover:w-full"></span>
+            <span
+              className="
+    absolute
+    left-0
+    bottom-0
+    h-[2px]
+    w-full
+    bg-[#3affa3]
+    origin-left
+    scale-x-0
+    transition-transform
+    duration-300
+    ease-out
+    group-hover:scale-x-[1]
+  "
+            ></span>
           </Link>
           <Link to="/blog" className="relative group py-1">
             Blogs
-            <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-[#3affa3] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
+            <span
+              className="
+    absolute
+    left-0
+    bottom-0
+    h-[2px]
+    w-full
+    bg-[#3affa3]
+    origin-left
+    scale-x-0
+    transition-transform
+    duration-300
+    ease-out
+    group-hover:scale-x-[1]
+  "
+            ></span>          </Link>
           <Link to="/pricing" className="relative group py-1">
             Pricing
-            <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-[#3affa3] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
+            <span
+              className="
+    absolute
+    left-0
+    bottom-0
+    h-[2px]
+    w-full
+    bg-[#3affa3]
+    origin-left
+    scale-x-0
+    transition-transform
+    duration-300
+    ease-out
+    group-hover:scale-x-[1]
+  "
+            ></span>          </Link>
 
           {token ? (
             <>
               <Link to="/dashboard" className="relative group py-1">
                 Dashboard
-                <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-[#3affa3] transition-all duration-300 group-hover:w-full"></span>
-              </Link>
+                <span
+                  className="
+    absolute
+    left-0
+    bottom-0
+    h-[2px]
+    w-full
+    bg-[#3affa3]
+    origin-left
+    scale-x-0
+    transition-transform
+    duration-300
+    ease-out
+    group-hover:scale-x-[1]
+  "
+                ></span>              </Link>
               <Link to="/tax-calculator" className="relative group py-1">
                 Tax Calculator
-                <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-[#3affa3] transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-
-              <button
-                onClick={() => dispatch(logout())}
-                className="
-    rounded-sm
+                <span
+                  className="
+    absolute
+    left-0
+    bottom-0
+    h-[2px]
+    w-full
     bg-[#3affa3]
-    text-black
-    font-semibold
-    px-4
-    py-2
-    hover:bg-[#2de88f]
-    transition-all
+    origin-left
+    scale-x-0
+    transition-transform
     duration-300
+    ease-out
+    group-hover:scale-x-[1]
   "
+                ></span>              </Link>
+              <Link
+                to="/profile"
+                title="Profile"
+                className={`rounded-full border-2 transition-colors duration-300 ${
+                  isProfileActive
+                    ? "border-white"
+                    : "border-white/10 hover:border-[#3affa3]"
+                }`}
               >
-                Logout
-              </button>
+                <img
+                  src={profileImage}
+                  alt="Profile"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              </Link>
             </>
           ) : (
             <>
               <Link to="/login" className="relative group py-1">
                 Login
-                <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-[#3affa3] transition-all duration-300 group-hover:w-full"></span>
-              </Link>
+                <span
+                  className="
+    absolute
+    left-0
+    bottom-0
+    h-[2px]
+    w-full
+    bg-[#3affa3]
+    origin-left
+    scale-x-0
+    transition-transform
+    duration-300
+    ease-out
+    group-hover:scale-x-[1]
+  "
+                ></span>              </Link>
 
               <Link to="/signup">
                 <button className="bg-[#3affa3] text-black font-semibold px-4 py-2 rounded-sm tracking-tighter hover:bg-[#2de88f] transition-all duration-300">
@@ -87,89 +185,105 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Hamburger */}
-        <button
+        {/* <button
           className="md:hidden text-3xl"
           onClick={() => setIsOpen(!isOpen)}
-        >
+        > */}
+        <button
+  className="md:hidden text-3xl text-white"
+  onClick={() => setIsOpen(true)}
+>
           {isOpen ? <HiX /> : <HiMenu />}
         </button>
       </div>
 
       {/* Mobile Menu */}
-      {isOpen && (
-        <div className="
-md:hidden
-absolute
-top-16
-left-0
-w-full
-text-[14px]
-font-semibold
-tracking-[0.08em]
-uppercase
-text-gray-200
-hover:text-[#3affa3]
-transition-colors
-duration-300
-bg-black
-border-b
-border-white/10
-shadow-xl
-">
+      {/* {isOpen && (
+<div
+  className={`fixed top-0 right-0 h-screen w-72 bg-black z-[200] transform transition-transform duration-300 ${
+    isOpen ? "translate-x-0" : "translate-x-full"
+  }`}
+>
           <div className="flex flex-col p-4 gap-4">
 
-            <Link to="/ai-assistant" onClick={() => setIsOpen(false)}>
+            <Link
+              to="/ai-assistant"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3"
+            >
+              <FaRobot className="text-[#3affa3] text-lg shrink-0" />
               AI Assistant
             </Link>
 
-            <Link to="/blog" onClick={() => setIsOpen(false)}>
+            <Link
+              to="/blog"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3"
+            >
+              <FaNewspaper className="text-[#3affa3] text-lg shrink-0" />
               BLOGS
             </Link>
 
-            <Link to="/pricing" onClick={() => setIsOpen(false)} className="text-white">
+            <Link
+              to="/pricing"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 text-white"
+            >
+              <FaTag className="text-[#3affa3] text-lg shrink-0" />
               PRICING
             </Link>
 
             {token ? (
               <>
-                <Link to="/dashboard" onClick={() => setIsOpen(false)}>
+                <Link
+                  to="/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3"
+                >
+                  <FaChartLine className="text-[#3affa3] text-lg shrink-0" />
                   Dashboard
                 </Link>
 
-                <Link to="/tax-calculator" onClick={() => setIsOpen(false)}>
+                <Link
+                  to="/tax-calculator"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3"
+                >
+                  <FaCalculator className="text-[#3affa3] text-lg shrink-0" />
                   Tax Calculator
                 </Link>
 
-                <button
-                  onClick={() => {
-                    dispatch(logout());
-                    setIsOpen(false);
-                  }}
-                  className="
-    w-full
-    bg-[#3affa3]
-    text-black
-    font-semibold
-    px-4
-    py-2
-    rounded-sm
-    hover:bg-[#2de88f]
-    transition-all
-    duration-300
-  "
+                <Link
+                  to="/profile"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3"
                 >
-                  Logout
-                </button>
+                  <img
+                    src={profileImage}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full object-cover border-2 border-white/10 shrink-0"
+                  />
+                  Profile
+                </Link>
               </>
             ) : (
               <>
-                <Link to="/login" onClick={() => setIsOpen(false)}>
+                <Link
+                  to="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3"
+                >
+                  <FaSignInAlt className="text-[#3affa3] text-lg shrink-0" />
                   Login
                 </Link>
 
                 <Link to="/signup" onClick={() => setIsOpen(false)}>
                   <button className="
     w-full
+    flex
+    items-center
+    justify-center
+    gap-3
     bg-[#3affa3]
     text-black
     font-semibold
@@ -180,6 +294,7 @@ shadow-xl
     transition-all
     duration-300
   ">
+                    <FaRocket className="text-lg shrink-0" />
                     Trade Now
                   </button>
 
@@ -188,7 +303,157 @@ shadow-xl
             )}
           </div>
         </div>
+      )} */}
+
+      {/* Mobile Menu */}
+<>
+  {/* Overlay */}
+  <div
+    onClick={() => setIsOpen(false)}
+    className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] transition-opacity duration-300 md:hidden ${
+      isOpen
+        ? "opacity-100 visible"
+        : "opacity-0 invisible"
+    }`}
+  />
+
+  {/* Drawer */}
+  <div
+    className={`fixed top-0 right-0 h-screen w-72 bg-[#0B0B0B] border-l border-white/10 shadow-2xl z-[200] transform transition-transform duration-300 md:hidden ${
+      isOpen ? "translate-x-0" : "translate-x-full"
+    }`}
+  >
+    {/* Header */}
+    <div className="flex items-center justify-between p-5 border-b border-white/10">
+      <img src={logo} alt="Zelbi" className="h-8" />
+
+      <button
+        onClick={() => setIsOpen(false)}
+        className="text-3xl text-white hover:text-[#3affa3]"
+      >
+        <HiX />
+      </button>
+    </div>
+
+    {/* Menu */}
+    <div className="flex flex-col p-4 gap-2">
+
+      <Link
+        to="/ai-assistant"
+        onClick={() => setIsOpen(false)}
+        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+          isActive("/ai-assistant")
+            ? "bg-[#3affa3] text-black"
+            : "text-white hover:bg-white/10"
+        }`}
+      >
+        <FaRobot />
+        AI Assistant
+      </Link>
+
+      <Link
+        to="/blog"
+        onClick={() => setIsOpen(false)}
+        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+          isActive("/blog")
+            ? "bg-[#3affa3] text-black"
+            : "text-white hover:bg-white/10"
+        }`}
+      >
+        <FaNewspaper />
+        Blogs
+      </Link>
+
+      <Link
+        to="/pricing"
+        onClick={() => setIsOpen(false)}
+        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+          isActive("/pricing")
+            ? "bg-[#3affa3] text-black"
+            : "text-white hover:bg-white/10"
+        }`}
+      >
+        <FaTag />
+        Pricing
+      </Link>
+
+      {token ? (
+        <>
+          <Link
+            to="/dashboard"
+            onClick={() => setIsOpen(false)}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              isActive("/dashboard")
+                ? "bg-[#3affa3] text-black"
+                : "text-white hover:bg-white/10"
+            }`}
+          >
+            <FaChartLine />
+            Dashboard
+          </Link>
+
+          <Link
+            to="/tax-calculator"
+            onClick={() => setIsOpen(false)}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              isActive("/tax-calculator")
+                ? "bg-[#3affa3] text-black"
+                : "text-white hover:bg-white/10"
+            }`}
+          >
+            <FaCalculator />
+            Tax Calculator
+          </Link>
+
+          <Link
+            to="/profile"
+            onClick={() => setIsOpen(false)}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              isActive("/profile")
+                ? "bg-[#3affa3] text-black"
+                : "text-white hover:bg-white/10"
+            }`}
+          >
+            <img
+              src={profileImage}
+              alt="Profile"
+              className="w-8 h-8 rounded-full object-cover"
+            />
+            Profile
+          </Link>
+        </>
+      ) : (
+        <>
+          <Link
+            to="/login"
+            onClick={() => setIsOpen(false)}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              isActive("/login")
+                ? "bg-[#3affa3] text-black"
+                : "text-white hover:bg-white/10"
+            }`}
+          >
+            <FaSignInAlt />
+            Login
+          </Link>
+
+          <Link
+            to="/signup"
+            onClick={() => setIsOpen(false)}
+            className="mt-4"
+          >
+            <button className="w-full bg-[#3affa3] text-black py-3 rounded-xl font-semibold hover:bg-[#2de88f] transition">
+              <div className="flex items-center justify-center gap-2">
+                <FaRocket />
+                Trade Now
+              </div>
+            </button>
+          </Link>
+        </>
       )}
+    </div>
+  </div>
+</>
     </nav>
   );
 };

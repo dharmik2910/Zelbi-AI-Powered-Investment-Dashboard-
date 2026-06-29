@@ -13,7 +13,11 @@ import AiAssistant from './pages/AiAssistant.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import TaxCalculator from './pages/TaxCalculator.jsx';
 import Pricing from './pages/Pricing.jsx';
-import { useSelector } from "react-redux";
+import Profile from './pages/Profile.jsx';
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { getUserDetails } from "./services/operations/SettingsAPI";
 
 const ProtectedRoute = ({ children }) => {
   const { token } = useSelector((state) => state.auth);
@@ -26,6 +30,18 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  const { token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  // On every page load/refresh, fetch fresh user details (including a new pre-signed S3 photo URL)
+  useEffect(() => {
+    if (token) {
+      dispatch(getUserDetails(token, navigate));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
   return (
    <div className="w-screen min-h-screen bg-black flex flex-col font-inter">
     <Navbar/>
@@ -92,6 +108,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AiAssistant/>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile/>
                 </ProtectedRoute>
               } 
             />

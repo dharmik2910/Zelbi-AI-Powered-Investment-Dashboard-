@@ -2,7 +2,7 @@ import { toast } from "react-hot-toast"
 
 import { setUser } from "../../slices/profileSlice"
 import { apiConnector } from "../apiconnector"
-import { settingsEndpoints } from "../apis"
+import { settingsEndpoints, profileEndpoints } from "../apis"
 import { logout } from "./authAPI"
 
 const {
@@ -108,5 +108,27 @@ export function deleteProfile(token, navigate) {
       toast.error("Could Not Delete Profile")
     }
     toast.dismiss(toastId)
+  }
+}
+
+export function getUserDetails(token, navigate) {
+  return async (dispatch) => {
+    try {
+      const response = await apiConnector("GET", profileEndpoints.GET_USER_DETAILS_API, null, {
+        Authorization: `Bearer ${token}`,
+      })
+      console.log("GET_USER_DETAILS_API RESPONSE............", response)
+
+      if (!response.data.success) {
+        throw new Error(response.data.message)
+      }
+      dispatch(setUser(response.data.data))
+    } catch (error) {
+      console.log("GET_USER_DETAILS_API ERROR............", error)
+      // If unauthorized/token invalid, log out the user
+      if (error.response?.status === 401) {
+        dispatch(logout(navigate))
+      }
+    }
   }
 }

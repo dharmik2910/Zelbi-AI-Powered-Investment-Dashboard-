@@ -14,7 +14,7 @@ export default function PricingCards({
 }) {
     const [yearly, setYearly] = useState(false);
     return (
-        <div style={{ backgroundColor: "#000", padding: "80px 16px", position: "relative", zIndex: 40 }}>
+        <div style={{ backgroundColor: "#000", padding: "10px 16px", position: "relative", zIndex: 40 }}>
             <div style={{ maxWidth: 1000, margin: "0 auto" }}>
                 {showHeading && (
                     <>
@@ -41,7 +41,7 @@ export default function PricingCards({
                 )}
 
                 {/* Toggle */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginBottom: 40, marginTop: showHeading ? 0 : 32 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginBottom: 20, marginTop: showHeading ? 0 : 32 }}>
                   <span style={{ fontSize: 14, color: "#fff" }}>Monthly</span>
                   <button
                     id="billing-toggle"
