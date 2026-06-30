@@ -1,5 +1,5 @@
 const passwordUpdated = (email, name) => {
-	return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
     <html>
     
     <head>
@@ -55,8 +55,6 @@ const passwordUpdated = (email, name) => {
     
     <body>
         <div class="container">
-            <a href="https://studynotion-edtech-project.vercel.ap"><img class="logo"
-                    src="https://i.ibb.co/7Xyj3PC/logo.pn" alt="Brain Logo"></a>
             <div class="message">Password Update Confirmation</div>
             <div class="body">
                 <p>Hey ${name},</p>
@@ -64,10 +62,11 @@ const passwordUpdated = (email, name) => {
                 </p>
                 <p>If you did not request this password change, please contact us immediately to secure your account.</p>
             </div>
-            <div class="support">If you have any questions or need further assistance, please feel free to reach out to us
-                at
-                <a href="mailto:kalariyakuldeep8238@gmail.com.com">info@Brain.com</a>. We are here to help!
-            </div>
+            <div class="support">
+    If you have any questions or need further assistance, please contact us at
+    <a href="mailto:djrabadiya2910@gmail.com">djrabadiya2910@gmail.com</a>.
+    We're here to help!
+</div>
         </div>
     </body>
     

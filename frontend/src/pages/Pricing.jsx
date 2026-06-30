@@ -115,7 +115,7 @@ const Pricing = () => {
       // For free plan, just call upgrade API directly
       if (planId === "free") {
         const response = await axios.post(
-          `${process.env.REACT_APP_API_URL}/subscription/upgrade`,
+          `${process.env.REACT_APP_API_URL}/api/subscription/upgrade`,
           { plan: planId },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -129,7 +129,7 @@ const Pricing = () => {
 
       // Paid plan: create Razorpay order first
       const orderRes = await axios.post(
-        `${process.env.REACT_APP_API_URL}/subscription/create-razorpay-order`,
+        `${process.env.REACT_APP_API_URL}/api/subscription/create-razorpay-order`,
         { plan: planId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -151,7 +151,7 @@ const Pricing = () => {
           // Verify payment on backend and finalize upgrade
           try {
             const verifyRes = await axios.post(
-              `${process.env.REACT_APP_API_URL}/subscription/verify-razorpay-payment`,
+              `${process.env.REACT_APP_API_URL}/api/subscription/verify-razorpay-payment`,
               {
                 plan: planId,
                 razorpay_payment_id: response.razorpay_payment_id,

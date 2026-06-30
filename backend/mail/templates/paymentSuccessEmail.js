@@ -77,7 +77,7 @@ exports.paymentSuccessEmail = (name, amount, orderId, paymentId) => {
                   <p>Your Order ID is <b>${orderId}</b></p>
               </div>
               <div class="support">If you have any questions or need assistance, please feel free to reach out to us at <a
-                      href="kalariyakuldeep8238@gmail.com.com">info@Brain.com</a>. We are here to help!</div>
+                      href="mailto:djrabadiya2910@gmail.com">info@Brain.com</a>. We are here to help!</div>
           </div>
       </body>
       

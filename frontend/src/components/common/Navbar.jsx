@@ -6,11 +6,13 @@ import {
   FaRobot,
   FaRocket,
   FaSignInAlt,
+  FaSignOutAlt,
   FaTag,
 } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
-import { useSelector } from "react-redux";
-import { Link, useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { logout } from "../../services/operations/authAPI";
 import logo from "../../assets/Zelbi.png";
 
 const Navbar = () => {
@@ -18,6 +20,8 @@ const Navbar = () => {
   const { user } = useSelector((state) => state.profile);
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const isActive = (path) => location.pathname === path;
 
   const profileImage =
@@ -306,20 +310,19 @@ const Navbar = () => {
       )} */}
 
       {/* Mobile Menu */}
+
 <>
   {/* Overlay */}
   <div
     onClick={() => setIsOpen(false)}
     className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] transition-opacity duration-300 md:hidden ${
-      isOpen
-        ? "opacity-100 visible"
-        : "opacity-0 invisible"
+      isOpen ? "opacity-100 visible" : "opacity-0 invisible"
     }`}
   />
 
   {/* Drawer */}
   <div
-    className={`fixed top-0 right-0 h-screen w-72 bg-[#0B0B0B] border-l border-white/10 shadow-2xl z-[200] transform transition-transform duration-300 md:hidden ${
+    className={`fixed top-0 right-0 h-screen w-72 bg-[#0B0B0B] border-l border-white/10 shadow-2xl z-[200] transform transition-transform duration-300 md:hidden flex flex-col ${
       isOpen ? "translate-x-0" : "translate-x-full"
     }`}
   >
@@ -335,13 +338,12 @@ const Navbar = () => {
       </button>
     </div>
 
-    {/* Menu */}
-    <div className="flex flex-col p-4 gap-2">
-
+    {/* Scrollable Menu */}
+    <div className="flex-1 overflow-y-auto p-4 space-y-2">
       <Link
         to="/ai-assistant"
         onClick={() => setIsOpen(false)}
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+        className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all ${
           isActive("/ai-assistant")
             ? "bg-[#3affa3] text-black"
             : "text-white hover:bg-white/10"
@@ -354,7 +356,7 @@ const Navbar = () => {
       <Link
         to="/blog"
         onClick={() => setIsOpen(false)}
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+        className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all ${
           isActive("/blog")
             ? "bg-[#3affa3] text-black"
             : "text-white hover:bg-white/10"
@@ -367,7 +369,7 @@ const Navbar = () => {
       <Link
         to="/pricing"
         onClick={() => setIsOpen(false)}
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+        className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all ${
           isActive("/pricing")
             ? "bg-[#3affa3] text-black"
             : "text-white hover:bg-white/10"
@@ -382,7 +384,7 @@ const Navbar = () => {
           <Link
             to="/dashboard"
             onClick={() => setIsOpen(false)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all ${
               isActive("/dashboard")
                 ? "bg-[#3affa3] text-black"
                 : "text-white hover:bg-white/10"
@@ -395,7 +397,7 @@ const Navbar = () => {
           <Link
             to="/tax-calculator"
             onClick={() => setIsOpen(false)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all ${
               isActive("/tax-calculator")
                 ? "bg-[#3affa3] text-black"
                 : "text-white hover:bg-white/10"
@@ -408,7 +410,7 @@ const Navbar = () => {
           <Link
             to="/profile"
             onClick={() => setIsOpen(false)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all ${
               isActive("/profile")
                 ? "bg-[#3affa3] text-black"
                 : "text-white hover:bg-white/10"
@@ -427,7 +429,7 @@ const Navbar = () => {
           <Link
             to="/login"
             onClick={() => setIsOpen(false)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all ${
               isActive("/login")
                 ? "bg-[#3affa3] text-black"
                 : "text-white hover:bg-white/10"
@@ -440,9 +442,9 @@ const Navbar = () => {
           <Link
             to="/signup"
             onClick={() => setIsOpen(false)}
-            className="mt-4"
+            className="mt-4 block"
           >
-            <button className="w-full bg-[#3affa3] text-black py-3 rounded-xl font-semibold hover:bg-[#2de88f] transition">
+            <button className="w-full bg-[#3affa3] text-black py-3 rounded-md font-semibold hover:bg-[#2de88f] transition">
               <div className="flex items-center justify-center gap-2">
                 <FaRocket />
                 Trade Now
@@ -452,8 +454,25 @@ const Navbar = () => {
         </>
       )}
     </div>
+
+    {/* Fixed Bottom Sign Out */}
+    {token && (
+      <div className="border-t border-white/10 p-4">
+        <button
+          onClick={() => {
+            setIsOpen(false);
+            dispatch(logout(navigate));
+          }}
+          className="flex items-center gap-3 px-4 py-3 rounded-md transition-all text-white hover:bg-white/10 w-full"
+        >
+          <FaSignOutAlt />
+          Sign Out
+        </button>
+      </div>
+    )}
   </div>
 </>
+
     </nav>
   );
 };

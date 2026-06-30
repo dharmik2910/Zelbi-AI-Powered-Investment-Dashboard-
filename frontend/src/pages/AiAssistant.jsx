@@ -9,6 +9,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { setUser } from "../slices/profileSlice";
 
+// Initialize Speech Recognition
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
 const PLAN_LIMITS = { free: 5, pro: 100, elite: -1 };
 
 const getPlanLimit = (plan) => PLAN_LIMITS[plan] ?? 5;
@@ -41,16 +44,30 @@ const AiAssistant = () => {
   const promptLimit = getPlanLimit(plan);
   const isLimited = promptLimit !== -1 && promptCount >= promptLimit;
 
-  const [messages, setMessages] = useState([
-    {
-      type: "bot",
-      content: "Hello! I'm your AI trading assistant. How can I help you today?",
-      timestamp: new Date().toLocaleTimeString(),
-    },
-  ]);
+  const [messages, setMessages] = useState(() => {
+    const savedMessages = localStorage.getItem("chatMessages");
+    if (savedMessages) {
+      try {
+        return JSON.parse(savedMessages);
+      } catch (error) {
+        console.error("Error parsing saved messages:", error);
+      }
+    }
+    return [
+      {
+        type: "bot",
+        content: "Hello! I'm your AI trading assistant. How can I help you today?",
+        timestamp: new Date().toLocaleTimeString(),
+      },
+    ];
+  });
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [micError, setMicError] = useState("");
+  const recognitionRef = useRef(null);
+  const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -59,6 +76,10 @@ const AiAssistant = () => {
 
   useEffect(() => {
     scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    localStorage.setItem("chatMessages", JSON.stringify(messages));
   }, [messages]);
 
   useEffect(() => {
@@ -148,7 +169,7 @@ const AiAssistant = () => {
     setTimeout(async () => {
       try {
         const response = await axios.post(
-          `${process.env.REACT_APP_API_URL}/ai/get-result`,
+          `${process.env.REACT_APP_API_URL}/api/ai/get-result`,
           { prompt },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -188,7 +209,87 @@ const AiAssistant = () => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); }
   };
 
-  const toggleRecording = () => setIsRecording(!isRecording);
+  const toggleRecording = () => {
+    console.log("Toggle recording called, isRecording:", isRecording);
+    console.log("SpeechRecognition available:", !!SpeechRecognition);
+    
+    if (!SpeechRecognition) {
+      setMicError("Speech recognition is not supported in your browser. Please use Chrome or Edge.");
+      return;
+    }
+
+    if (isRecording) {
+      console.log("Stopping recognition");
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+    } else {
+      console.log("Starting new recognition");
+      setMicError("");
+      setInputMessage("");
+      
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+        
+        recognition.onresult = (event) => {
+          console.log("✓ Speech result received:", event.results.length, "results");
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const result = event.results[i];
+            console.log(`  Result ${i}: "${result[0].transcript}" isFinal: ${result.isFinal}`);
+            transcript += result[0].transcript;
+          }
+          console.log("✓ Setting transcript:", transcript);
+          setInputMessage(transcript);
+        };
+
+        recognition.onerror = (event) => {
+          console.error("✗ Speech recognition error:", event.error);
+          let errorMessage = "Speech recognition error. Please try again.";
+          if (event.error === "not-allowed") {
+            errorMessage = "Microphone access denied. Please allow microphone access in your browser settings.";
+          } else if (event.error === "no-speech") {
+            errorMessage = "No speech detected. Please try again.";
+          } else if (event.error === "network") {
+            errorMessage = "Network error occurred. Please check your connection.";
+          }
+          setMicError(errorMessage);
+          setIsRecording(false);
+        };
+
+        recognition.onend = () => {
+          console.log("Speech recognition ended");
+          setIsRecording(false);
+        };
+
+        recognitionRef.current = recognition;
+        
+        console.log("Starting recognition...");
+        recognition.start();
+        setIsRecording(true);
+        console.log("✓ Recognition started successfully");
+      } catch (error) {
+        console.error("✗ Error starting speech recognition:", error);
+        setMicError("Failed to start speech recognition. Please try again.");
+        setIsRecording(false);
+      }
+    }
+  };
+
+  const toggleMenu = () => setShowMenu((prev) => !prev);
+
+  const handleClearChat = () => {
+    const defaultMessage = {
+      type: "bot",
+      content: "Hello! I'm your AI trading assistant. How can I help you today?",
+      timestamp: new Date().toLocaleTimeString(),
+    };
+    setMessages([defaultMessage]);
+    localStorage.setItem("chatMessages", JSON.stringify([defaultMessage]));
+    setShowMenu(false);
+  };
 
   const messageVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -217,9 +318,24 @@ const AiAssistant = () => {
             </div>
             <div className="flex items-center gap-3">
               <PlanBadge plan={plan} />
-              <button className="text-[#3affa3] hover:text-[#32e092] transition-colors">
-                <BsThreeDotsVertical className="text-2xl" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={toggleMenu}
+                  className="text-[#3affa3] hover:text-[#32e092] transition-colors"
+                >
+                  <BsThreeDotsVertical className="text-2xl" />
+                </button>
+                {showMenu && (
+                  <div className="absolute right-0 mt-2 w-40 bg-[#111] border border-[#3affa3]/20 rounded-md shadow-[0_0_15px_rgba(58,255,163,0.3)] z-10">
+                    <button
+                      onClick={handleClearChat}
+                      className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-[#1a1a1a] hover:text-[#3affa3] rounded-md transition-colors"
+                    >
+                      Clear Chat
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -231,14 +347,21 @@ const AiAssistant = () => {
                   ? `${promptCount} prompts used (Unlimited)`
                   : `${promptCount} / ${promptLimit} prompts used`}
               </span>
-              {plan !== "elite" && (
-                <button
-                  onClick={() => navigate("/pricing")}
-                  className="text-xs text-[#3affa3] font-semibold hover:underline flex items-center gap-1"
-                >
-                  <FaCrown className="text-[10px]" /> Upgrade
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                {promptLimit !== -1 && (
+                  <span className="text-xs font-semibold" style={{ color: progressColor }}>
+                    {progressPercent.toFixed(1)}% used
+                  </span>
+                )}
+                {plan !== "elite" && (
+                  <button
+                    onClick={() => navigate("/pricing")}
+                    className="text-xs text-[#3affa3] font-semibold hover:underline flex items-center gap-1"
+                  >
+                    <FaCrown className="text-[10px]" /> Upgrade
+                  </button>
+                )}
+              </div>
             </div>
             <div className="w-full h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
               <motion.div
@@ -324,7 +447,7 @@ const AiAssistant = () => {
                 onClick={toggleRecording}
                 className={`p-3 rounded-xl transition-all duration-300 ${
                   isRecording
-                    ? "bg-red-900 text-white shadow-[0_0_15px_rgba(255,0,0,0.5)]"
+                    ? "bg-red-900 text-white shadow-[0_0_15px_rgba(255,0,0,0.5)] animate-pulse"
                     : "bg-[#1a1a1a] text-[#3affa3] hover:bg-[#2a2a2a] hover:shadow-[0_0_15px_rgba(58,255,163,0.5)]"
                 }`}
                 whileHover={{ scale: 1.1 }}
@@ -333,10 +456,11 @@ const AiAssistant = () => {
                 {isRecording ? <FaStop className="text-xl" /> : <FaMicrophone className="text-xl" />}
               </motion.button>
               <textarea
+                ref={textareaRef}
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type your message..."
+                placeholder={isRecording ? "Listening... Speak now" : "Type your message..."}
                 rows="1"
                 className="flex-1 bg-[#1a1a1a] text-white rounded-xl px-6 py-3 border border-[#3affa3]/20 focus:outline-none focus:ring-2 focus:ring-[#3affa3] focus:shadow-[0_0_15px_rgba(58,255,163,0.5)] transition-all duration-300 text-base resize-none min-h-[48px] max-h-32 overflow-y-auto"
               />
@@ -349,6 +473,11 @@ const AiAssistant = () => {
                 <IoMdSend className="text-2xl" />
               </motion.button>
             </div>
+            {micError && (
+              <div className="mt-2 text-xs text-red-400 bg-red-900/20 border border-red-500/30 rounded-lg px-3 py-2">
+                {micError}
+              </div>
+            )}
           </form>
         )}
       </div>

@@ -26,6 +26,6 @@ export const generateResult = async (prompt) => {
         return text || "No response generated";
     } catch (error) {
         console.error("Error generating AI response:", error);
-        return "An error occurred while processing your request.";
+        return "Please try again after some time.";
     }
 };

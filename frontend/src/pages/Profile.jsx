@@ -2,29 +2,31 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import { 
-  FaUser, 
-  FaKey, 
-  FaCreditCard, 
-  FaTrash, 
-  FaCamera, 
-  FaSpinner, 
-  FaCalendarAlt, 
-  FaPhone, 
-  FaInfoCircle, 
-  FaCrown, 
-  FaRobot, 
+import {
+  FaUser,
+  FaKey,
+  FaCreditCard,
+  FaTrash,
+  FaCamera,
+  FaSpinner,
+  FaCalendarAlt,
+  FaPhone,
+  FaInfoCircle,
+  FaCrown,
+  FaRobot,
   FaEnvelope,
   FaSignOutAlt,
   FaChevronDown,
+  FaEye,
+  FaEyeSlash,
 } from "react-icons/fa";
 import useOnClickOutside from "../hooks/useOnClickOutside";
 import { logout } from "../services/operations/authAPI";
-import { 
-  updateDisplayPicture, 
-  updateProfile, 
-  changePassword, 
-  deleteProfile 
+import {
+  updateDisplayPicture,
+  updateProfile,
+  changePassword,
+  deleteProfile
 } from "../services/operations/SettingsAPI";
 
 const GENDER_OPTIONS = [
@@ -56,9 +58,8 @@ function GenderSelect({ value, onChange }) {
           {selectedLabel}
         </span>
         <FaChevronDown
-          className={`text-gray-500 text-xs shrink-0 transition-transform duration-200 ${
-            open ? "rotate-180" : ""
-          }`}
+          className={`text-gray-500 text-xs shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""
+            }`}
         />
       </button>
       {open && (
@@ -71,11 +72,10 @@ function GenderSelect({ value, onChange }) {
                   onChange({ target: { name: "gender", value: option.value } });
                   setOpen(false);
                 }}
-                className={`w-full text-left px-4 py-3 text-sm transition-colors ${
-                  value === option.value
-                    ? "bg-[#3affa3]/10 text-[#3affa3]"
-                    : "text-white hover:bg-white/5"
-                }`}
+                className={`w-full text-left px-4 py-3 text-sm transition-colors ${value === option.value
+                  ? "bg-[#3affa3]/10 text-[#3affa3]"
+                  : "text-white hover:bg-white/5"
+                  }`}
               >
                 {option.label}
               </button>
@@ -128,6 +128,12 @@ export default function Profile() {
     oldPassword: "",
     newPassword: "",
     confirmPassword: "",
+  });
+
+  const [showPassword, setShowPassword] = useState({
+    current: false,
+    new: false,
+    confirm: false,
   });
 
   // Update profile state when user loads/changes
@@ -296,11 +302,10 @@ export default function Profile() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 shrink-0 ${
-                      activeTab === tab.id
-                        ? "bg-[#3affa3] text-black shadow-lg shadow-[#3affa3]/10 font-semibold"
-                        : "text-gray-400 hover:text-white hover:bg-white/5"
-                    }`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 shrink-0 ${activeTab === tab.id
+                      ? "bg-[#3affa3] text-black shadow-lg shadow-[#3affa3]/10 font-semibold"
+                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                      }`}
                   >
                     <Icon className="text-base" />
                     {tab.name}
@@ -321,7 +326,7 @@ export default function Profile() {
 
           {/* Content Area */}
           <div className="lg:col-span-3 bg-[#101010] rounded-2xl p-6 border border-white/5 shadow-xl">
-            
+
             {/* 1. MY PROFILE TAB */}
             {activeTab === "profile" && (
               <div className="space-y-8 animate-fadeIn">
@@ -361,7 +366,7 @@ export default function Profile() {
                       <FaEnvelope className="text-xs text-gray-500" />
                       {user?.email}
                     </p>
-                    <button 
+                    <button
                       onClick={handleAvatarClick}
                       className="mt-3 text-xs font-semibold text-[#3affa3] hover:underline"
                     >
@@ -373,7 +378,7 @@ export default function Profile() {
                 {/* Profile Edit Form */}
                 <form onSubmit={handleProfileSubmit} className="space-y-6">
                   <h3 className="text-lg font-semibold text-white border-b border-white/5 pb-2">Personal Details</h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
@@ -488,58 +493,88 @@ export default function Profile() {
                 </div>
 
                 <div className="space-y-5 border-t border-white/5 pt-6">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
-                      Current Password
-                    </label>
+                  <div className="relative">
                     <input
-                      type="password"
+                      type={showPassword.current ? "text" : "password"}
                       name="oldPassword"
                       value={passwordData.oldPassword}
                       onChange={handlePasswordChange}
                       required
-                      className="w-full bg-[#1a1a1a] text-white rounded-md px-4 py-3 border border-white/10 focus:outline-none focus:border-[#3affa3] transition-colors"
-                      placeholder="••••••••"
+                      placeholder="Enter current password"
+                      className="w-full bg-[#1a1a1a] text-white rounded-md px-4 pr-12 py-3 border border-white/10 focus:outline-none focus:border-[#3affa3] transition-colors"
                     />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowPassword((prev) => ({
+                          ...prev,
+                          current: !prev.current,
+                        }))
+                      }
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#3affa3]"
+                    >
+                      {showPassword.current ? <FaEyeSlash /> : <FaEye />}
+                    </button>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
-                      New Password
-                    </label>
+                  <div className="relative">
                     <input
-                      type="password"
+                      type={showPassword.new ? "text" : "password"}
                       name="newPassword"
                       value={passwordData.newPassword}
                       onChange={handlePasswordChange}
                       required
-                      className="w-full bg-[#1a1a1a] text-white rounded-md px-4 py-3 border border-white/10 focus:outline-none focus:border-[#3affa3] transition-colors"
-                      placeholder="••••••••"
+                      placeholder="Enter new password"
+                      className="w-full bg-[#1a1a1a] text-white rounded-md px-4 pr-12 py-3 border border-white/10 focus:outline-none focus:border-[#3affa3]"
                     />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowPassword((prev) => ({
+                          ...prev,
+                          new: !prev.new,
+                        }))
+                      }
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#3affa3]"
+                    >
+                      {showPassword.new ? <FaEyeSlash /> : <FaEye />}
+                    </button>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
-                      Confirm New Password
-                    </label>
+                  <div className="relative">
                     <input
-                      type="password"
+                      type={showPassword.confirm ? "text" : "password"}
                       name="confirmPassword"
                       value={passwordData.confirmPassword}
                       onChange={handlePasswordChange}
                       required
-                      className="w-full bg-[#1a1a1a] text-white rounded-md px-4 py-3 border border-white/10 focus:outline-none focus:border-[#3affa3] transition-colors"
-                      placeholder="••••••••"
+                      placeholder="Confirm new password"
+                      className="w-full bg-[#1a1a1a] text-white rounded-md px-4 pr-12 py-3 border border-white/10 focus:outline-none focus:border-[#3affa3]"
                     />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowPassword((prev) => ({
+                          ...prev,
+                          confirm: !prev.confirm,
+                        }))
+                      }
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#3affa3]"
+                    >
+                      {showPassword.confirm ? <FaEyeSlash /> : <FaEye />}
+                    </button>
                   </div>
                 </div>
 
                 <div className="flex justify-end pt-4 border-t border-white/5">
-                    <button
-                      type="submit"
-                      disabled={!canUpdatePassword}
-                      className="bg-[#3affa3] hover:bg-[#2de88f] text-black font-semibold px-6 py-3 rounded-md transition-all duration-300 flex items-center gap-2 shadow-lg shadow-[#3affa3]/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3affa3]"
-                    >
+                  <button
+                    type="submit"
+                    disabled={!canUpdatePassword}
+                    className="bg-[#3affa3] hover:bg-[#2de88f] text-black font-semibold px-6 py-3 rounded-md transition-all duration-300 flex items-center gap-2 shadow-lg shadow-[#3affa3]/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3affa3]"
+                  >
                     {passwordLoading && <FaSpinner className="animate-spin" />}
                     Update Password
                   </button>
@@ -592,15 +627,15 @@ export default function Profile() {
                     </div>
 
                     <div className="w-full bg-black/50 h-3 rounded-full overflow-hidden border border-white/5">
-                      <div 
-                        className="bg-[#3affa3] h-full rounded-full transition-all duration-500" 
+                      <div
+                        className="bg-[#3affa3] h-full rounded-full transition-all duration-500"
                         style={{ width: `${usagePercentage}%` }}
                       />
                     </div>
-                    
+
                     <p className="text-xs text-gray-500 mt-2">
-                      {currentPlan === "free" 
-                        ? "Free plan users are limited to 5 AI prompts in total. Upgrade for higher limits." 
+                      {currentPlan === "free"
+                        ? "Free plan users are limited to 5 AI prompts in total. Upgrade for higher limits."
                         : `Your usage resets at the end of the billing period.`
                       }
                     </p>
@@ -613,20 +648,19 @@ export default function Profile() {
             {activeTab === "danger" && (
               <div className="space-y-6 animate-fadeIn">
                 <div>
-                  <h3 className="text-lg font-semibold" style={{ color: "#ef4444" }}>Delete Account</h3>
-                  <p className="text-gray-400 text-xs mt-1">Irreversible actions regarding your account.</p>
+                  <h3 className="text-lg font-semibold" style={{ color: "#ffffff" }}>Delete Account</h3>
                 </div>
 
-                <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.3)", paddingTop: "1.5rem" }}>
+                <div>
                   <div style={{ background: "rgba(127,29,29,0.2)", border: "1px solid rgb(222, 231, 220)" }} className="rounded-2xl p-6">
                     <h4 className="text-base font-bold" style={{ color: "#f8f4f4" }}>Delete Account</h4>
                     <p className="text-gray-400 text-sm mt-2">
-                      Once you delete your account, there is no going back. All of your personal details, saved stock portfolios, and AI prompts history will be permanently deleted from our databases.
+                      Once you delete your account, there is no going back. All of your personal details, saved stock portfolios, and AI prompts history will be permanently deleted.
                     </p>
                     <button
                       type="button"
                       onClick={() => setShowDeleteModal(true)}
-                      style={{ background: "#dc2626", color: "#fff" }}
+                      style={{ background: "#9b0707", color: "#fff" }}
                       className="mt-5 font-semibold px-5 py-2.5 rounded-md text-sm transition-all duration-200 hover:opacity-90 active:scale-95"
                     >
                       Delete My Account
@@ -672,8 +706,9 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={handleDeleteAccount}
+                style={{ background: "#9b0707", color: "#fff" }}
                 disabled={deleteConfirmText !== "DELETE"}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-md text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-600"
+                className="bg-red-700 hover:bg-red-700 text-black px-4 py-2.5 rounded-md text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-600"
               >
                 Permanently Delete
               </button>

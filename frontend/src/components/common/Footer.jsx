@@ -65,7 +65,7 @@ const Footer = () => {
         <div className="mt-12 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2024 Zelbi. All rights reserved.
+              © 2026 Zelbi. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <div className="text-gray-400 hover:text-cyan-400 transition-colors text-sm">Privacy Policy</div>

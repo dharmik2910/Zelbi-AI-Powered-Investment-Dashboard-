@@ -469,7 +469,7 @@ const Dashboard = () => {
 
   const analyzeStock = async () => {
     if (promptCount >= promptLimit) {
-      setAiAnalysis(`You have reached your limit of ${promptLimit} AI prompts for the ${currentPlan} plan. Please upgrade your plan to continue using ZELBI AI.`);
+      setAiAnalysis(`You have reached your limit of ${promptLimit} AI prompts for the ${currentPlan} plan. Please upgrade your plan to continue using ZELBI AI-Assistant.`);
       return;
     }
     try {
@@ -489,7 +489,7 @@ const Dashboard = () => {
         Keep the analysis concise, insightful, and easy to read.`;
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/ai/analyze`,
+        `${process.env.REACT_APP_API_URL}/api/ai/analyze`,
         { prompt },
         {
           headers: {
