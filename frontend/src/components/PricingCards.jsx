@@ -13,6 +13,7 @@ export default function PricingCards({
     showViewAllButton = true,
 }) {
     const [yearly, setYearly] = useState(false);
+    const billingCycle = yearly ? "yearly" : "monthly";
     return (
         <div style={{ backgroundColor: "#000", padding: "10px 16px", position: "relative", zIndex: 40 }}>
             <div style={{ maxWidth: 1000, margin: "0 auto" }}>
@@ -82,6 +83,7 @@ export default function PricingCards({
                         const price = yearly
                             ? plan.yearlyPrice
                             : plan.monthlyPrice;
+                        const priceLabel = yearly ? "/year" : "/month";
 
                         return (
                             <div
@@ -169,7 +171,7 @@ export default function PricingCards({
                                                 color: "#71717a",
                                             }}
                                         >
-                                            /month
+                                            {priceLabel}
                                         </span>
                                     )}
                                 </div>
@@ -187,7 +189,7 @@ export default function PricingCards({
                                 {onPlanClick ? (
                                     <button
                                         disabled={active}
-                                        onClick={() => onPlanClick(plan.id)}
+                                        onClick={() => onPlanClick(plan.id, billingCycle)}
                                         style={{
                                             width: "100%",
                                             padding: "10px 0",

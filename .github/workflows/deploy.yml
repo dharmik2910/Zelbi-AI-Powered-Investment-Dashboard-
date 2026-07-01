@@ -1,0 +1,105 @@
+name: Deploy Zelbi
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            backend/package-lock.json
+
+      # -------------------------
+      # Backend
+      # -------------------------
+
+      - name: Install Backend Dependencies
+        working-directory: backend
+        run: npm ci
+
+      # -------------------------
+      # Frontend
+      # -------------------------
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: frontend
+        env:
+          CI: false
+          NODE_OPTIONS: --max-old-space-size=1024
+        run: npm run build
+
+      # -------------------------
+      # Deploy
+      # -------------------------
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+
+          script: |
+            set -e
+
+            echo "Go to project..."
+            cd ${{ secrets.PROJECT_PATH }}
+
+            echo "Pull latest code..."
+            git pull origin main
+
+            echo "Backend..."
+            cd backend
+
+            npm install
+
+            pm2 restart zelbi-backend
+
+            cd ..
+
+            echo "Frontend..."
+
+            cd frontend
+
+            npm install
+
+            export NODE_OPTIONS="--max-old-space-size=1024"
+
+            export CI=false
+
+            npm run build
+
+            sudo rm -rf /var/www/html/*
+
+            sudo cp -r build/* /var/www/html/
+
+            sudo systemctl reload nginx
+
+            pm2 save
+
+            echo "Deployment completed successfully."

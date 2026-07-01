@@ -322,7 +322,8 @@ const Navbar = () => {
 
   {/* Drawer */}
   <div
-    className={`fixed top-0 right-0 h-screen w-72 bg-[#0B0B0B] border-l border-white/10 shadow-2xl z-[200] transform transition-transform duration-300 md:hidden flex flex-col ${
+    // className={`fixed top-0 right-0 h-screen w-72 bg-[#0B0B0B] border-l border-white/10 shadow-2xl z-[200] transform transition-transform duration-300 md:hidden flex flex-col ${
+      className={`fixed inset-y-0 right-0 w-72 bg-[#0B0B0B] border-l border-white/10 shadow-2xl z-[200] transform transition-transform duration-300 md:hidden flex flex-col ${
       isOpen ? "translate-x-0" : "translate-x-full"
     }`}
   >
@@ -339,7 +340,8 @@ const Navbar = () => {
     </div>
 
     {/* Scrollable Menu */}
-    <div className="flex-1 overflow-y-auto p-4 space-y-2">
+    {/* <div className="flex-1 overflow-y-auto p-4 space-y-2"> */}
+    <div className="flex-1 overflow-y-auto p-4 space-y-2 pb-24">
       <Link
         to="/ai-assistant"
         onClick={() => setIsOpen(false)}
@@ -457,7 +459,7 @@ const Navbar = () => {
 
     {/* Fixed Bottom Sign Out */}
     {token && (
-      <div className="border-t border-white/10 p-4">
+      <div className="sticky bottom-0 border-t border-white/10 bg-[#0B0B0B] p-4">
         <button
           onClick={() => {
             setIsOpen(false);

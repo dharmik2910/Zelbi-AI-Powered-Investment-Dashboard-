@@ -317,7 +317,8 @@ export default function Profile() {
             <button
               type="button"
               onClick={() => dispatch(logout(navigate))}
-              className="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 shrink-0 text-gray-400 hover:text-white hover:bg-white/5 border-t border-white/10 lg:mt-2"
+              // className="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 shrink-0 text-gray-400 hover:text-white hover:bg-white/5 border-t border-white/10 lg:mt-2"
+              className="hidden lg:flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 shrink-0 text-gray-400 hover:text-white hover:bg-white/5 border-t border-white/10 lg:mt-2"
             >
               <FaSignOutAlt className="text-base" />
               Sign Out
@@ -428,7 +429,7 @@ export default function Profile() {
 
                     <div>
                       <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
-                        Gender
+                        Gender00
                       </label>
                       <GenderSelect
                         value={profileData.gender}
@@ -448,6 +449,7 @@ export default function Profile() {
                           value={profileData.dateOfBirth}
                           onChange={handleProfileChange}
                           className="w-full bg-[#1a1a1a] text-white rounded-md pl-10 pr-4 py-3 border border-white/10 focus:outline-none focus:border-[#3affa3] transition-colors"
+                          style={{ colorScheme: "dark" }}
                         />
                       </div>
                     </div>

@@ -15,6 +15,12 @@ const paymentSchema = new mongoose.Schema(
             required: true,
         },
 
+        billingCycle: {
+            type: String,
+            enum: ["monthly", "yearly"],
+            default: "monthly",
+        },
+
         amount: {
             type: Number, // in paise (smallest INR unit)
             required: true,

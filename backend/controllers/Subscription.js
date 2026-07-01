@@ -21,6 +21,7 @@ const PLANS = [
         id: "pro",
         name: "Pro",
         price: 499,
+        yearlyPrice: 349,
         currency: "INR",
         promptLimit: 100,
         features: [
@@ -35,6 +36,7 @@ const PLANS = [
         id: "elite",
         name: "Elite",
         price: 999,
+        yearlyPrice: 699,
         currency: "INR",
         promptLimit: Infinity,
         features: [
@@ -138,11 +140,16 @@ export const getMyPlan = async (req, res) => {
 
 export const createRazorpayOrder = async (req, res) => {
     try {
-        const { plan } = req.body;
+        const { plan, billingCycle = "monthly" } = req.body;
 
         const validPlans = ["free", "pro", "elite"];
         if (!plan || !validPlans.includes(plan)) {
             return res.status(400).json({ success: false, error: "Invalid plan selected" });
+        }
+
+        const validBillingCycles = ["monthly", "yearly"];
+        if (!validBillingCycles.includes(billingCycle)) {
+            return res.status(400).json({ success: false, error: "Invalid billing cycle selected" });
         }
 
         if (plan === "free") {
@@ -159,8 +166,12 @@ export const createRazorpayOrder = async (req, res) => {
             key_secret: process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET,
         });
 
+        const amountInRupees = billingCycle === "yearly"
+            ? (planDetails.yearlyPrice ?? planDetails.price)
+            : planDetails.price;
+
         const options = {
-            amount: planDetails.price * 100, // amount in smallest currency unit (paise)
+            amount: amountInRupees * 100, // amount in smallest currency unit (paise)
             currency: planDetails.currency || "INR",
             receipt: `rcpt_${req.user.id.slice(-6)}_${Date.now()}` // Keeping it under 40 chars
         };
@@ -187,10 +198,15 @@ export const createRazorpayOrder = async (req, res) => {
 
 export const verifyRazorpayPayment = async (req, res) => {
     try {
-        const { plan, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+        const { plan, billingCycle = "monthly", razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !plan) {
             return res.status(400).json({ success: false, error: "Missing required fields" });
+        }
+
+        const validBillingCycles = ["monthly", "yearly"];
+        if (!validBillingCycles.includes(billingCycle)) {
+            return res.status(400).json({ success: false, error: "Invalid billing cycle selected" });
         }
 
         const secret = process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET;
@@ -201,13 +217,17 @@ export const verifyRazorpayPayment = async (req, res) => {
         const generatedSignature = hmac.digest("hex");
 
         const planDetails = PLANS.find(p => p.id === plan);
-        const amountInPaise = planDetails ? planDetails.price * 100 : 0;
+        const amountInRupees = planDetails
+            ? (billingCycle === "yearly" ? (planDetails.yearlyPrice ?? planDetails.price) : planDetails.price)
+            : 0;
+        const amountInPaise = amountInRupees * 100;
 
         // --- Signature mismatch: log a failed payment and return error ---
         if (generatedSignature !== razorpay_signature) {
             await Payment.create({
                 userId: req.user.id,
                 plan,
+                billingCycle,
                 amount: amountInPaise,
                 currency: planDetails?.currency || "INR",
                 razorpay_order_id,
@@ -226,7 +246,7 @@ export const verifyRazorpayPayment = async (req, res) => {
 
         // 30-day expiry
         const expiry = new Date();
-        expiry.setDate(expiry.getDate() + 30);
+        expiry.setDate(expiry.getDate() + (billingCycle === "yearly" ? 365 : 30));
 
         user.subscriptionPlan = plan;
         user.subscriptionExpiry = expiry;
@@ -238,6 +258,7 @@ export const verifyRazorpayPayment = async (req, res) => {
         await Payment.create({
             userId: req.user.id,
             plan,
+            billingCycle,
             amount: amountInPaise,
             currency: planDetails?.currency || "INR",
             razorpay_order_id,

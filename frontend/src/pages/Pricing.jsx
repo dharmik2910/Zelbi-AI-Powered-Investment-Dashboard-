@@ -106,7 +106,7 @@ const Pricing = () => {
     return () => { document.title = "Zelbi"; };
   }, []);
 
-  const handleUpgrade = async (planId) => {
+  const handleUpgrade = async (planId, billingCycle = "monthly") => {
     if (!token) { navigate("/login"); return; }
     if (planId === currentPlan) return;
     setLoadingPlan(planId);
@@ -130,7 +130,7 @@ const Pricing = () => {
       // Paid plan: create Razorpay order first
       const orderRes = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/subscription/create-razorpay-order`,
-        { plan: planId },
+        { plan: planId, billingCycle },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const { order_id, amount, currency, key_id } = orderRes.data;
@@ -154,6 +154,7 @@ const Pricing = () => {
               `${process.env.REACT_APP_API_URL}/api/subscription/verify-razorpay-payment`,
               {
                 plan: planId,
+                billingCycle,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
