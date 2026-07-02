@@ -679,8 +679,8 @@ export default function Profile() {
                 </div>
 
                 <div>
-                  <div style={{ background: "rgba(127,29,29,0.2)", border: "1px solid rgb(222, 231, 220)" }} className="rounded-2xl p-6">
-                    <h4 className="text-base font-bold" style={{ color: "#f8f4f4" }}>Delete Account</h4>
+                  <div style={{ background: "rgba(19, 11, 11, 0.2)", border: "1px solid rgb(222, 231, 220)" }} className="rounded-2xl p-6">
+                    {/* <h4 className="text-base font-bold" style={{ color: "#f8f4f4" }}>Delete Account</h4> */}
                     <p className="text-gray-400 text-sm mt-2">
                       Once you delete your account, there is no going back. All of your personal details, saved stock portfolios, and AI prompts history will be permanently deleted.
                     </p>

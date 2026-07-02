@@ -17,23 +17,24 @@ function ForgotPassword() {
   }
 
   return (
-    <div className="grid min-h-[calc(100vh-3.5rem)] place-items-center">
+    <div className="grid min-h-[calc(100vh-3.5rem)] place-items-center bg-black px-4">
       {loading ? (
         <div className="spinner"></div>
       ) : (
-        <div className="max-w-[500px] p-4 lg:p-8">
-          <h1 className="text-[1.875rem] font-semibold leading-[2.375rem] text-richblack-5">
-            {!emailSent ? "Reset your password" : "Check email"}
+<div className="relative z-10 w-full max-w-[380px] md:max-w-md mx-auto mt-10 md:mt-20 px-6 py-8 md:p-7 rounded-md md:rounded-md bg-gradient-to-br from-[#141414] to-[#111111] text-white">      
+          <h1 className="text-3xl font-bold text-center text-[#3affa3]">
+            {!emailSent ? "Reset your password" : "Check your email"}
           </h1>
-          <p className="my-4 text-[1.125rem] leading-[1.625rem] text-richblack-100">
+          <p className="mt-3 mb-7 text-center text-sm leading-6 text-richblack-300">
             {!emailSent
-              ? "Have no fear. We'll email you instructions to reset your password. If you dont have access to your email we can try account recovery"
-              : `We have sent the reset email to ${email}`}
+              ? "Have no fear. We'll email you instructions to reset your password. If you don't have access to your email, we can try account recovery."
+              : `We've sent a reset link to ${email}.`}
           </p>
+
           <form onSubmit={handleOnSubmit}>
             {!emailSent && (
-              <label className="w-full">
-                <p className="mb-1 text-[0.875rem] leading-[1.375rem] text-richblack-5">
+              <label className="block">
+                <p className="mb-1.5 text-sm font-medium text-white">
                   Email Address <sup className="text-pink-200">*</sup>
                 </p>
                 <input
@@ -43,20 +44,22 @@ function ForgotPassword() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter email address"
-                  className="form-style w-full"
+                  className="w-full rounded-lg bg-[#1c1c1c] border border-white/10 px-4 py-3 text-white placeholder:text-richblack-400 outline-none transition-colors focus:border-[#3affa3]/60 focus:ring-1 focus:ring-[#3affa3]/30"
                 />
               </label>
             )}
+
             <button
               type="submit"
-              className="mt-6 w-full rounded-[8px] bg-[#3affa3] py-[12px] px-[12px] font-medium text-black hover:bg-[#2de88f] transition-all duration-300 font-semibold"
+              className="mt-6 w-full rounded-full bg-[#3affa3] py-3 font-semibold text-black hover:bg-[#2de88f] active:scale-95 transition-all duration-200"
             >
-              {!emailSent ? "Sumbit" : "Resend Email"}
+              {!emailSent ? "Submit" : "Resend Email"}
             </button>
           </form>
-          <div className="mt-6 flex items-center justify-between">
+
+          <div className="mt-6 flex items-center justify-center">
             <Link to="/login">
-              <p className="flex items-center gap-x-2 text-richblack-5">
+              <p className="flex items-center gap-x-2 text-sm text-[#3affa3] hover:text-[#2de88f] transition-colors">
                 <BiArrowBack /> Back To Login
               </p>
             </Link>

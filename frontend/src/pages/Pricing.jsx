@@ -233,7 +233,7 @@ const Pricing = () => {
     successPlan && (
       <SuccessModal
         plan={successPlan}
-        onClose={() => { setSuccessPlan(null); navigate("/ai"); }}
+        onClose={() => { setSuccessPlan(null); navigate("/ai-assistant"); }}
       />
     )
   }

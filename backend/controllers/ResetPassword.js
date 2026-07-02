@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import User from "../models/User.js";
 import mailSender from "../utils/mailSender.js";
+import baseEmailTemplate from "../mail/templates/baseEmailTemplate.js";
 
 export const resetPasswordToken = async (req, res) => {
 	try {
@@ -25,11 +26,8 @@ export const resetPasswordToken = async (req, res) => {
 		);
 		console.log("DETAILS", updatedDetails);
 
-		const frontendUrl =
-  process.env.FRONTEND_URL ||
-  "https://zelbi-ai-powered-investment-dashboard.netlify.app";
-
-const url = `${frontendUrl}/update-password/${token}`;
+		const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
+		const url = `${frontendUrl.replace(/\/$/, "")}/update-password/${token}`;
 
 console.log("Reset URL:", url);
 
@@ -38,31 +36,19 @@ console.log("Reset URL:", url);
 		// 	"Password Reset",
 		// 	`Your Link for email verification is ${url}. Please click this url to reset your password.`
 		// );
-		const htmlTemplate = `
-<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px">
-  <h2 style="color:#2563eb">Reset Your Password</h2>
-
-  <p>We received a request to reset your password.</p>
-
-  <a href="${url}"
-     style="
-       background:#2563eb;
-       color:white;
-       padding:12px 24px;
-       text-decoration:none;
-       border-radius:5px;
-       display:inline-block;
-     ">
-     Reset Password
-  </a>
-
-  <p style="margin-top:20px">
-    This link will expire in 1 hour.
-  </p>
-
-  <p>If you didn't request this, you can safely ignore this email.</p>
-</div>
-`;
+		const htmlTemplate = baseEmailTemplate({
+			title: "Reset Your Password",
+			eyebrow: "Account Recovery",
+			heading: "Reset Your Password",
+			body: `
+				<p style="margin:0 0 15px;">We received a request to reset your password.</p>
+				<p style="margin:0 0 15px;">Click the button below to choose a new password.</p>
+				<p style="margin:0;">This link will expire in 1 hour.</p>
+			`,
+			ctaText: "Reset Password",
+			ctaUrl: url,
+			footerNote: "If you did not request this, you can safely ignore this email.",
+		});
 
 		await mailSender(
 			email,

@@ -119,6 +119,16 @@ const AiAssistant = () => {
     scrollToBottom();
   }, [messages, isTyping]);
 
+  // Auto-resize the textarea any time inputMessage changes, whether from
+  // typing (onChange) or voice input (recognition.onresult setting state directly).
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 200) + "px";
+    }
+  }, [inputMessage]);
+
   useEffect(() => {
     localStorage.setItem("chatMessages", JSON.stringify(messages));
   }, [messages]);
@@ -559,14 +569,7 @@ const AiAssistant = () => {
               <textarea
                 ref={textareaRef}
                 value={inputMessage}
-                onChange={(e) => {
-                  setInputMessage(e.target.value);
-                  const el = textareaRef.current;
-                  if (el) {
-                    el.style.height = "auto";
-                    el.style.height = Math.min(el.scrollHeight, 200) + "px";
-                  }
-                }}
+                onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={isRecording ? "Listening… speak now" : "Message Zelbi AI…"}
                 rows="1"
