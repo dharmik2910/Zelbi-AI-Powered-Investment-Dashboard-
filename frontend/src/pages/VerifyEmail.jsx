@@ -71,8 +71,8 @@ function VerifyEmail() {
             />
             <button
               type="submit"
-              className="text-white mt-4 bg-[#212121] py-3 px-6 rounded-full bg-cyan-500 font-semibold active:scale-95 transition-all duration-300"
-            >
+            className="w-full bg-[#3affa3] text-black py-3 rounded-full font-semibold hover:bg-[#2de88f] transition">
+            
               Verify Email
             </button>
           </form>

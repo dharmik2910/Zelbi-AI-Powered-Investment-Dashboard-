@@ -55,12 +55,12 @@ export const signup = async (req, res) => {
     if (response.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "The OTP is not valid",
+        message: "Enter correct OTP",
       })
     } else if (otp !== response[0].otp) {
       return res.status(400).json({
         success: false,
-        message: "The OTP is not valid",
+        message: "Enter correct OTP",
       })
     }
 

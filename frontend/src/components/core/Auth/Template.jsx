@@ -13,11 +13,13 @@ function Template({ formType }) {
   }
 
   return (
-    <div className="grid min-h-[calc(100vh-3.5rem)] bg-black place-items-center">
+ <div className="min-h-[calc(100vh-3.5rem)] bg-black overflow-y-auto">
       {loading ? (
-        <div className="spinner"></div>
+        <div className="grid min-h-[calc(100vh-3.5rem)] place-items-center">
+          <div className="spinner"></div>
+        </div>
       ) : (
-        <div className="flex flex-col items-center justify-center w-full min-h-[calc(100vh-3.5rem)]">
+        <div className="flex flex-col items-center w-full min-h-[calc(100vh-3.5rem)] py-12">
           <div className="w-full max-w-[450px] mx-auto">
             {formType === "signup" ? <SignupForm onSwitchToLogin={onSwitchToLogin} /> : <LoginForm />}
           </div>

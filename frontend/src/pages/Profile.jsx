@@ -29,6 +29,10 @@ import {
   deleteProfile
 } from "../services/operations/SettingsAPI";
 
+import usePasswordValidation from "../hooks/usePasswordValidation";
+import PasswordChecklist from "../components/PasswordChecklist";
+import PasswordMatchIndicator from "../components/PasswordMatchIndicator";
+
 const GENDER_OPTIONS = [
   { value: "", label: "Select Gender" },
   { value: "Male", label: "Male" },
@@ -36,6 +40,7 @@ const GENDER_OPTIONS = [
   { value: "Other", label: "Other" },
   { value: "Prefer not to say", label: "Prefer not to say" },
 ];
+
 
 function GenderSelect({ value, onChange }) {
   const [open, setOpen] = useState(false);
@@ -180,9 +185,17 @@ export default function Profile() {
     }
   };
 
+  // Password strength checklist (shared across app)
+  const { checklist: passwordChecklist, isStrong: isPasswordStrong } =
+    usePasswordValidation(passwordData.newPassword);
+
   // Handle Password Submit
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+    if (!isPasswordStrong) {
+      toast.error("Password doesn't meet the requirements.");
+      return;
+    }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error("New passwords do not match!");
       return;
@@ -261,9 +274,10 @@ export default function Profile() {
       oldPassword.trim() !== "" &&
       newPassword.trim() !== "" &&
       confirmPassword.trim() !== "" &&
-      newPassword === confirmPassword
+      newPassword === confirmPassword &&
+      isPasswordStrong
     );
-  }, [passwordData]);
+  }, [passwordData, isPasswordStrong]);
 
   const canUpdatePassword = isPasswordFormValid && !passwordLoading;
 
@@ -317,7 +331,6 @@ export default function Profile() {
             <button
               type="button"
               onClick={() => dispatch(logout(navigate))}
-              // className="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 shrink-0 text-gray-400 hover:text-white hover:bg-white/5 border-t border-white/10 lg:mt-2"
               className="hidden lg:flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 shrink-0 text-gray-400 hover:text-white hover:bg-white/5 border-t border-white/10 lg:mt-2"
             >
               <FaSignOutAlt className="text-base" />
@@ -392,7 +405,7 @@ export default function Profile() {
                         onChange={handleProfileChange}
                         required
                         className="w-full bg-[#1a1a1a] text-white rounded-md px-4 py-3 border border-white/10 focus:outline-none focus:border-[#3affa3] transition-colors"
-                        placeholder="John"
+                        placeholder="Enter your first name"
                       />
                     </div>
 
@@ -406,7 +419,7 @@ export default function Profile() {
                         value={profileData.lastName}
                         onChange={handleProfileChange}
                         className="w-full bg-[#1a1a1a] text-white rounded-md px-4 py-3 border border-white/10 focus:outline-none focus:border-[#3affa3] transition-colors"
-                        placeholder="Doe"
+                        placeholder="Enter your last name"
                       />
                     </div>
 
@@ -429,7 +442,7 @@ export default function Profile() {
 
                     <div>
                       <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
-                        Gender00
+                        Gender
                       </label>
                       <GenderSelect
                         value={profileData.gender}
@@ -545,6 +558,13 @@ export default function Profile() {
                     </button>
                   </div>
 
+                  {/* Password Requirements Checklist */}
+                  <PasswordChecklist
+                    password={passwordData.newPassword}
+                    checklist={passwordChecklist}
+                    isStrong={isPasswordStrong}
+                  />
+
                   <div className="relative">
                     <input
                       type={showPassword.confirm ? "text" : "password"}
@@ -569,6 +589,11 @@ export default function Profile() {
                       {showPassword.confirm ? <FaEyeSlash /> : <FaEye />}
                     </button>
                   </div>
+
+                  <PasswordMatchIndicator
+                    password={passwordData.newPassword}
+                    confirmPassword={passwordData.confirmPassword}
+                  />
                 </div>
 
                 <div className="flex justify-end pt-4 border-t border-white/5">

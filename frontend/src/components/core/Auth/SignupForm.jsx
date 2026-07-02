@@ -5,6 +5,9 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { sendOtp } from "../../../services/operations/authAPI";
 import { setSignupData } from "../../../slices/authSlice";
+import usePasswordValidation from "../../../hooks/usePasswordValidation";
+import PasswordChecklist from "../../PasswordChecklist";
+import PasswordMatchIndicator from "../../PasswordMatchIndicator";
 
 const SignupForm = ({ onSwitchToLogin, onClose }) => {
   const dispatch = useDispatch();
@@ -21,6 +24,15 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
 
   const { email, password, confirmPassword } = formData;
 
+  const { checklist: passwordChecklist, isStrong: isPasswordStrong } =
+    usePasswordValidation(password);
+
+  const isFormValid =
+    email.trim() !== "" &&
+    isPasswordStrong &&
+    confirmPassword !== "" &&
+    password === confirmPassword;
+
   const handleOnChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -28,8 +40,13 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
     }));
   };
 
-  const handleOnSubmit = (e) => {
+const handleOnSubmit = (e) => {
     e.preventDefault();
+
+    if (!isPasswordStrong) {
+      toast.error("Password doesn't meet the requirements.");
+      return;
+    }
 
     if (password !== confirmPassword) {
       toast.error("Passwords Do Not Match");
@@ -48,8 +65,7 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
   };
 
   return (
-    <div className="relative z-10 w-full max-w-none md:max-w-md mx-auto px-4 py-6 md:p-7 rounded-md bg-gradient-to-br from-[#141414] to-[#111111] text-white">
-      <h2 className="text-2xl md:text-3xl mt-2 font-bold text-center mb-6 text-[#3affa3]">
+<div className="relative z-10 w-full max-w-[380px] md:max-w-lg mx-auto mt-20 px-4 py-6 md:p-7 rounded-2xl md:rounded-md bg-gradient-to-br from-[#141414] to-[#111111] text-white">      <h2 className="text-2xl md:text-3xl mt-2 font-bold text-center mb-6 text-[#3affa3]">
         Join Zelbi
       </h2>
 
@@ -99,6 +115,12 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
           </span>
         </label>
 
+        <PasswordChecklist
+          password={password}
+          checklist={passwordChecklist}
+          isStrong={isPasswordStrong}
+        />
+
         {/* Confirm Password */}
         <label className="w-full relative">
           <p className="mb-2 text-sm text-gray-300">
@@ -129,10 +151,16 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
           </span>
         </label>
 
+         <PasswordMatchIndicator
+          password={password}
+          confirmPassword={confirmPassword}
+        />
+
         {/* Submit */}
         <button
           type="submit"
-          className="mt-2 py-3 px-6 rounded-full font-semibold text-black bg-[#3affa3] hover:bg-[#32e092] active:scale-95 transition-all duration-300"
+          disabled={!isFormValid}
+          className="mt-2 py-3 px-6 rounded-full font-semibold text-black bg-[#3affa3] hover:bg-[#32e092] active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3affa3]"
         >
           Create Account
         </button>
