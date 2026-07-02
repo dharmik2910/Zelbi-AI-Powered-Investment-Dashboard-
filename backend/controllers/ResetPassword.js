@@ -7,6 +7,7 @@ import baseEmailTemplate from "../mail/templates/baseEmailTemplate.js";
 export const resetPasswordToken = async (req, res) => {
 	try {
 		const email = req.body.email;
+		const frontendUrl = req.body.frontendUrl || process.env.FRONTEND_URL || "http://localhost:3001";
 		const user = await User.findOne({ email: email });
 		if (!user) {
 			return res.json({
@@ -26,7 +27,6 @@ export const resetPasswordToken = async (req, res) => {
 		);
 		console.log("DETAILS", updatedDetails);
 
-		const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
 		const url = `${frontendUrl.replace(/\/$/, "")}/update-password/${token}`;
 
 console.log("Reset URL:", url);
