@@ -26,8 +26,7 @@ export const resetPasswordToken = async (req, res) => {
 		);
 		console.log("DETAILS", updatedDetails);
 
-		const frontendUrl =
-			process.env.FRONTEND_URL || req.headers.origin || "http://localhost:3001";
+		const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
 		const url = `${frontendUrl.replace(/\/$/, "")}/update-password/${token}`;
 
 console.log("Reset URL:", url);
