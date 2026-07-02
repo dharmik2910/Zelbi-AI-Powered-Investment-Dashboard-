@@ -16,11 +16,13 @@ dotenv.config();
 dbConnect();
 const app=express();
 
+const frontendOrigin = process.env.FRONTEND_URL || "http://localhost:3001";
+
 app.use(
   cors({
     origin: [
       "http://localhost:3001",
-      "https://zelbi-ai-powered-investment-dashboard.netlify.app"
+      frontendOrigin
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
