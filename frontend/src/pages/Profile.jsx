@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import {
   FaUser,
@@ -101,15 +101,21 @@ const getOriginalProfileData = (user) => ({
   gender: user?.additionalDetails?.gender || "",
 });
 
+const PROFILE_TABS = new Set(["profile", "password", "subscription", "delete"]);
+
 export default function Profile() {
   const { user } = useSelector((state) => state.profile);
   const { token } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const fileInputRef = useRef(null);
 
   // Active tab state
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(() => {
+    const tabFromUrl = searchParams.get("tab");
+    return PROFILE_TABS.has(tabFromUrl) ? tabFromUrl : "profile";
+  });
 
   // Loading states
   const [profileLoading, setProfileLoading] = useState(false);
@@ -161,6 +167,20 @@ export default function Profile() {
       document.title = "Zelbi";
     };
   }, []);
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    const normalizedTab = PROFILE_TABS.has(tabFromUrl) ? tabFromUrl : "profile";
+
+    if (normalizedTab !== activeTab) {
+      setActiveTab(normalizedTab);
+    }
+  }, [activeTab, searchParams]);
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    setSearchParams(tabId === "profile" ? {} : { tab: tabId }, { replace: true });
+  };
 
   // Handle Profile Form Change
   const handleProfileChange = (e) => {
@@ -285,7 +305,7 @@ export default function Profile() {
     { id: "profile", name: "My Profile", icon: FaUser },
     { id: "password", name: "Security", icon: FaKey },
     { id: "subscription", name: "Subscription", icon: FaCreditCard },
-    { id: "danger", name: "Delete Account", icon: FaTrash },
+    { id: "delete", name: "Delete Account", icon: FaTrash },
   ];
 
   return (
@@ -315,7 +335,7 @@ export default function Profile() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => handleTabChange(tab.id)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 shrink-0 ${activeTab === tab.id
                       ? "bg-[#3affa3] text-black shadow-lg shadow-[#3affa3]/10 font-semibold"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
@@ -405,7 +425,7 @@ export default function Profile() {
                         onChange={handleProfileChange}
                         required
                         className="w-full bg-[#1a1a1a] text-white rounded-md px-4 py-3 border border-white/10 focus:outline-none focus:border-[#3affa3] transition-colors"
-                        placeholder="Enter your first name"
+                        placeholder="Enter first name"
                       />
                     </div>
 
@@ -419,7 +439,7 @@ export default function Profile() {
                         value={profileData.lastName}
                         onChange={handleProfileChange}
                         className="w-full bg-[#1a1a1a] text-white rounded-md px-4 py-3 border border-white/10 focus:outline-none focus:border-[#3affa3] transition-colors"
-                        placeholder="Enter your last name"
+                        placeholder="Enter last name"
                       />
                     </div>
 
@@ -672,7 +692,7 @@ export default function Profile() {
             )}
 
             {/* 4. DELETE ACCOUNT TAB */}
-            {activeTab === "danger" && (
+            {activeTab === "delete" && (
               <div className="space-y-6 animate-fadeIn">
                 <div>
                   <h3 className="text-lg font-semibold" style={{ color: "#ffffff" }}>Delete Account</h3>
@@ -690,7 +710,7 @@ export default function Profile() {
                       style={{ background: "#9b0707", color: "#fff" }}
                       className="mt-5 font-semibold px-5 py-2.5 rounded-md text-sm transition-all duration-200 hover:opacity-90 active:scale-95"
                     >
-                      Delete My Account
+                      Delete Account
                     </button>
                   </div>
                 </div>

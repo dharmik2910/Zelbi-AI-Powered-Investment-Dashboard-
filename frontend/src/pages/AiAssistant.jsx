@@ -20,6 +20,35 @@ const PLAN_STYLES = {
   elite: { label: "Elite", color: "#facc15", bg: "rgba(250,204,21,0.08)", ring: "rgba(250,204,21,0.3)" },
 };
 
+const DEFAULT_MESSAGES = [
+  {
+    type: "bot",
+    content: "Hello! I'm your AI trading assistant. How can I help you today?",
+    timestamp: new Date().toLocaleTimeString(),
+  },
+];
+
+const getChatStorageKey = (user) => {
+  const userIdentifier = user?._id || user?.id || user?.email || "guest";
+  return `chatMessages:${userIdentifier}`;
+};
+
+const loadChatMessages = (storageKey) => {
+  const savedMessages = localStorage.getItem(storageKey);
+
+  if (!savedMessages) {
+    return DEFAULT_MESSAGES;
+  }
+
+  try {
+    const parsedMessages = JSON.parse(savedMessages);
+    return Array.isArray(parsedMessages) && parsedMessages.length ? parsedMessages : DEFAULT_MESSAGES;
+  } catch (error) {
+    console.error("Error parsing saved messages:", error);
+    return DEFAULT_MESSAGES;
+  }
+};
+
 const PlanBadge = ({ plan }) => {
   const s = PLAN_STYLES[plan] || PLAN_STYLES.free;
   return (
@@ -83,24 +112,10 @@ const AiAssistant = () => {
   const promptCount = user?.aiPromptCount || 0;
   const promptLimit = getPlanLimit(plan);
   const isLimited = promptLimit !== -1 && promptCount >= promptLimit;
+  const chatStorageKey = getChatStorageKey(user);
+  const hydratedStorageKeyRef = useRef(chatStorageKey);
 
-  const [messages, setMessages] = useState(() => {
-    const savedMessages = localStorage.getItem("chatMessages");
-    if (savedMessages) {
-      try {
-        return JSON.parse(savedMessages);
-      } catch (error) {
-        console.error("Error parsing saved messages:", error);
-      }
-    }
-    return [
-      {
-        type: "bot",
-        content: "Hello! I'm your AI trading assistant. How can I help you today?",
-        timestamp: new Date().toLocaleTimeString(),
-      },
-    ];
-  });
+  const [messages, setMessages] = useState(() => loadChatMessages(chatStorageKey));
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -119,6 +134,15 @@ const AiAssistant = () => {
     scrollToBottom();
   }, [messages, isTyping]);
 
+  useEffect(() => {
+    if (hydratedStorageKeyRef.current === chatStorageKey) {
+      return;
+    }
+
+    setMessages(loadChatMessages(chatStorageKey));
+    hydratedStorageKeyRef.current = chatStorageKey;
+  }, [chatStorageKey]);
+
   // Auto-resize the textarea any time inputMessage changes, whether from
   // typing (onChange) or voice input (recognition.onresult setting state directly).
   useEffect(() => {
@@ -130,8 +154,12 @@ const AiAssistant = () => {
   }, [inputMessage]);
 
   useEffect(() => {
-    localStorage.setItem("chatMessages", JSON.stringify(messages));
-  }, [messages]);
+    if (hydratedStorageKeyRef.current !== chatStorageKey) {
+      return;
+    }
+
+    localStorage.setItem(chatStorageKey, JSON.stringify(messages));
+  }, [chatStorageKey, messages]);
 
   useEffect(() => {
     document.title = "Zelbi | AI Assistant";
@@ -345,13 +373,8 @@ const AiAssistant = () => {
   const toggleMenu = () => setShowMenu((prev) => !prev);
 
   const handleClearChat = () => {
-    const defaultMessage = {
-      type: "bot",
-      content: "Hello! I'm your AI trading assistant. How can I help you today?",
-      timestamp: new Date().toLocaleTimeString(),
-    };
-    setMessages([defaultMessage]);
-    localStorage.setItem("chatMessages", JSON.stringify([defaultMessage]));
+    setMessages(DEFAULT_MESSAGES);
+    localStorage.setItem(chatStorageKey, JSON.stringify(DEFAULT_MESSAGES));
     setShowMenu(false);
   };
 
