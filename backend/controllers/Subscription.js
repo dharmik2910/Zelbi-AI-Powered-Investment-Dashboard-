@@ -2,6 +2,9 @@ import User from '../models/User.js';
 import Payment from '../models/Payment.js';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import mailSender from '../utils/mailSender.js';
+import { paymentSuccessEmail } from '../mail/templates/paymentSuccessEmail.js';
+import { paymentFailureEmail } from '../mail/templates/paymentFailureEmail.js';
 
 const PLANS = [
     {
@@ -235,6 +238,25 @@ export const verifyRazorpayPayment = async (req, res) => {
                 razorpay_signature,
                 status: "failed",
             });
+
+            // Send payment failure email
+            try {
+                const user = await User.findById(req.user.id);
+                if (user) {
+                    const planName = planDetails?.name || plan;
+                    const amountInRupees = amountInPaise / 100;
+                    const failureEmail = paymentFailureEmail(
+                        user.firstName || "User",
+                        planName,
+                        amountInRupees,
+                        razorpay_order_id
+                    );
+                    await mailSender(user.email, "Payment Failed - Zelbi AI", failureEmail);
+                }
+            } catch (emailError) {
+                console.error("Failed to send payment failure email:", emailError);
+            }
+
             return res.status(400).json({ success: false, error: "Payment verification failed" });
         }
 
@@ -266,6 +288,21 @@ export const verifyRazorpayPayment = async (req, res) => {
             razorpay_signature,
             status: "success",
         });
+
+        // Send payment success email
+        try {
+            const planName = planDetails?.name || plan;
+            const successEmail = paymentSuccessEmail(
+                user.firstName || "User",
+                planName,
+                amountInRupees,
+                razorpay_order_id,
+                razorpay_payment_id
+            );
+            await mailSender(user.email, "Payment Successful - Zelbi AI", successEmail);
+        } catch (emailError) {
+            console.error("Failed to send payment success email:", emailError);
+        }
 
         return res.status(200).json({
             success: true,

@@ -48,7 +48,7 @@ app.use("/api/subscription", subscriptionRoutes);
 
 
 app.get('/', (req, res) => {   
-  res.send('<h1>Hello</h1>');
+  res.send('<h1>Server is Running</h1>');
 });
 
 app.get("/test", async (req, res) => {

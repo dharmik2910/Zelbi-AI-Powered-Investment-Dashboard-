@@ -28,13 +28,22 @@ function LoginForm() {
     }));
   };
 
-  const handleOnSubmit = (e) => {
+  const handleOnSubmit = async (e) => {
     e.preventDefault();
-    dispatch(login(email, password, navigate));
+    
+    const result = await dispatch(login(email, password, navigate));
+    
+    // If login failed, clear only password
+    if (result && !result.success) {
+      setFormData((prevData) => ({
+        ...prevData,
+        password: "", // Clear only password, keep email
+      }));
+    }
   };
 
   return (
-<div className="relative z-10 w-full max-w-[380px] md:max-w-md mx-auto mt-10 md:mt-20 px-6 py-8 md:p-7 rounded-md md:rounded-md bg-gradient-to-br from-[#141414] to-[#111111] text-white">      
+    <div className="relative z-10 w-full max-w-[380px] md:max-w-md mx-auto mt-10 md:mt-20 px-6 py-8 md:p-7 rounded-md md:rounded-md bg-gradient-to-br from-[#141414] to-[#111111] text-white">
 <h2 className="text-2xl md:text-3xl mt-2 font-bold text-center mb-6 text-[#3affa3]">
         Welcome Back
       </h2>

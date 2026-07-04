@@ -348,14 +348,16 @@ export default function Profile() {
               })}
             </div>
 
-            <button
-              type="button"
-              onClick={() => dispatch(logout(navigate))}
-              className="hidden lg:flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 shrink-0 text-gray-400 hover:text-white hover:bg-white/5 border-t border-white/10 lg:mt-2"
-            >
-              <FaSignOutAlt className="text-base" />
-              Sign Out
-            </button>
+            <div className="mt-auto pt-4">
+              <button
+                type="button"
+                onClick={() => dispatch(logout(navigate))}
+                className="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 shrink-0 text-gray-400 hover:text-white hover:bg-white/5 border-t border-white/10 w-full"
+              >
+                <FaSignOutAlt className="text-base" />
+                Sign Out
+              </button>
+            </div>
           </div>
 
           {/* Content Area */}
