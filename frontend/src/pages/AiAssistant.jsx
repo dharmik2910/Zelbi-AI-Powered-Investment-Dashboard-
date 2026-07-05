@@ -384,7 +384,7 @@ const AiAssistant = () => {
   };
 
   const progressPercent = promptLimit === -1 ? 100 : Math.min((promptCount / promptLimit) * 100, 100);
-  const progressColor = progressPercent >= 100 ? "#ef4444" : progressPercent >= 80 ? "#facc15" : "#3affa3";
+  const progressColor = progressPercent >= 100 ? "#00f1e1" : progressPercent >= 80 ? "#facc15" : "#3affa3";
 
   return (
     <div className="h-screen bg-gradient-to-b pt-16 from-black to-[#0a0a0a] flex justify-center items-center font-sans p-4 overflow-hidden">

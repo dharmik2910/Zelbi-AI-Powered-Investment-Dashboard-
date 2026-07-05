@@ -193,6 +193,105 @@ export const sendotp = async (req, res) => {
   }
 }
 
+export const googleAuth = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Google token is required",
+      });
+    }
+
+    // Verify the Google token using Google's API
+    const response = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${token}`
+    );
+
+    if (!response.ok) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid Google token",
+      });
+    }
+
+    const googleData = await response.json();
+
+    // Extract user information from Google
+    const { email, name, picture, sub } = googleData;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required from Google",
+      });
+    }
+
+    // Check if user already exists
+    let user = await User.findOne({ email }).populate("additionalDetails");
+
+    if (user) {
+      // User exists - check if it's a Google OAuth user
+      if (!user.googleId) {
+        // User exists with email/password - link Google account
+        user.googleId = sub;
+        user.image = picture || user.image;
+        await user.save();
+      }
+    } else {
+      // Create new user
+      const profileDetails = await Profile.create({
+        gender: null,
+        dateOfBirth: null,
+        about: null,
+        contactNumber: null,
+      });
+
+      user = await User.create({
+        email,
+        firstName: name?.split(" ")[0] || "",
+        lastName: name?.split(" ")[1] || "",
+        googleId: sub,
+        image: picture,
+        additionalDetails: profileDetails._id,
+      });
+    }
+
+    // Generate JWT token
+    const jwtToken = jwt.sign(
+      { email: user.email, id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "24h",
+      }
+    );
+
+    user.token = jwtToken;
+    user.password = undefined;
+
+    const options = {
+      expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+    };
+
+    const populatedUser = await populateUserImage(user);
+    res.cookie("token", jwtToken, options).status(200).json({
+      success: true,
+      token: jwtToken,
+      user: populatedUser,
+      message: user.googleId ? "Google Sign In Success" : "Google Account Linked Successfully",
+    });
+  } catch (error) {
+    console.error("Google Auth Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Google authentication failed. Please try again.",
+      error: error.message,
+    });
+  }
+};
+
 export const changePassword = async (req, res) => {
   try {
     const userDetails = await User.findById(req.user.id)

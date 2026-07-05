@@ -1,5 +1,6 @@
 import "./App.css";
 import {Route, Routes, Navigate } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import Home from "./pages/Home.jsx"
 import Navbar from "./components/common/Navbar.jsx"
 import Login from "./pages/Login.jsx"
@@ -33,6 +34,7 @@ function App() {
   const { token } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
 
   // On every page load/refresh, fetch fresh user details (including a new pre-signed S3 photo URL)
   useEffect(() => {
@@ -43,95 +45,97 @@ function App() {
   }, [token]);
 
   return (
-   <div className="w-screen min-h-screen bg-black flex flex-col font-inter">
-    <Navbar/>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+    <div className="w-screen min-h-screen bg-black flex flex-col font-inter">
+     <Navbar/>
 
-    <main className="flex-grow">
-        <Routes>
-            <Route path="/" element={<Home/>} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard/>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/tax-calculator" 
-              element={
-                <ProtectedRoute>
-                  <TaxCalculator/>
-                </ProtectedRoute>
-              } 
-            />
-            <Route
-                path="/signup"
-                element={
-                    <Signup />
-                }
-              />
-            <Route
-                path="/login"
-                element={
-                    <Login />
-                }
-              />
-            <Route
-                path="/forgot-password"
-                element={
-                    <ForgotPassword />
-                }
-              />  
-            <Route
-              path="/update-password/:id"
-              element={
-                  <UpdatePassword />
-              }
-            />  
-            <Route
-                path="/verify-email"
-                element={
-                    <VerifyEmail />
-                }
-              />  
-            <Route
-                path="/update-password/:id"
-                element={
-                    <UpdatePassword />
-                }
-              />
-            <Route path="/blog" element={<Blog/>}/>
-            <Route path="/pricing" element={<Pricing/>}/>
-            <Route 
-              path="/ai-assistant" 
-              element={
-                <ProtectedRoute>
-                  <AiAssistant/>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute>
-                  <Profile/>
-                </ProtectedRoute>
-              } 
-            />
-            {/* <Route 
-              path="/project" 
-              element={
-                <ProtectedRoute>
-                  <Project/>
-                </ProtectedRoute>
-              } 
-            /> */}
-            
-            <Route path="*" element={<Error />} />
-        </Routes>
-    </main>
-   </div>
+     <main className="flex-grow">
+         <Routes>
+             <Route path="/" element={<Home/>} />
+             <Route 
+               path="/dashboard" 
+               element={
+                 <ProtectedRoute>
+                   <Dashboard/>
+                 </ProtectedRoute>
+               } 
+             />
+             <Route 
+               path="/tax-calculator" 
+               element={
+                 <ProtectedRoute>
+                   <TaxCalculator/>
+                 </ProtectedRoute>
+               } 
+             />
+             <Route
+                 path="/signup"
+                 element={
+                     <Signup />
+                 }
+               />
+             <Route
+                 path="/login"
+                 element={
+                     <Login />
+                 }
+               />
+             <Route
+                 path="/forgot-password"
+                 element={
+                     <ForgotPassword />
+                 }
+               />  
+             <Route
+               path="/update-password/:id"
+               element={
+                   <UpdatePassword />
+               }
+             />  
+             <Route
+                 path="/verify-email"
+                 element={
+                     <VerifyEmail />
+                 }
+               />  
+             <Route
+                 path="/update-password/:id"
+                 element={
+                     <UpdatePassword />
+                 }
+               />
+             <Route path="/blog" element={<Blog/>}/>
+             <Route path="/pricing" element={<Pricing/>}/>
+             <Route 
+               path="/ai-assistant" 
+               element={
+                 <ProtectedRoute>
+                   <AiAssistant/>
+                 </ProtectedRoute>
+               } 
+             />
+             <Route 
+               path="/profile" 
+               element={
+                 <ProtectedRoute>
+                   <Profile/>
+                 </ProtectedRoute>
+               } 
+             />
+             {/* <Route 
+               path="/project" 
+               element={
+                 <ProtectedRoute>
+                   <Project/>
+                 </ProtectedRoute>
+               } 
+             /> */}
+             
+             <Route path="*" element={<Error />} />
+         </Routes>
+     </main>
+    </div>
+    </GoogleOAuthProvider>
   );
 }
 

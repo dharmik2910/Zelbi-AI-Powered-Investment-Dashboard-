@@ -500,7 +500,7 @@ const Dashboard = () => {
 
       if (response.data && response.data.result) {
         setAiAnalysis(response.data.result);
-        
+
         const newCount = response.data.aiPromptCount;
         if (typeof newCount === "number" && user) {
           const updatedUser = { ...user, aiPromptCount: newCount };
@@ -576,11 +576,11 @@ const Dashboard = () => {
                     className="w-full bg-black text-white pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 border border-white/20 placeholder-gray-400 caret-white text-sm sm:text-base"
                   />
                   <FaSearch className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  
+
                   {showDropdown && searchResults.length > 0 && (
                     <ul className="absolute z-50 w-full mt-1 bg-[#141414] border border-[#333] rounded-xl shadow-lg max-h-60 overflow-y-auto custom-scrollbar">
                       {searchResults.map((result, idx) => (
-                        <li 
+                        <li
                           key={idx}
                           className="px-4 py-2 hover:bg-gray-800 cursor-pointer text-sm border-b border-[#222] last:border-b-0 flex justify-between items-center"
                           onClick={() => handleSelectStock(result.symbol)}
@@ -750,6 +750,7 @@ const Dashboard = () => {
                     <ReactApexChart
                       options={tradingViewOptions}
                       series={tradingSeries}
+                      type="line"
                       width={isMobile ? 1200 : "100%"}
                       height={chartHeight}
                     />

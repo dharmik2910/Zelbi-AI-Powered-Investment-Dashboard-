@@ -8,6 +8,11 @@ import { setSignupData } from "../../../slices/authSlice";
 import usePasswordValidation from "../../../hooks/usePasswordValidation";
 import PasswordChecklist from "../../PasswordChecklist";
 import PasswordMatchIndicator from "../../PasswordMatchIndicator";
+import { GoogleLogin } from "@react-oauth/google";
+import axios from "axios";
+import { setToken } from "../../../slices/authSlice";
+import { setUser } from "../../../slices/profileSlice";
+import { endpoints } from "../../../services/apis";
 
 const SignupForm = ({ onSwitchToLogin, onClose }) => {
   const dispatch = useDispatch();
@@ -40,7 +45,7 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
     }));
   };
 
-const handleOnSubmit = (e) => {
+  const handleOnSubmit = (e) => {
     e.preventDefault();
 
     if (!isPasswordStrong) {
@@ -64,8 +69,52 @@ const handleOnSubmit = (e) => {
     );
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const token = credentialResponse.credential;
+      
+      const response = await axios.post(
+        endpoints.GOOGLE_AUTH_API,
+        { token },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Google Sign In Successful");
+        
+        // Store token in Redux and localStorage
+        dispatch(setToken(response.data.token));
+        
+        const userImage = response.data?.user?.image
+          ? response.data.user.image
+          : `https://api.dicebear.com/5.x/initials/svg?seed=${response.data.user.firstName} ${response.data.user.lastName}`
+        dispatch(setUser({ ...response.data.user, image: userImage }))
+        
+        localStorage.setItem("token", JSON.stringify(response.data.token))
+        localStorage.setItem("user", JSON.stringify(response.data.user))
+        
+        // Navigate to dashboard
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      console.error("Google Sign In Error:", error);
+      toast.error(error.response?.data?.message || "Google Sign In failed. Please try again.");
+    }
+  };
+
+  const handleGoogleError = () => {
+    console.error("Google Sign In Failed");
+    toast.error("Google Sign In failed. Please try again.");
+  };
+
   return (
-<div className="relative z-10 w-full max-w-[380px] md:max-w-lg mx-auto mt-20 px-4 py-6 md:p-7 rounded-2xl md:rounded-md bg-gradient-to-br from-[#141414] to-[#111111] text-white">      <h2 className="text-2xl md:text-3xl mt-2 font-bold text-center mb-6 text-[#3affa3]">
+    <div className="relative z-10 w-full max-w-[380px] md:max-w-lg mx-auto mt-20 px-4 py-6 md:p-7 rounded-2xl md:rounded-md bg-gradient-to-br from-[#141414] to-[#111111] text-white">
+      <h2 className="text-2xl md:text-3xl mt-2 font-bold text-center mb-6 text-[#3affa3]">
         Join Zelbi
       </h2>
 
@@ -164,6 +213,26 @@ const handleOnSubmit = (e) => {
         >
           Create Account
         </button>
+
+        {/* Divider */}
+        <div className="flex items-center gap-x-2 my-2">
+          <div className="w-full h-[1px] bg-gray-600"></div>
+          <p className="text-gray-400 font-medium">OR</p>
+          <div className="w-full h-[1px] bg-gray-600"></div>
+        </div>
+
+        {/* Google Sign Up Button */}
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            theme="dark"
+            size="large"
+            width="380"
+            text="signup_with"
+            shape="rectangular"
+          />
+        </div>
 
         {/* Login Link */}
         <p className="text-center text-sm text-white mt-1">

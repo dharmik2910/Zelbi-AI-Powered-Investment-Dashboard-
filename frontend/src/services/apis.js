@@ -10,6 +10,7 @@ export const endpoints = {
   RESETPASSTOKEN_API: BASE_URL + "/api/auth/reset-password-token",
   RESETPASSWORD_API: BASE_URL + "/api/auth/reset-password",
   CHANGE_PASSWORD_API: BASE_URL + "/api/auth/changepassword",
+  GOOGLE_AUTH_API: BASE_URL + "/api/auth/google-auth",
 };
 
 // ==========================

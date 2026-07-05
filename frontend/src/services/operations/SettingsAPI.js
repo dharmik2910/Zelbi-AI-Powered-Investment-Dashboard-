@@ -117,7 +117,6 @@ export function getUserDetails(token, navigate) {
       const response = await apiConnector("GET", profileEndpoints.GET_USER_DETAILS_API, null, {
         Authorization: `Bearer ${token}`,
       })
-      console.log("GET_USER_DETAILS_API RESPONSE............", response)
 
       if (!response.data.success) {
         throw new Error(response.data.message)
