@@ -15,6 +15,8 @@ import Dashboard from './pages/Dashboard.jsx';
 import TaxCalculator from './pages/TaxCalculator.jsx';
 import Pricing from './pages/Pricing.jsx';
 import Profile from './pages/Profile.jsx';
+import TermsAndConditions from './pages/TermsAndConditions.jsx';
+import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -36,7 +38,6 @@ function App() {
   const navigate = useNavigate();
   const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
 
-  // On every page load/refresh, fetch fresh user details (including a new pre-signed S3 photo URL)
   useEffect(() => {
     if (token) {
       dispatch(getUserDetails(token, navigate));
@@ -52,85 +53,19 @@ function App() {
      <main className="flex-grow">
          <Routes>
              <Route path="/" element={<Home/>} />
-             <Route 
-               path="/dashboard" 
-               element={
-                 <ProtectedRoute>
-                   <Dashboard/>
-                 </ProtectedRoute>
-               } 
-             />
-             <Route 
-               path="/tax-calculator" 
-               element={
-                 <ProtectedRoute>
-                   <TaxCalculator/>
-                 </ProtectedRoute>
-               } 
-             />
-             <Route
-                 path="/signup"
-                 element={
-                     <Signup />
-                 }
-               />
-             <Route
-                 path="/login"
-                 element={
-                     <Login />
-                 }
-               />
-             <Route
-                 path="/forgot-password"
-                 element={
-                     <ForgotPassword />
-                 }
-               />  
-             <Route
-               path="/update-password/:id"
-               element={
-                   <UpdatePassword />
-               }
-             />  
-             <Route
-                 path="/verify-email"
-                 element={
-                     <VerifyEmail />
-                 }
-               />  
-             <Route
-                 path="/update-password/:id"
-                 element={
-                     <UpdatePassword />
-                 }
-               />
+             <Route path="/dashboard" element={<ProtectedRoute><Dashboard/></ProtectedRoute>} />
+             <Route path="/tax-calculator" element={<ProtectedRoute><TaxCalculator/></ProtectedRoute>} />
+             <Route path="/signup" element={<Signup />} />
+             <Route path="/login" element={<Login />} />
+             <Route path="/forgot-password" element={<ForgotPassword />} />
+             <Route path="/update-password/:id" element={<UpdatePassword />} />
+             <Route path="/verify-email" element={<VerifyEmail />} />
              <Route path="/blog" element={<Blog/>}/>
              <Route path="/pricing" element={<Pricing/>}/>
-             <Route 
-               path="/ai-assistant" 
-               element={
-                 <ProtectedRoute>
-                   <AiAssistant/>
-                 </ProtectedRoute>
-               } 
-             />
-             <Route 
-               path="/profile" 
-               element={
-                 <ProtectedRoute>
-                   <Profile/>
-                 </ProtectedRoute>
-               } 
-             />
-             {/* <Route 
-               path="/project" 
-               element={
-                 <ProtectedRoute>
-                   <Project/>
-                 </ProtectedRoute>
-               } 
-             /> */}
-             
+             <Route path="/ai-assistant" element={<ProtectedRoute><AiAssistant/></ProtectedRoute>} />
+             <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>} />
+             <Route path="/terms-and-conditions" element={<TermsAndConditions/>} />
+             <Route path="/privacy-policy" element={<PrivacyPolicy/>} />
              <Route path="*" element={<Error />} />
          </Routes>
      </main>

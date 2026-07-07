@@ -1,17 +1,17 @@
 import mongoose from "mongoose";
 
-const userSchema=new mongoose.Schema({
+const userSchema = new mongoose.Schema({
 
     firstName: {
         type: String,
-        trim: true, 
+        trim: true,
     },
 
     lastName: {
         type: String,
         trim: true,
     },
-    
+
     email: {
         type: String,
         required: true,
@@ -20,9 +20,23 @@ const userSchema=new mongoose.Schema({
 
     password: {
         type: String,
-        required: function() {
+        required: function () {
             return !this.googleId; // Password not required for OAuth users
         },
+    },
+
+    acceptedTerms: {
+        type: Boolean,
+        default: false,
+    },
+
+    acceptedTermsAt: {
+        type: Date,
+    },
+
+    termsVersion: {
+        type: String,
+        default: "v1.0",
     },
 
     googleId: {
@@ -65,4 +79,4 @@ const userSchema=new mongoose.Schema({
 
 })
 
-export default mongoose.model('user',userSchema);
+export default mongoose.model('user', userSchema);

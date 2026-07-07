@@ -125,6 +125,7 @@ const AiAssistant = () => {
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
   const menuRef = useRef(null);
+  const [showConfirmClear, setShowConfirmClear] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -177,14 +178,14 @@ const AiAssistant = () => {
   }, []);
 
   useEffect(() => {
-  if (!micError) return;
+    if (!micError) return;
 
-  const timer = setTimeout(() => {
-    setMicError("");
-  }, 4000); // disappears after 4 seconds
+    const timer = setTimeout(() => {
+      setMicError("");
+    }, 4000); // disappears after 4 seconds
 
-  return () => clearTimeout(timer);
-}, [micError]);
+    return () => clearTimeout(timer);
+  }, [micError]);
 
   const normalizeAIResponse = (text) => text?.replace(/\*\*/g, "") ?? "No response generated";
 
@@ -452,15 +453,71 @@ const AiAssistant = () => {
                       className="absolute right-0 mt-2 w-44 bg-[#111] border border-white/10 rounded-lg shadow-[0_8px_30px_rgba(0,0,0,0.5)] z-10 overflow-hidden"
                     >
                       <button
-                        onClick={handleClearChat}
-                        className="w-full flex items-center gap-2 text-left px-3.5 py-2.5 text-sm text-white/80 hover:bg-white/5 hover:text-[#ef4444] transition-colors"
+                        onClick={() => {
+                          setShowMenu(false);
+                          setShowConfirmClear(true);
+                        }}
+                        className="w-full flex items-center gap-2 text-left px-3.5 py-2.5 text-sm text-white/80 hover:bg-white/5 hover:text-red-500 transition-colors"
                       >
-                        <HiTrash className="text-base" /> Clear chat
+                        <HiTrash className="text-base" />
+                        Clear Chat
                       </button>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* Confirmation Modal */}
+              <AnimatePresence>
+                {showConfirmClear && (
+                  <>
+                    <motion.div
+                      className="fixed inset-0 bg-black/60 z-40"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setShowConfirmClear(false)}
+                    />
+
+                    <motion.div
+                      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                    >
+                      <div className="w-full max-w-sm rounded-xl bg-[#111] border border-white/10 p-6 shadow-2xl">
+                        <h3 className="text-lg font-semibold text-white">
+                          Clear Chat?
+                        </h3>
+
+                        <p className="mt-2 text-sm text-white/60">
+                          This will permanently remove all messages from this chat.
+                          This action cannot be undone.
+                        </p>
+
+                        <div className="mt-6 flex justify-end gap-3">
+                          <button
+                            onClick={() => setShowConfirmClear(false)}
+                            className="rounded-md border border-white/10 px-4 py-2 text-sm text-white hover:bg-white/5"
+                          >
+                            Cancel
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              handleClearChat();
+                              setShowConfirmClear(false);
+                            }}
+                            className="bg-[#f94449] text-white text-sm font-bold px-5 py-2.5 rounded-md hover:bg-[#f08080] transition-all duration-300 "
+                          >
+                            Clear Chat
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
           <div className="h-px w-full bg-gradient-to-r from-transparent via-[#3affa3]/25 to-transparent" />
@@ -481,16 +538,16 @@ const AiAssistant = () => {
                 <div className={`flex items-end gap-2.5 max-w-[92%] md:max-w-[80%] ${isUser ? "flex-row-reverse" : ""}`}>
                   <div
                     className={`shrink-0 h-8 w-8 rounded-full flex items-center justify-center border ${isUser
-                        ? "bg-[#1a1a1a] border-white/10 text-white/70"
-                        : "bg-[#3affa3]/10 border-[#3affa3]/30 text-[#3affa3]"
+                      ? "bg-[#1a1a1a] border-white/10 text-white/70"
+                      : "bg-[#3affa3]/10 border-[#3affa3]/30 text-[#3affa3]"
                       }`}
                   >
                     {isUser ? <FaUser className="text-xs" /> : <FaRobot className="text-sm" />}
                   </div>
                   <div
                     className={`px-4 py-3 rounded-2xl text-white ${isUser
-                        ? "bg-[#1a1a1a] border border-white/10 rounded-br-sm"
-                        : "bg-[#0f0f0f] border border-[#3affa3]/15 rounded-bl-sm"
+                      ? "bg-[#1a1a1a] border border-white/10 rounded-br-sm"
+                      : "bg-[#0f0f0f] border border-[#3affa3]/15 rounded-bl-sm"
                       }`}
                   >
                     {isUser ? (
@@ -558,28 +615,28 @@ const AiAssistant = () => {
           </div>
         ) : (
           <form onSubmit={handleSendMessage} className="shrink-0 bg-[#0a0a0a] p-3.5">
-          <AnimatePresence mode="wait">
-  {micError && (
-    <motion.div
-      key="mic-error"
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.25 }}
-      className="mb-2 text-xs text-white bg-red-500/10 border border-red-500/30 rounded-md px-3 py-2"
-    >
-      {micError}
-    </motion.div>
-  )}
-</AnimatePresence>
+            <AnimatePresence mode="wait">
+              {micError && (
+                <motion.div
+                  key="mic-error"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.25 }}
+                  className="mb-2 text-xs text-white bg-red-500/10 border border-red-500/30 rounded-md px-3 py-2"
+                >
+                  {micError}
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="flex items-end gap-2 w-full bg-[#141414] rounded-2xl border border-white/10 focus-within:border-[#3affa3]/50 focus-within:shadow-[0_0_0_3px_rgba(58,255,163,0.1)] transition-all duration-200 px-2 py-2">
               <motion.button
                 type="button"
                 onClick={toggleRecording}
                 aria-label={isRecording ? "Stop recording" : "Start voice input"}
                 className={`shrink-0 p-2.5 rounded-xl transition-all duration-300 ${isRecording
-                    ? "bg-red-500/15 text-red-400 shadow-[0_0_12px_rgba(239,68,68,0.4)]"
-                    : "text-white/50 hover:text-[#3affa3] hover:bg-white/5"
+                  ? "bg-red-500/15 text-red-400 shadow-[0_0_12px_rgba(239,68,68,0.4)]"
+                  : "text-white/50 hover:text-[#3affa3] hover:bg-white/5"
                   }`}
                 whileTap={{ scale: 0.92 }}
               >

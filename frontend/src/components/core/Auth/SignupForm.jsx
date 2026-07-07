@@ -29,14 +29,10 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
 
   const { email, password, confirmPassword } = formData;
 
+  const [acceptTerms, setAcceptTerms] = useState(false);
+
   const { checklist: passwordChecklist, isStrong: isPasswordStrong } =
     usePasswordValidation(password);
-
-  const isFormValid =
-    email.trim() !== "" &&
-    isPasswordStrong &&
-    confirmPassword !== "" &&
-    password === confirmPassword;
 
   const handleOnChange = (e) => {
     setFormData((prev) => ({
@@ -58,7 +54,15 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
       return;
     }
 
-    const signupData = { ...formData };
+    const signupData = {
+      ...formData,
+      acceptedTerms: true,
+    };
+
+    if (!acceptTerms) {
+      toast.error("Please accept the Terms & Conditions.");
+      return;
+    }
 
     dispatch(setSignupData(signupData));
 
@@ -72,10 +76,18 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       const token = credentialResponse.credential;
-      
+
+      if (!acceptTerms) {
+        toast.error("Please accept the Terms & Conditions.");
+        return;
+      }
+
       const response = await axios.post(
         endpoints.GOOGLE_AUTH_API,
-        { token },
+        {
+          token,
+          acceptedTerms: true,
+        },
         {
           headers: {
             "Content-Type": "application/json",
@@ -86,18 +98,18 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
 
       if (response.data.success) {
         toast.success("Google Sign In Successful");
-        
+
         // Store token in Redux and localStorage
         dispatch(setToken(response.data.token));
-        
+
         const userImage = response.data?.user?.image
           ? response.data.user.image
           : `https://api.dicebear.com/5.x/initials/svg?seed=${response.data.user.firstName} ${response.data.user.lastName}`
         dispatch(setUser({ ...response.data.user, image: userImage }))
-        
+
         localStorage.setItem("token", JSON.stringify(response.data.token))
         localStorage.setItem("user", JSON.stringify(response.data.user))
-        
+
         // Navigate to dashboard
         navigate("/dashboard");
       }
@@ -200,19 +212,53 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
           </span>
         </label>
 
-         <PasswordMatchIndicator
+        <PasswordMatchIndicator
           password={password}
           confirmPassword={confirmPassword}
         />
 
+        {/* Terms & Conditions */}
+        <div className="flex items-start gap-3">
+          <input
+            id="terms"
+            type="checkbox"
+            checked={acceptTerms}
+            onChange={(e) => setAcceptTerms(e.target.checked)}
+            className="mt-1 h-4 w-4 accent-[#3affa3]"
+          />
+
+          <label
+            htmlFor="terms"
+            className="text-sm text-gray-300 leading-6"
+          >
+            I agree to the{" "}
+            <a
+              href="/terms-and-conditions"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#3affa3] hover:underline"
+            >
+              Terms & Conditions
+            </a>{" "}
+            and{" "}
+            <a
+              href="/privacy-policy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#3affa3] hover:underline"
+            >
+              Privacy Policy
+            </a>.
+          </label>
+        </div>
+
         {/* Submit */}
-        <button
-          type="submit"
-          disabled={!isFormValid}
-          className="mt-2 py-3 px-6 rounded-full font-semibold text-black bg-[#3affa3] hover:bg-[#32e092] active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3affa3]"
-        >
-          Create Account
-        </button>
+       <button
+  type="submit"
+  className="mt-4 py-3 px-6 rounded-md font-semibold text-black bg-[#3affa3] hover:bg-[#32e092] active:scale-95 transition-all duration-300"
+>
+  Create Account
+</button>
 
         {/* Divider */}
         <div className="flex items-center gap-x-2 my-2">
@@ -231,6 +277,7 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
             width="380"
             text="signup_with"
             shape="rectangular"
+
           />
         </div>
 

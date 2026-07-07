@@ -51,7 +51,7 @@ function ForgotPassword() {
 
             <button
               type="submit"
-              className="mt-6 w-full rounded-full bg-[#3affa3] py-3 font-semibold text-black hover:bg-[#2de88f] active:scale-95 transition-all duration-200"
+              className="mt-6 w-full rounded-md bg-[#3affa3] py-3 font-semibold text-black hover:bg-[#2de88f] active:scale-95 transition-all duration-200"
             >
               {!emailSent ? "Submit" : "Resend Email"}
             </button>

@@ -594,7 +594,7 @@ const Dashboard = () => {
                 </div>
                 <button
                   type="submit"
-                  className="bg-white hover:bg-white hover:text-black px-4 sm:px-6 py-2.5 sm:py-3 rounded-r-xl hover:bg-cyan-700 transition-all duration-200 font-medium shadow-lg shadow-cyan-500/20 text-sm sm:text-base shrink-0"
+                  className="bg-[#32e092] hover:bg-[#3affa3] text-black px-4 sm:px-6 py-2.5 sm:py-3 rounded-r-xl hover:bg-cyan-700 transition-all duration-200 font-medium shadow-lg shadow-cyan-500/20 text-sm sm:text-base shrink-0"
                 >
                   Search
                 </button>

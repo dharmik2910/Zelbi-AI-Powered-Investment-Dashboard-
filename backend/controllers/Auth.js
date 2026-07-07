@@ -4,7 +4,7 @@ import OTP from "../models/OTP.js";
 import jwt from "jsonwebtoken";
 import otpGenerator from "otp-generator";
 import mailSender from "../utils/mailSender.js";
-import passwordUpdated  from "../mail/templates/passwordUpdate.js";
+import passwordUpdated from "../mail/templates/passwordUpdate.js";
 import Profile from "../models/Profile.js";
 import dotenv from "dotenv";
 import { populateUserImage } from "../utils/userHelper.js";
@@ -19,6 +19,7 @@ export const signup = async (req, res) => {
       password,
       confirmPassword,
       otp,
+      acceptedTerms,
     } = req.body;
 
     if (
@@ -27,12 +28,26 @@ export const signup = async (req, res) => {
       !confirmPassword ||
       !otp
     ) {
-      return res.status(403).send({
+      return res.status(403).json({
         success: false,
         message: "All Fields are required",
-      })
+      });
     }
-    
+
+    if (!acceptedTerms) {
+      return res.status(400).json({
+        success: false,
+        message: "You must accept the Terms & Conditions.",
+      });
+    }
+
+    if (!acceptedTerms) {
+      return res.status(400).json({
+        success: false,
+        message: "You must accept the Terms & Conditions.",
+      });
+    }
+
     if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
@@ -76,6 +91,9 @@ export const signup = async (req, res) => {
       email,
       password: hashedPassword,
       additionalDetails: profileDetails._id,
+      acceptedTerms: true,
+      acceptedTermsAt: new Date(),
+      termsVersion: "v1.0",
     })
 
     const populatedUser = await populateUserImage(user);
@@ -124,7 +142,7 @@ export const login = async (req, res) => {
 
       user.token = token
       user.password = undefined
-     
+
       const options = {
         expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
         httpOnly: true,
@@ -171,7 +189,7 @@ export const sendotp = async (req, res) => {
     })
 
     const result = await OTP.findOne({ otp: otp })
-    
+
     console.log("OTP", otp)
     console.log("Result", result)
     while (result) {
@@ -195,12 +213,22 @@ export const sendotp = async (req, res) => {
 
 export const googleAuth = async (req, res) => {
   try {
-    const { token } = req.body;
+    const {
+      token,
+      acceptedTerms,
+    } = req.body;
 
     if (!token) {
       return res.status(400).json({
         success: false,
         message: "Google token is required",
+      });
+    }
+
+    if (!acceptedTerms) {
+      return res.status(400).json({
+        success: false,
+        message: "You must accept the Terms & Conditions.",
       });
     }
 
@@ -221,41 +249,51 @@ export const googleAuth = async (req, res) => {
     // Extract user information from Google
     const { email, name, picture, sub } = googleData;
 
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Email is required from Google",
-      });
-    }
-
-    // Check if user already exists
     let user = await User.findOne({ email }).populate("additionalDetails");
 
-    if (user) {
-      // User exists - check if it's a Google OAuth user
-      if (!user.googleId) {
-        // User exists with email/password - link Google account
-        user.googleId = sub;
-        user.image = picture || user.image;
-        await user.save();
+    if (!user) {
+      if (!acceptedTerms) {
+        return res.status(400).json({
+          success: false,
+          message: "You must accept the Terms & Conditions.",
+        });
       }
-    } else {
-      // Create new user
-      const profileDetails = await Profile.create({
-        gender: null,
-        dateOfBirth: null,
-        about: null,
-        contactNumber: null,
-      });
 
-      user = await User.create({
-        email,
-        firstName: name?.split(" ")[0] || "",
-        lastName: name?.split(" ")[1] || "",
-        googleId: sub,
-        image: picture,
-        additionalDetails: profileDetails._id,
-      });
+if (user) {
+  // Existing user
+  if (!user.googleId) {
+    user.googleId = sub;
+    user.image = picture || user.image;
+    await user.save();
+  }
+} else {
+  // New user
+  if (!acceptedTerms) {
+    return res.status(400).json({
+      success: false,
+      message: "You must accept the Terms & Conditions.",
+    });
+  }
+
+  const profileDetails = await Profile.create({
+    gender: null,
+    dateOfBirth: null,
+    about: null,
+    contactNumber: null,
+  });
+
+  user = await User.create({
+    email,
+    firstName: name?.split(" ")[0] || "",
+    lastName: name?.split(" ")[1] || "",
+    googleId: sub,
+    image: picture,
+    additionalDetails: profileDetails._id,
+    acceptedTerms: true,
+    acceptedTermsAt: new Date(),
+    termsVersion: "v1.0",
+  });
+}
     }
 
     // Generate JWT token

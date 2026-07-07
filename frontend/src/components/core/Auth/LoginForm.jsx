@@ -92,7 +92,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="relative z-10 w-full max-w-[380px] md:max-w-md mx-auto mt-10 md:mt-20 px-6 py-8 md:p-7 rounded-md md:rounded-md bg-gradient-to-br from-[#141414] to-[#111111] text-white">
+    <div className="relative z-10 w-full max-w-[380px] md:max-w-md mx-auto mt-20 md:mt-20 px-6 py-8 md:p-7 rounded-md md:rounded-md bg-gradient-to-br from-[#141414] to-[#111111] text-white">
       <h2 className="text-2xl md:text-3xl mt-2 font-bold text-center mb-6 text-[#3affa3]">
         Welcome Back
       </h2>
@@ -152,7 +152,7 @@ function LoginForm() {
         {/* Login Button */}
         <button
           type="submit"
-          className="mt-2 py-3 px-6 rounded-full font-semibold text-black bg-[#3affa3] hover:bg-[#32e092] active:scale-95 transition-all duration-300"
+          className="mt-2 py-3 px-6 rounded-md font-semibold text-black bg-[#3affa3] hover:bg-[#32e092] active:scale-95 transition-all duration-300"
         >
           Sign In
         </button>
