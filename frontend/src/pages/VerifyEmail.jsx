@@ -20,19 +20,25 @@ function VerifyEmail() {
 
   const handleVerifyAndSignup = (e) => {
     e.preventDefault();
-    const { email, password, confirmPassword } = signupData;
+   const {
+  email,
+  password,
+  confirmPassword,
+  acceptedTerms,
+} = signupData;
     dispatch(
-      signUp(
-        null,
-        null,
-        null,
-        email,
-        password,
-        confirmPassword,
-        otp,
-        navigate
-      )
-    );
+  signUp(
+    null,
+    null,
+    null,
+    email,
+    password,
+    confirmPassword,
+    acceptedTerms,
+    otp,
+    navigate
+  )
+);
   };
 
   return (
