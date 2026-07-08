@@ -1,5 +1,5 @@
 import express from "express";
-import { login, signup, sendotp, changePassword, googleAuth } from "../controllers/Auth.js";
+import { login, signup, sendotp, changePassword, googleAuth, acceptTerms,      } from "../controllers/Auth.js";
 import { resetPasswordToken, resetPassword } from "../controllers/ResetPassword.js";
 import { auth } from "../middleware/auth.js";
 
@@ -12,5 +12,6 @@ router.post("/changepassword", auth, changePassword);
 router.post("/reset-password-token", resetPasswordToken);
 router.post("/reset-password", resetPassword);
 router.post("/google-auth", googleAuth);
+router.post("/accept-terms", auth, acceptTerms);
 
 export default router;

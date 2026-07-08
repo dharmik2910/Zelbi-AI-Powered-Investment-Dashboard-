@@ -8,11 +8,11 @@ import { setSignupData } from "../../../slices/authSlice";
 import usePasswordValidation from "../../../hooks/usePasswordValidation";
 import PasswordChecklist from "../../PasswordChecklist";
 import PasswordMatchIndicator from "../../PasswordMatchIndicator";
-import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { setToken } from "../../../slices/authSlice";
 import { setUser } from "../../../slices/profileSlice";
 import { endpoints } from "../../../services/apis";
+import { useGoogleLogin } from "@react-oauth/google";
 
 const SignupForm = ({ onSwitchToLogin, onClose }) => {
   const dispatch = useDispatch();
@@ -73,25 +73,32 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
     );
   };
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    try {
-      const token = credentialResponse.credential;
+  const login = useGoogleLogin({
+    onSuccess: (tokenResponse) => {
+      handleGoogleSuccess(tokenResponse);
+    },
+    onError: () => {
+      handleGoogleError();
+    },
+  });
 
-      if (!acceptTerms) {
-        toast.error("Please accept the Terms & Conditions.");
-        return;
-      }
+  // Google signup no longer requires the checkbox to be checked first
+  const handleGoogleSignupClick = () => {
+    login();
+  };
+
+  const handleGoogleSuccess = async (tokenResponse) => {
+    try {
+      const access_token = tokenResponse.access_token;
 
       const response = await axios.post(
         endpoints.GOOGLE_AUTH_API,
         {
-          token,
+          access_token,
           acceptedTerms: true,
         },
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           withCredentials: true,
         }
       );
@@ -99,18 +106,16 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
       if (response.data.success) {
         toast.success("Google Sign In Successful");
 
-        // Store token in Redux and localStorage
         dispatch(setToken(response.data.token));
 
         const userImage = response.data?.user?.image
           ? response.data.user.image
-          : `https://api.dicebear.com/5.x/initials/svg?seed=${response.data.user.firstName} ${response.data.user.lastName}`
-        dispatch(setUser({ ...response.data.user, image: userImage }))
+          : `https://api.dicebear.com/5.x/initials/svg?seed=${response.data.user.firstName} ${response.data.user.lastName}`;
+        dispatch(setUser({ ...response.data.user, image: userImage }));
 
-        localStorage.setItem("token", JSON.stringify(response.data.token))
-        localStorage.setItem("user", JSON.stringify(response.data.user))
+        localStorage.setItem("token", JSON.stringify(response.data.token));
+        localStorage.setItem("user", JSON.stringify(response.data.user));
 
-        // Navigate to dashboard
         navigate("/dashboard");
       }
     } catch (error) {
@@ -125,12 +130,12 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
   };
 
   return (
-    <div className="relative z-10 w-full max-w-[380px] md:max-w-lg mx-auto mt-20 px-4 py-6 md:p-7 rounded-2xl md:rounded-md bg-gradient-to-br from-[#141414] to-[#111111] text-white">
+    <div className="relative z-10 w-[91%] sm:w-[80%] md:w-full md:max-w-md mx-auto mt-20 px-6 py-8 md:p-7 rounded-md bg-gradient-to-br from-[#141414] to-[#111111] text-white">
       <h2 className="text-2xl md:text-3xl mt-2 font-bold text-center mb-6 text-[#3affa3]">
         Join Zelbi
       </h2>
 
-      <form onSubmit={handleOnSubmit} className="flex flex-col gap-y-5 w-full">
+      <form onSubmit={handleOnSubmit} className="flex flex-col gap-y-3 w-full">
         {/* Email */}
         <label className="w-full">
           <p className="mb-2 text-sm text-gray-300">
@@ -176,11 +181,13 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
           </span>
         </label>
 
-        <PasswordChecklist
-          password={password}
-          checklist={passwordChecklist}
-          isStrong={isPasswordStrong}
-        />
+        {password && (
+          <PasswordChecklist
+            password={password}
+            checklist={passwordChecklist}
+            isStrong={isPasswordStrong}
+          />
+        )}
 
         {/* Confirm Password */}
         <label className="w-full relative">
@@ -253,12 +260,12 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
         </div>
 
         {/* Submit */}
-       <button
-  type="submit"
-  className="mt-4 py-3 px-6 rounded-md font-semibold text-black bg-[#3affa3] hover:bg-[#32e092] active:scale-95 transition-all duration-300"
->
-  Create Account
-</button>
+        <button
+          type="submit"
+          className="mt-4 py-3 px-6 rounded-md font-semibold text-black bg-[#3affa3] hover:bg-[#32e092] active:scale-95 transition-all duration-300"
+        >
+          Create Account
+        </button>
 
         {/* Divider */}
         <div className="flex items-center gap-x-2 my-2">
@@ -267,18 +274,24 @@ const SignupForm = ({ onSwitchToLogin, onClose }) => {
           <div className="w-full h-[1px] bg-gray-600"></div>
         </div>
 
-        {/* Google Sign Up Button */}
-        <div className="flex justify-center">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            theme="dark"
-            size="large"
-            width="380"
-            text="signup_with"
-            shape="rectangular"
-
-          />
+        {/* Google Sign Up Button - no longer requires checkbox */}
+        <div className="flex justify-center md:hidden">
+          <button
+            onClick={handleGoogleSignupClick}
+            className="w-[290px] h-12 rounded-md bg-white text-black flex items-center justify-center gap-3 font-medium hover:bg-gray-100 transition"
+          >
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRscLXqCZkzakBL-YSFMx6ehxwqB71B8OCV2iB-W8SJA&s=10" alt="Google" className="w-5 h-5" />
+            Sign up with Google
+          </button>
+        </div>
+        <div className="hidden md:flex justify-center">
+          <button
+            onClick={handleGoogleSignupClick}
+            className="w-[390px] h-12 rounded-md bg-white text-black flex items-center justify-center gap-3 font-medium hover:bg-gray-100 transition"
+          >
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRscLXqCZkzakBL-YSFMx6ehxwqB71B8OCV2iB-W8SJA&s=10" alt="Google" className="w-5 h-5" />
+            Sign up with Google
+          </button>
         </div>
 
         {/* Login Link */}

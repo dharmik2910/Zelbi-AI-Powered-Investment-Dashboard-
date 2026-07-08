@@ -214,27 +214,23 @@ export const sendotp = async (req, res) => {
 export const googleAuth = async (req, res) => {
   try {
     const {
-      token,
+      access_token,        // was: token
       acceptedTerms,
     } = req.body;
 
-    if (!token) {
+    if (!access_token) {   // was: if (!token)
       return res.status(400).json({
         success: false,
         message: "Google token is required",
       });
     }
 
-    if (!acceptedTerms) {
-      return res.status(400).json({
-        success: false,
-        message: "You must accept the Terms & Conditions.",
-      });
-    }
-
-    // Verify the Google token using Google's API
+    // Verify the Google access_token by fetching the user's profile
     const response = await fetch(
-      `https://oauth2.googleapis.com/tokeninfo?id_token=${token}`
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }
     );
 
     if (!response.ok) {
@@ -247,53 +243,37 @@ export const googleAuth = async (req, res) => {
     const googleData = await response.json();
 
     // Extract user information from Google
-    const { email, name, picture, sub } = googleData;
+    const { email, given_name, family_name, picture, sub } = googleData;
 
     let user = await User.findOne({ email }).populate("additionalDetails");
 
-    if (!user) {
-      if (!acceptedTerms) {
-        return res.status(400).json({
-          success: false,
-          message: "You must accept the Terms & Conditions.",
-        });
+    if (user) {
+      // Existing user
+      if (!user.googleId) {
+        user.googleId = sub;
+        user.image = picture || user.image;
+        await user.save();
       }
+    } else {
+      // New user — create account, terms not yet accepted
+      const profileDetails = await Profile.create({
+        gender: null,
+        dateOfBirth: null,
+        about: null,
+        contactNumber: null,
+      });
 
-if (user) {
-  // Existing user
-  if (!user.googleId) {
-    user.googleId = sub;
-    user.image = picture || user.image;
-    await user.save();
-  }
-} else {
-  // New user
-  if (!acceptedTerms) {
-    return res.status(400).json({
-      success: false,
-      message: "You must accept the Terms & Conditions.",
-    });
-  }
-
-  const profileDetails = await Profile.create({
-    gender: null,
-    dateOfBirth: null,
-    about: null,
-    contactNumber: null,
-  });
-
-  user = await User.create({
-    email,
-    firstName: name?.split(" ")[0] || "",
-    lastName: name?.split(" ")[1] || "",
-    googleId: sub,
-    image: picture,
-    additionalDetails: profileDetails._id,
-    acceptedTerms: true,
-    acceptedTermsAt: new Date(),
-    termsVersion: "v1.0",
-  });
-}
+      user = await User.create({
+        email,
+        firstName: given_name || "",
+        lastName: family_name || "",
+        googleId: sub,
+        image: picture,
+        additionalDetails: profileDetails._id,
+        acceptedTerms: false,
+        acceptedTermsAt: null,
+        termsVersion: null,
+      });
     }
 
     // Generate JWT token
@@ -318,6 +298,7 @@ if (user) {
       success: true,
       token: jwtToken,
       user: populatedUser,
+      requiresTermsAcceptance: !user.acceptedTerms,
       message: user.googleId ? "Google Sign In Success" : "Google Account Linked Successfully",
     });
   } catch (error) {
@@ -384,3 +365,38 @@ export const changePassword = async (req, res) => {
     })
   }
 }
+
+export const acceptTerms = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        acceptedTerms: true,
+        acceptedTermsAt: new Date(),
+        termsVersion: "v1.0",
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const populatedUser = await populateUserImage(user);
+
+    return res.status(200).json({
+      success: true,
+      user: populatedUser,
+      message: "Terms accepted successfully",
+    });
+  } catch (error) {
+    console.error("Accept Terms Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Could not update terms acceptance",
+    });
+  }
+};
