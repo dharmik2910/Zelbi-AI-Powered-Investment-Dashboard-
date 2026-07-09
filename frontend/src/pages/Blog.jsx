@@ -24,10 +24,8 @@ const Blog = () => {
 
   useEffect(() => {
     document.title = "Zelbi | Blog";
-    return () => {
-      document.title = "Zelbi";
-    };
   }, []);
+  
   const categories = [
     "Market Analysis",
     "AI Trading",

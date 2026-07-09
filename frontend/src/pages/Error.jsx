@@ -1,7 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 
 const Error = () => {
+
+useEffect(() => {
+    document.title = "Page not found";
+  }, []);
+
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-black text-white">
       <h1 className="text-6xl font-bold">404</h1>

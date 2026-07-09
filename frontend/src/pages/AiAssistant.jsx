@@ -164,10 +164,8 @@ const AiAssistant = () => {
 
   useEffect(() => {
     document.title = "Zelbi | AI Assistant";
-    return () => {
-      document.title = "Zelbi";
-    };
   }, []);
+  
 
   useEffect(() => {
     const handleClickOutside = (e) => {

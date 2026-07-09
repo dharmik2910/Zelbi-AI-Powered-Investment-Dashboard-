@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai"
 import { BiArrowBack } from "react-icons/bi"
 import { useDispatch, useSelector } from "react-redux"
@@ -50,6 +50,10 @@ function UpdatePassword() {
     const token = location.pathname.split("/").at(-1)
     dispatch(resetPassword(password, confirmPassword, token, navigate))
   }
+
+  useEffect(() => {
+    document.title = "Zelbi | Update Password";
+  }, [])
 
   return (
     <div className="grid min-h-[calc(100vh-3.5rem)] place-items-center">

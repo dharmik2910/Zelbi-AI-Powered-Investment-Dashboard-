@@ -177,9 +177,6 @@ const TaxCalculator = () => {
 
   useEffect(() => {
     document.title = "Zelbi | Tax Calculator";
-    return () => {
-      document.title = "Zelbi";
-    };
   }, []);
 
   return (

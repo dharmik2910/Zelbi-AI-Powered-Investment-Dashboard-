@@ -163,9 +163,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     document.title = "Zelbi | Dashboard";
-    return () => {
-      document.title = "Zelbi";
-    };
   }, []);
 
   const fetchSearchResults = async (query) => {

@@ -1,21 +1,28 @@
 import React from "react";
+import { useEffect } from "react";
 
 const TermsAndConditions = () => {
+  useEffect(() => {
+    document.title = "Zelbi | Terms and Conditions";
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="max-w-5xl mx-auto px-6 py-20">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">
-          Terms & Conditions
-        </h1>
-
-        <p className="text-gray-400 mb-12">
-          Last Updated: July 7, 2026
-        </p>
+      <div className="max-w-5xl mx-auto px-6 py-20 mt-4">
+        <div className="mb-12 border-b border-white/10 pb-8">
+          <h1 className="text-4xl font-bold text-white">
+            Terms and Conditions
+          </h1>
+          <p className="mt-3 text-gray-400">
+            Last Updated: July 9, 2026
+          </p>
+        </div>
 
         <div className="space-y-10 text-gray-300 leading-8">
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               1. Acceptance of Terms
             </h2>
 
@@ -27,7 +34,7 @@ const TermsAndConditions = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               2. Eligibility
             </h2>
 
@@ -38,7 +45,7 @@ const TermsAndConditions = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               3. Platform Services
             </h2>
 
@@ -50,7 +57,7 @@ const TermsAndConditions = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               4. Investment Disclaimer
             </h2>
 
@@ -66,7 +73,7 @@ const TermsAndConditions = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               5. User Accounts
             </h2>
 
@@ -79,7 +86,7 @@ const TermsAndConditions = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               6. Acceptable Use
             </h2>
 
@@ -95,7 +102,7 @@ const TermsAndConditions = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               7. AI Generated Content
             </h2>
 
@@ -107,7 +114,7 @@ const TermsAndConditions = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               8. Intellectual Property
             </h2>
 
@@ -119,7 +126,7 @@ const TermsAndConditions = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               9. Limitation of Liability
             </h2>
 
@@ -130,7 +137,7 @@ const TermsAndConditions = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               10. Termination
             </h2>
 
@@ -141,7 +148,7 @@ const TermsAndConditions = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               11. Changes to Terms
             </h2>
 
@@ -152,7 +159,7 @@ const TermsAndConditions = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               12. Contact
             </h2>
 

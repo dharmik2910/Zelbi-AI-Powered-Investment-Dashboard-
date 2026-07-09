@@ -161,12 +161,28 @@ export default function Profile() {
     }
   }, [user]);
 
-  useEffect(() => {
-    document.title = "Zelbi | My Profile";
-    return () => {
+useEffect(() => {
+  switch (activeTab) {
+    case "profile":
+      document.title = "Zelbi | My Profile";
+      break;
+
+    case "password":
+      document.title = "Zelbi | Security";
+      break;
+
+    case "subscription":
+      document.title = "Zelbi | Subscription";
+      break;
+
+    case "delete":
+      document.title = "Zelbi | Delete Account";
+      break;
+
+    default:
       document.title = "Zelbi";
-    };
-  }, []);
+  }
+}, [activeTab]);
 
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab");

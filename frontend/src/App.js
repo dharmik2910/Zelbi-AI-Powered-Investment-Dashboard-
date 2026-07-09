@@ -21,6 +21,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserDetails } from "./services/operations/SettingsAPI";
+import CookiePolicy from "./pages/CookiePolicy.jsx";
 
 const ProtectedRoute = ({ children }) => {
   const { token } = useSelector((state) => state.auth);
@@ -67,6 +68,7 @@ function App() {
              <Route path="/terms-and-conditions" element={<TermsAndConditions/>} />
              <Route path="/privacy-policy" element={<PrivacyPolicy/>} />
              <Route path="*" element={<Error />} />
+             <Route path="/cookie-policy" element={<CookiePolicy />} />
          </Routes>
      </main>
     </div>

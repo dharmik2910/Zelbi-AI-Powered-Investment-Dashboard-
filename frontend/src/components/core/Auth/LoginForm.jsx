@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -99,6 +99,10 @@ function LoginForm() {
     console.error("Google Sign In Failed");
     toast.error("Google Sign In failed. Please try again.");
   };
+
+    useEffect(() => {
+    document.title = "Zelbi | Login"; // Set the document title
+  }, []);
 
   return (
     <div className="relative z-10 w-[91%] sm:w-[80%] md:w-full md:max-w-md mx-auto mt-20 px-6 py-8 md:p-7 rounded-md bg-gradient-to-br from-[#141414] to-[#111111] text-white">

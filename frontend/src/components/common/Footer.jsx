@@ -1,4 +1,4 @@
-import { FaDiscord, FaGithub, FaTelegram, FaXTwitter } from "react-icons/fa6";
+import { FaDiscord, FaInstagram, FaTelegram, FaXTwitter } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 import logo from "../../assets/Zelbi.png";
 
@@ -24,7 +24,7 @@ const Footer = () => {
                 <FaDiscord size={20} />
               </a>
               <a href="/" className="text-gray-400 hover:text-cyan-400 transition-colors">
-                <FaGithub size={20} />
+                <FaInstagram size={20} />
               </a>
             </div>
           </div>
@@ -33,21 +33,51 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><Link to="/dashboard" onClick={() => window.scrollTo(0, 0)} className="text-gray-400 hover:text-cyan-400 transition-colors">Dashboard</Link></li>
-              <li><Link to="/ai-assistant" className="text-gray-400 hover:text-cyan-400 transition-colors">AI Assistant</Link></li>
-              <li><Link to="/blog" onClick={() => window.scrollTo(0, 0)} className="text-gray-400 hover:text-cyan-400 transition-colors">Blogs</Link></li>
-              <li><Link to="/tax-calculator" onClick={() => window.scrollTo(0, 0)} className="text-gray-400 hover:text-cyan-400 transition-colors">Tax Calculator</Link></li>
+             <li><Link to="/dashboard" onClick={() => window.scrollTo(0, 0)} className="relative group inline-block text-gray-400 hover:text-white transition-colors">
+                Dashboard
+                <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link></li>
+              <li><Link to="/ai-assistant" className="relative group inline-block text-gray-400 hover:text-white transition-colors">
+                AI Assistant
+                <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link></li>
+              <li><Link to="/blog" onClick={() => window.scrollTo(0, 0)} className="relative group inline-block text-gray-400 hover:text-white transition-colors">
+                Blogs
+                <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link></li>
+              <li><Link to="/pricing" onClick={() => window.scrollTo(0, 0)} className="relative group inline-block text-gray-400 hover:text-white transition-colors">
+                Pricing
+                <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link></li>
             </ul>
           </div>
 
           {/* Resources */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Resources</h3>
-              <ul className="space-y-2">
+              {/* <ul className="space-y-2">
                 <li className="text-gray-400 hover:text-cyan-400 transition-colors">Trading Guide</li>
                 <li className="text-gray-400 hover:text-cyan-400 transition-colors">Market Analysis</li>
                 <li className="text-gray-400 hover:text-cyan-400 transition-colors">API Documentation</li>
                 <li className="text-gray-400 hover:text-cyan-400 transition-colors">FAQ</li>
+              </ul> */}
+              <ul className="flex flex-col items-start space-y-2">
+                <li className="relative group inline-block text-gray-400 hover:text-white transition-colors cursor-pointer">
+                  Trading Guide
+                  <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+                </li>
+                <li className="relative group inline-block text-gray-400 hover:text-white transition-colors cursor-pointer">
+                  Market Analysis
+                  <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+                </li>
+                <li className="relative group inline-block text-gray-400 hover:text-white transition-colors cursor-pointer">
+                  API Documentation
+                  <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+                </li>
+                <li className="relative group inline-block text-gray-400 hover:text-white transition-colors cursor-pointer">
+                  FAQ
+                  <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+                </li>
               </ul>
           </div>
 
@@ -68,9 +98,18 @@ const Footer = () => {
               © 2026 Zelbi. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <div className="text-gray-400 hover:text-cyan-400 transition-colors text-sm">Privacy Policy</div>
-              <div className="text-gray-400 hover:text-cyan-400 transition-colors text-sm">Terms of Service</div>
-              <div className="text-gray-400 hover:text-cyan-400 transition-colors text-sm">Cookie Policy</div>
+             <Link to="/privacy-policy" className="relative group inline-block text-gray-400 hover:text-white transition-colors text-sm">
+                Privacy Policy
+                <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link>
+              <Link to="/terms-and-conditions" className="relative group inline-block text-gray-400 hover:text-white transition-colors text-sm">
+                Terms of Service
+                <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link>
+              <Link to="/cookie-policy" className="relative group inline-block text-gray-400 hover:text-white transition-colors text-sm">
+                Cookie Policy
+                <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link>
             </div>
           </div>
         </div>

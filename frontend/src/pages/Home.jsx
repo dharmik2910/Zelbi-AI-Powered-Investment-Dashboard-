@@ -11,10 +11,16 @@ import Footer from '../components/common/Footer';
 import '../styles/testimonials.css';
 import PricingCards from "../components/PricingCards";
 import { useSelector } from "react-redux";
+import { useEffect } from "react";
 
 
 const Home = () => {
   const { user } = useSelector((state) => state.profile);
+
+  useEffect(() => {
+    document.title = "Zelbi | Home";
+  }, []);
+
   return (
     <div className='scrollbar-hide'>
       {/* Hero Section */}

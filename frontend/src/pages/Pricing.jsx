@@ -103,7 +103,6 @@ const Pricing = () => {
 
   useEffect(() => {
     document.title = "Zelbi | Pricing";
-    return () => { document.title = "Zelbi"; };
   }, []);
 
   const handleUpgrade = async (planId, billingCycle = "monthly") => {

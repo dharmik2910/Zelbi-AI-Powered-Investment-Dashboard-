@@ -1,21 +1,31 @@
 import React from "react";
+import { useEffect } from "react";
+
+
 
 const PrivacyPolicy = () => {
+
+  useEffect(() => {
+    document.title = "Zelbi | Privacy Policy";
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="max-w-5xl mx-auto px-6 py-20">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">
-          Privacy Policy
-        </h1>
-
-        <p className="text-gray-400 mb-12">
-          Last Updated: July 7, 2026
-        </p>
+      <div className="max-w-5xl mx-auto px-6 py-20 mt-4">
+        <div className="mb-12 border-b border-white/10 pb-8">
+          <h1 className="text-4xl font-bold text-white">
+            Privacy Policy
+          </h1>
+          <p className="mt-3 text-gray-400">
+            Last Updated: July 9, 2026
+          </p>
+        </div>
 
         <div className="space-y-10 text-gray-300 leading-8">
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               1. Introduction
             </h2>
 
@@ -27,8 +37,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
-              2. Information We Collect
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">              2. Information We Collect
             </h2>
 
             <ul className="list-disc ml-6 space-y-2">
@@ -43,8 +52,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
-              3. How We Use Your Information
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">              3. How We Use Your Information
             </h2>
 
             <ul className="list-disc ml-6 space-y-2">
@@ -58,8 +66,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
-              4. AI Services
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">              4. AI Services
             </h2>
 
             <p>
@@ -70,8 +77,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
-              5. Cookies
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">              5. Cookies
             </h2>
 
             <p>
@@ -81,7 +87,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               6. Data Security
             </h2>
 
@@ -93,7 +99,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               7. Third-Party Services
             </h2>
 
@@ -105,7 +111,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               8. Your Rights
             </h2>
 
@@ -119,7 +125,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               9. Children's Privacy
             </h2>
 
@@ -130,7 +136,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               10. Changes to This Policy
             </h2>
 
@@ -141,7 +147,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-3">
+            <h2 className="mb-3 text-2xl font-semibold text-[#3affa3]">
               11. Contact Us
             </h2>
 
