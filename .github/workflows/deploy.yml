@@ -18,11 +18,17 @@ jobs:
         shell: bash
 
     steps:
+      # -------------------------
+      # Checkout
+      # -------------------------
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
+      # -------------------------
+      # Setup Node.js
+      # -------------------------
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -33,7 +39,6 @@ jobs:
       # -------------------------
       # Backend
       # -------------------------
-
       - name: Install Backend Dependencies
         working-directory: backend
         run: npm ci
@@ -41,7 +46,6 @@ jobs:
       # -------------------------
       # Frontend
       # -------------------------
-
       - name: Install Frontend Dependencies
         working-directory: frontend
         run: npm ci
@@ -54,16 +58,14 @@ jobs:
         run: npm run build
 
       # -------------------------
-      # Deploy
+      # Deploy to EC2
       # -------------------------
-
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-
           script: |
             set -e
 
@@ -89,13 +91,11 @@ jobs:
             npm install
 
             export NODE_OPTIONS="--max-old-space-size=1024"
-
             export CI=false
 
             npm run build
 
             sudo rm -rf /var/www/html/*
-
             sudo cp -r build/* /var/www/html/
 
             sudo systemctl reload nginx
