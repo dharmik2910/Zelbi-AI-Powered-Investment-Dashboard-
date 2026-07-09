@@ -20,15 +20,26 @@ function VerifyEmail() {
 
   const handleVerifyAndSignup = (e) => {
     e.preventDefault();
-    const { email, password, confirmPassword } = signupData;
+
+    const {
+      accountType,
+      firstName,
+      lastName,
+      email,
+      password,
+      confirmPassword,
+      acceptedTerms,
+    } = signupData;
+
     dispatch(
       signUp(
-        null,
-        null,
-        null,
+        accountType,
+        firstName,
+        lastName,
         email,
         password,
         confirmPassword,
+        acceptedTerms,
         otp,
         navigate
       )
@@ -75,8 +86,8 @@ function VerifyEmail() {
             />
             <button
               type="submit"
-            className="w-full bg-[#3affa3] text-black py-3 rounded-full font-semibold hover:bg-[#2de88f] transition">
-            
+              className="w-full bg-[#3affa3] text-black py-3 rounded-full font-semibold hover:bg-[#2de88f] transition"
+            >
               Verify Email
             </button>
           </form>
