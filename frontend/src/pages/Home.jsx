@@ -25,8 +25,9 @@ const Home = () => {
     <div className='scrollbar-hide'>
       {/* Hero Section */}
       <div className='flex flex-col w-full h-fit mt-[80px] bg-black'>
-        <div className='fixed left-[183px] bg-cover bg-center z-0'>
-          <img src={img} className='w-[1552px] h-[280px] mx-auto' alt="banner" />
+        <div className='fixed md:left-[183px] left-[40px] bg-cover bg-center z-0'>
+          <img src={img} className='w-[1552px] md:h-[280px] h-[200px] pt-6 mx-auto' alt="banner" />
+          {/* <img src={img} className='w-[500px] h-[280px] lg:w-[1552px] mx-auto' alt="banner" /> */}
           <div className='flex justify-between text-sm'>
             <div className='text-white mt-3 font-edu-sa tracking-tighter'>AI ENHANCED TRADING</div>
             <div className='text-white mt-3 font-edu-sa tracking-tighter'>PREDICT TOP COURSES</div>
