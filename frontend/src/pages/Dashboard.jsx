@@ -466,7 +466,7 @@ const Dashboard = () => {
 
   const analyzeStock = async () => {
     if (promptCount >= promptLimit) {
-      setAiAnalysis(`You have reached your limit of ${promptLimit} AI prompts for the ${currentPlan} plan. Please upgrade your plan to continue using ZELBI AI-Assistant.`);
+      setAiAnalysis(`You have reached your limit of ${promptLimit} AI prompts for the ${currentPlan} plan. Please upgrade your plan to continue using ZELBI zelbi-Assistant.`);
       return;
     }
     try {
@@ -683,7 +683,7 @@ const Dashboard = () => {
                 className="flex items-center justify-center w-full md:w-auto px-4 py-2.5 bg-[#3affa3] text-black rounded-lg hover:bg-[#3affa3]/90 transition-colors duration-300 text-sm md:text-base font-medium whitespace-nowrap"
               >
                 <FaRobot className="mr-2" />
-                ASK ZELBI AI
+                ASK ZELBI Assistant
               </button>
               <div className="flex flex-wrap gap-2 md:flex-nowrap">
                 {timeframes.map((tf) => (
@@ -786,7 +786,7 @@ const Dashboard = () => {
             </button>
             <div className="flex items-center mb-4 shrink-0">
               <FaRobot className="text-[#3affa3] text-2xl mr-2" />
-              <h3 className="text-xl font-bold">ZELBI AI Analysis</h3>
+              <h3 className="text-xl font-bold">ZELBI Assistant Analysis</h3>
             </div>
             {isAnalyzing ? (
               <div className="flex items-center justify-center py-8 shrink-0">

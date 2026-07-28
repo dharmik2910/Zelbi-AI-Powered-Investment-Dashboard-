@@ -26,8 +26,8 @@ export const paymentFailureEmail = (name, planName, amount, orderId) => {
     `;
 
     return baseEmailTemplate({
-        title: "Payment Failed - Zelbi AI",
-        brandName: "Zelbi AI",
+        title: "Payment Failed - Zelbi Assistant",
+        brandName: "Zelbi Assistant",
         eyebrow: "Subscription Payment",
         heading: "Payment Failed",
         body: body,

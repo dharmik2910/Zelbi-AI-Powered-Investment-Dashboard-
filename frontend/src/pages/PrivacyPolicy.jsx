@@ -70,7 +70,7 @@ const PrivacyPolicy = () => {
             </h2>
 
             <p>
-              If you interact with our AI assistant, your prompts may be
+              If you interact with our Zelbi assistant, your prompts may be
               processed to generate responses. Please avoid sharing highly
               sensitive personal or financial information in AI conversations.
             </p>

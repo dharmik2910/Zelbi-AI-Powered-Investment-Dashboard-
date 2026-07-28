@@ -10,7 +10,7 @@ import UpdatePassword from "./pages/UpdatePassword.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
 import Error from "./pages/Error.jsx"
 import Blog from './pages/Blog.jsx';
-import AiAssistant from './pages/AiAssistant.jsx';
+import ZelbiAssistant from './pages/ZelbiAssistant.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import TaxCalculator from './pages/TaxCalculator.jsx';
 import Pricing from './pages/Pricing.jsx';
@@ -63,7 +63,7 @@ function App() {
              <Route path="/verify-email" element={<VerifyEmail />} />
              <Route path="/blog" element={<Blog/>}/>
              <Route path="/pricing" element={<Pricing/>}/>
-             <Route path="/ai-assistant" element={<ProtectedRoute><AiAssistant/></ProtectedRoute>} />
+             <Route path="/zelbi-assistant" element={<ProtectedRoute><ZelbiAssistant/></ProtectedRoute>} />
              <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>} />
              <Route path="/terms-and-conditions" element={<TermsAndConditions/>} />
              <Route path="/privacy-policy" element={<PrivacyPolicy/>} />

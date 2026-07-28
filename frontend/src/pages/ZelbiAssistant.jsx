@@ -163,7 +163,7 @@ const AiAssistant = () => {
   }, [chatStorageKey, messages]);
 
   useEffect(() => {
-    document.title = "Zelbi | AI Assistant";
+    document.title = "Zelbi | Zelbi Assistant";
   }, []);
   
 
@@ -419,7 +419,7 @@ const AiAssistant = () => {
                 <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[#3affa3] border-2 border-[#0a0a0a] shadow-[0_0_6px_rgba(58,255,163,0.9)]" />
               </div>
               <div>
-                <h2 className="text-[15px] text-white font-bold tracking-tight leading-none">Zelbi AI</h2>
+                <h2 className="text-[15px] text-white font-bold tracking-tight leading-none">Zelbi Assistant</h2>
                 <p className="text-[11px] text-white/40 mt-1.5">Your AI trading assistant</p>
               </div>
             </div>
@@ -649,7 +649,7 @@ const AiAssistant = () => {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isRecording ? "Listening… speak now" : "Message Zelbi AI…"}
+                placeholder={isRecording ? "Listening… speak now" : "Message Zelbi Assistant…"}
                 rows="1"
                 className="flex-1 bg-transparent text-white placeholder-white/30 focus:outline-none text-[14px] resize-none min-h-[38px] max-h-[200px] overflow-y-auto py-2 leading-relaxed"
               />

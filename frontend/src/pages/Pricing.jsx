@@ -143,7 +143,7 @@ const Pricing = () => {
         key: key_id,
         amount: amount,
         currency: currency,
-        name: "Zelbi AI",
+        name: "Zelbi Assistant",
         description: `${planId.charAt(0).toUpperCase() + planId.slice(1)} Plan Upgrade`,
         order_id: order_id,
         handler: async function (response) {
@@ -232,7 +232,7 @@ const Pricing = () => {
     successPlan && (
       <SuccessModal
         plan={successPlan}
-        onClose={() => { setSuccessPlan(null); navigate("/ai-assistant"); }}
+        onClose={() => { setSuccessPlan(null); navigate("/zelbi-assistant"); }}
       />
     )
   }

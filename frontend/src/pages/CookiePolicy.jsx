@@ -96,11 +96,11 @@ export default function CookiePolicy() {
 
               <div className="rounded-lg border border-white/10 bg-[#111111] p-5">
                 <h3 className="mb-2 text-lg font-semibold text-white">
-                  AI Assistant Cookies
+                  Zelbi Assistant Cookies
                 </h3>
 
                 <p>
-                  These cookies support AI Assistant functionality by
+                  These cookies support Zelbi Assistant functionality by
                   maintaining your session and remembering preferences that
                   improve your AI experience.
                 </p>

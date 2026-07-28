@@ -2,13 +2,13 @@ import baseEmailTemplate from "./baseEmailTemplate.js";
 
 const otpTemplate = (otp) => {
   return baseEmailTemplate({
-    title: "Zelbi AI Verification",
+    title: "Zelbi Assistant Verification",
     eyebrow: "Secure Account Verification",
     heading: "Verify Your Email",
     body: `
       <p style="margin:0 0 15px;color:#4b5563;font-size:15px;">Hello,</p>
       <p style="margin:0 0 20px;color:#4b5563;font-size:15px;line-height:1.6;">
-        Thank you for signing up with <strong>Zelbi AI</strong>. Use the verification code below to complete your registration.
+        Thank you for signing up with <strong>Zelbi Assistant</strong>. Use the verification code below to complete your registration.
       </p>
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr>

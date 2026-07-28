@@ -251,7 +251,7 @@ export const verifyRazorpayPayment = async (req, res) => {
                         amountInRupees,
                         razorpay_order_id
                     );
-                    await mailSender(user.email, "Payment Failed - Zelbi AI", failureEmail);
+                    await mailSender(user.email, "Payment Failed - Zelbi Assistant", failureEmail);
                 }
             } catch (emailError) {
                 console.error("Failed to send payment failure email:", emailError);
@@ -299,7 +299,7 @@ export const verifyRazorpayPayment = async (req, res) => {
                 razorpay_order_id,
                 razorpay_payment_id
             );
-            await mailSender(user.email, "Payment Successful - Zelbi AI", successEmail);
+            await mailSender(user.email, "Payment Successful - Zelbi Assistant", successEmail);
         } catch (emailError) {
             console.error("Failed to send payment success email:", emailError);
         }

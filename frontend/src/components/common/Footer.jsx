@@ -37,8 +37,8 @@ const Footer = () => {
                 Dashboard
                 <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
               </Link></li>
-              <li><Link to="/ai-assistant" className="relative group inline-block text-gray-400 hover:text-white transition-colors">
-                AI Assistant
+              <li><Link to="/zelbi-assistant" className="relative group inline-block text-gray-400 hover:text-white transition-colors">
+                Zelbi Assistant
                 <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
               </Link></li>
               <li><Link to="/blog" onClick={() => window.scrollTo(0, 0)} className="relative group inline-block text-gray-400 hover:text-white transition-colors">

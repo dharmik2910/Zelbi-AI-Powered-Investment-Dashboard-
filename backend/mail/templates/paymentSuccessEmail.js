@@ -19,14 +19,14 @@ export const paymentSuccessEmail = (name, planName, amount, orderId, paymentId) 
     `;
 
     return baseEmailTemplate({
-        title: "Payment Successful - Zelbi AI",
-        brandName: "Zelbi AI",
+        title: "Payment Successful - Zelbi Assistant",
+        brandName: "Zelbi Assistant",
         eyebrow: "Subscription Payment",
         heading: "Payment Successful! 🎉",
         body: body,
         ctaText: "Go to Dashboard",
         ctaUrl: "FRONTEND_URL/dashboard",
         ctaBackground: "#10B981",
-        footerNote: "Thank you for choosing Zelbi AI. Your subscription is now active.",
+        footerNote: "Thank you for choosing Zelbi Assistant. Your subscription is now active.",
     });
 };

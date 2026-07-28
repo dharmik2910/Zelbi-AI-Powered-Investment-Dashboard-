@@ -664,8 +664,8 @@ useEffect(() => {
                         {currentPlan !== "free" && <span className="bg-[#3affa3]/10 text-[#3affa3] text-xs font-bold px-2 py-0.5 rounded-full border border-[#3affa3]/20">Active</span>}
                       </div>
                       <p className="text-gray-400 text-sm mt-1">
-                        {currentPlan === "free" && "Upgrade to unlock advanced analytics and unlimited AI assistant queries."}
-                        {currentPlan === "pro" && "Your Pro tier covers up to 100 AI Assistant calls monthly."}
+                        {currentPlan === "free" && "Upgrade to unlock advanced analytics and unlimited Zelbi assistant queries."}
+                        {currentPlan === "pro" && "Your Pro tier covers up to 100 Zelbi Assistant calls monthly."}
                         {currentPlan === "elite" && "Elite tier includes unlimited AI queries and priority real-time data."}
                       </p>
                     </div>
@@ -684,7 +684,7 @@ useEffect(() => {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2 text-white font-semibold">
                         <FaRobot className="text-[#3affa3]" />
-                        Zelbi AI Assistant Usage
+                        Zelbi Assistant Usage
                       </div>
                       <span className="text-sm font-semibold text-[#3affa3]">
                         {promptCount} / {promptLimit === Infinity ? "∞" : promptLimit} Queries

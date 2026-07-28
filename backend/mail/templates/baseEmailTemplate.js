@@ -1,6 +1,6 @@
 const baseEmailTemplate = ({
   title,
-  brandName = "Zelbi AI",
+  brandName = "Zelbi Assistant",
   eyebrow = "",
   heading,
   body,
