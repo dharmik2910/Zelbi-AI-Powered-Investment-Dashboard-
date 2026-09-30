@@ -1,4 +1,3 @@
-import { FaDiscord, FaInstagram, FaTelegram, FaXTwitter } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 import logo from "../../assets/Zelbi.png";
 
@@ -11,22 +10,8 @@ const Footer = () => {
           <div className="space-y-4">
             <img src={logo} alt="Zelbi Logo" className="h-8" />
             <p className="text-gray-400 text-sm">
-              Empowering traders with AI-driven insights and advanced trading tools.
+              Empowering investors with AI-driven insights and market analysis tools.
             </p>
-            <div className="flex space-x-4">
-              <a href="/" className="text-gray-400 hover:text-cyan-400 transition-colors">
-                <FaXTwitter size={20} />
-              </a>
-              <a href="/" className="text-gray-400 hover:text-cyan-400 transition-colors">
-                <FaTelegram size={20} />
-              </a>
-              <a href="/" className="text-gray-400 hover:text-cyan-400 transition-colors">
-                <FaDiscord size={20} />
-              </a>
-              <a href="/" className="text-gray-400 hover:text-cyan-400 transition-colors">
-                <FaInstagram size={20} />
-              </a>
-            </div>
           </div>
 
           {/* Quick Links */}
@@ -55,38 +40,33 @@ const Footer = () => {
           {/* Resources */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Resources</h3>
-              {/* <ul className="space-y-2">
-                <li className="text-gray-400 hover:text-cyan-400 transition-colors">Trading Guide</li>
-                <li className="text-gray-400 hover:text-cyan-400 transition-colors">Market Analysis</li>
-                <li className="text-gray-400 hover:text-cyan-400 transition-colors">API Documentation</li>
-                <li className="text-gray-400 hover:text-cyan-400 transition-colors">FAQ</li>
-              </ul> */}
-              <ul className="flex flex-col items-start space-y-2">
-                <li className="relative group inline-block text-gray-400 hover:text-white transition-colors cursor-pointer">
-                  Trading Guide
-                  <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
-                </li>
-                <li className="relative group inline-block text-gray-400 hover:text-white transition-colors cursor-pointer">
-                  Market Analysis
-                  <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
-                </li>
-                <li className="relative group inline-block text-gray-400 hover:text-white transition-colors cursor-pointer">
-                  API Documentation
-                  <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
-                </li>
-                <li className="relative group inline-block text-gray-400 hover:text-white transition-colors cursor-pointer">
-                  FAQ
-                  <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
-                </li>
-              </ul>
+            <ul className="space-y-2">
+              <li><Link to="/tax-calculator" className="relative group inline-block text-gray-400 hover:text-white transition-colors">
+                Tax Calculator
+                <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link></li>
+              <li><Link to="/blog" className="relative group inline-block text-gray-400 hover:text-white transition-colors">
+                Market Insights
+                <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link></li>
+              <li><Link to="/#faq" className="relative group inline-block text-gray-400 hover:text-white transition-colors">
+                FAQ
+                <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link></li>
+              <li><Link to="/profile" className="relative group inline-block text-gray-400 hover:text-white transition-colors">
+                Account Settings
+                <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link></li>
+            </ul>
           </div>
 
           {/* Contact */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Contact</h3>
             <ul className="space-y-2">
-              <li className="text-gray-400">Email: support@zelbi.com</li>
-              <li className="text-gray-400">Address: 123 Trading Street, NY</li>
+              <li className="text-gray-400">
+                Email: <a href="mailto:support@zelbi.com" className="hover:text-white transition-colors">support@zelbi.com</a>
+              </li>
             </ul>
           </div>
         </div>
