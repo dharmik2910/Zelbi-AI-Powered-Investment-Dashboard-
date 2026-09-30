@@ -9,6 +9,7 @@ import profileRoutes from "./routes/Profile.js";
 import userRoutes from "./routes/User.js";
 import subscriptionRoutes from "./routes/Subscription.js";
 import marketRoutes from "./routes/Market.js";
+import portfolioRoutes from "./routes/Portfolio.js";
 
 dotenv.config(); 
 dbConnect();
@@ -43,6 +44,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/market", marketRoutes);
+app.use("/api/portfolio", portfolioRoutes);
 
 
 app.get('/', (req, res) => {   

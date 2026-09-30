@@ -20,6 +20,7 @@ export const getPlans = async (req, res) => {
         const plansForClient = PLANS.map(p => ({
             ...p,
             promptLimit: p.promptLimit === Infinity ? -1 : p.promptLimit,
+            holdingLimit: p.holdingLimit === Infinity ? -1 : p.holdingLimit,
         }));
         return res.status(200).json({ success: true, plans: plansForClient });
     } catch (err) {

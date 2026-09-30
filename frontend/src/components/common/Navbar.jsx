@@ -9,6 +9,7 @@ import {
   FaSignOutAlt,
   FaTag,
   FaUser,
+  FaWallet,
 } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
 import { useSelector, useDispatch } from "react-redux";
@@ -106,6 +107,24 @@ const Navbar = () => {
             <>
               <Link to="/dashboard" className="relative group py-1">
                 Dashboard
+                <span
+                  className="
+    absolute
+    left-0
+    bottom-0
+    h-[2px]
+    w-full
+    bg-[#3affa3]
+    origin-left
+    scale-x-0
+    transition-transform
+    duration-300
+    ease-out
+    group-hover:scale-x-[1]
+  "
+                ></span>              </Link>
+              <Link to="/portfolio" className="relative group py-1">
+                Portfolio
                 <span
                   className="
     absolute
@@ -281,6 +300,19 @@ const Navbar = () => {
                 >
                   <FaChartLine />
                   Dashboard
+                </Link>
+
+                <Link
+                  to="/portfolio"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all ${
+                    isActive("/portfolio")
+                      ? "bg-[#3affa3] text-black"
+                      : "text-white hover:bg-white/10"
+                  }`}
+                >
+                  <FaWallet />
+                  Portfolio
                 </Link>
 
                 <Link

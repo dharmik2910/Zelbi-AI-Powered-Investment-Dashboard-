@@ -1,8 +1,36 @@
 import * as ai from '../services/ai.service.js'
 import User from '../models/User.js';
 import { getPromptLimit, refreshSubscriptionState } from '../utils/subscription.js';
+import { getValuedPortfolio } from '../services/portfolio.service.js';
 
 const MAX_PROMPT_CHARS = 8000;
+
+const portfolioTool = (userId) => ({
+    declaration: {
+        name: "get_user_portfolio",
+        description: "Get the signed-in user's portfolio holdings with quantity, average buy price, live value and profit or loss. Use this when the user asks about their portfolio, holdings or investments.",
+    },
+    execute: async () => {
+        const { holdings, summary } = await getValuedPortfolio(userId);
+        if (holdings.length === 0) {
+            return { message: "The user has no holdings yet. They can add them on the Portfolio page." };
+        }
+        return {
+            summary,
+            holdings: holdings.map((h) => ({
+                symbol: h.symbol,
+                name: h.name,
+                quantity: h.quantity,
+                avgPrice: h.avgPrice,
+                currentPrice: h.currentPrice ?? null,
+                currency: h.currency ?? null,
+                marketValue: h.marketValue ?? null,
+                pnl: h.pnl ?? null,
+                pnlPercent: h.pnlPercent ?? null,
+            })),
+        };
+    },
+});
 
 const handleAiRequest = (mode) => async (req, res) => {
     try {
@@ -47,6 +75,7 @@ const handleAiRequest = (mode) => async (req, res) => {
                 prompt,
                 history: Array.isArray(history) ? history : [],
                 mode,
+                extraTools: mode === "chat" ? [portfolioTool(req.user.id)] : [],
             });
         } catch (err) {
             // Give the prompt back if the AI call failed

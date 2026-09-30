@@ -1,5 +1,6 @@
 import Profile from "../models/Profile.js"
 import User from "../models/User.js"
+import Holding from "../models/Holding.js"
 import { uploadFile, deleteFile } from "../utils/s3Uploader.js"
 import { populateUserImage } from "../utils/userHelper.js"
 import { refreshSubscriptionState } from "../utils/subscription.js"
@@ -80,6 +81,8 @@ export const deleteAccount = async (req, res) => {
       _id: new mongoose.Types.ObjectId(user.additionalDetails),
     })
     
+    await Holding.deleteMany({ userId: id })
+
     // Now Delete User
     await User.findByIdAndDelete({ _id: id })
     
