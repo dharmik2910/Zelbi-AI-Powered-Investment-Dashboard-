@@ -4,7 +4,7 @@ import debounce from 'lodash/debounce';
 import { useEffect, useMemo, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import ReactMarkdown from 'react-markdown';
-import { FaArrowDown, FaArrowUp, FaBell, FaChartLine, FaRegStar, FaRobot, FaSearch, FaStar } from 'react-icons/fa';
+import { FaArrowDown, FaArrowUp, FaBalanceScale, FaBell, FaChartLine, FaRegStar, FaRobot, FaSearch, FaStar } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { ImStatsBars } from 'react-icons/im';
 import { useDispatch, useSelector } from 'react-redux';
@@ -739,6 +739,14 @@ const Dashboard = () => {
                 className="text-gray-400 hover:text-primary"
               >
                 <FaBell />
+              </Link>
+              <Link
+                to={`/compare?symbols=${encodeURIComponent([selectedStock, ...favorites.filter((s) => s !== selectedStock)].slice(0, 4).join(","))}`}
+                aria-label={`Compare ${selectedStock} with other stocks`}
+                title="Compare with other stocks"
+                className="text-gray-400 hover:text-primary"
+              >
+                <FaBalanceScale />
               </Link>
             </div>
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3 md:shrink-0">

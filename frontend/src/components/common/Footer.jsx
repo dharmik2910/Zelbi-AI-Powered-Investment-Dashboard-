@@ -41,6 +41,10 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Resources</h3>
             <ul className="space-y-2">
+              <li><Link to="/compare" className="relative group inline-block text-gray-400 hover:text-white transition-colors">
+                Compare Stocks
+                <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link></li>
               <li><Link to="/tax-calculator" className="relative group inline-block text-gray-400 hover:text-white transition-colors">
                 Tax Calculator
                 <span className="absolute left-0 bottom-0 h-[2px] w-full bg-[#3affa3] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
