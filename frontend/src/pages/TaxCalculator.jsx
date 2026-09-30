@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import TradeTaxSummary from "../components/TradeTaxSummary";
 import { FaCalculator, FaExchangeAlt, FaClock, FaInfoCircle, FaChartLine, FaMoneyBillWave, FaPercentage, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
 
 const TaxRuleCard = ({ title, icon: Icon, children }) => {
@@ -202,6 +203,9 @@ const TaxCalculator = () => {
           <p className="text-gray-400 text-sm md:text-lg px-4">Calculate your capital gains tax and STT for stock market investments</p>
         </motion.div>
 
+        <TradeTaxSummary />
+
+        <h2 className="text-xl md:text-2xl font-bold text-white mb-4">Single trade calculator</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           {/* Calculator Form */}
           <motion.div 
