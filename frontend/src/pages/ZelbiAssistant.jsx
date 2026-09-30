@@ -32,6 +32,18 @@ const DEFAULT_MESSAGES = [
   },
 ];
 
+// How many earlier messages to send so the AI can follow the conversation
+const HISTORY_LENGTH = 12;
+
+const toHistory = (messages) =>
+  messages
+    .filter((message) => !message.isError && typeof message.content === "string")
+    .slice(-HISTORY_LENGTH)
+    .map((message) => ({
+      role: message.type === "user" ? "user" : "assistant",
+      text: message.content,
+    }));
+
 const getChatStorageKey = (user) => {
   const userIdentifier = user?._id || user?.id || user?.email || "guest";
   return `chatMessages:${userIdentifier}`;
@@ -268,6 +280,7 @@ const AiAssistant = () => {
     if (!inputMessage.trim() || isLimited) return;
 
     const prompt = inputMessage;
+    const history = toHistory(messages);
     setMessages((prev) => [
       ...prev,
       { type: "user", content: prompt, timestamp: new Date().toLocaleTimeString() },
@@ -278,7 +291,7 @@ const AiAssistant = () => {
       try {
         const response = await axios.post(
           `${process.env.REACT_APP_API_URL}/api/ai/get-result`,
-          { prompt },
+          { prompt, history },
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -303,7 +316,7 @@ const AiAssistant = () => {
         const errorMsg = error.response?.data?.error || "Sorry, something went wrong. Please try again.";
         setMessages((prev) => [
           ...prev,
-          { type: "bot", content: errorMsg, timestamp: new Date().toLocaleTimeString() },
+          { type: "bot", content: errorMsg, isError: true, timestamp: new Date().toLocaleTimeString() },
         ]);
       } finally {
         setIsTyping(false);
@@ -668,6 +681,9 @@ const AiAssistant = () => {
                 <IoMdSend className="text-base" />
               </motion.button>
             </div>
+            <p className="mt-2 text-center text-[11px] text-white/50">
+              Zelbi uses live market data but can still make mistakes. Not financial advice.
+            </p>
           </form>
         )}
       </div>
