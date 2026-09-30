@@ -2,6 +2,7 @@ import Profile from "../models/Profile.js"
 import User from "../models/User.js"
 import { uploadFile, deleteFile } from "../utils/s3Uploader.js"
 import { populateUserImage } from "../utils/userHelper.js"
+import { refreshSubscriptionState } from "../utils/subscription.js"
 import mongoose from "mongoose"
 
 export const updateProfile = async (req, res) => {
@@ -155,6 +156,7 @@ export const getUserDetails = async (req, res) => {
         message: "User not found",
       })
     }
+    await refreshSubscriptionState(userDetailsDoc)
     const userDetails = await populateUserImage(userDetailsDoc)
     return res.status(200).json({
       success: true,

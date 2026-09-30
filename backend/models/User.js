@@ -77,6 +77,11 @@ const userSchema = new mongoose.Schema({
         default: null,
     },
 
+    // When aiPromptCount was last reset; it resets every 30 days
+    promptCountResetAt: {
+        type: Date,
+    },
+
 })
 
 export default mongoose.model('user', userSchema);

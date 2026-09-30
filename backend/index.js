@@ -3,13 +3,13 @@ import cors from 'cors';
 import dotenv from "dotenv";
 import express from 'express';
 import fileUpload from "express-fileupload";
-import nodemailer from "nodemailer";
 import { cloudinaryConnect } from "./config/cloudinary.js";
 import dbConnect from './config/db.js';
 import aiRoutes from "./routes/Ai.js";
 import profileRoutes from "./routes/Profile.js";
 import userRoutes from "./routes/User.js";
 import subscriptionRoutes from "./routes/Subscription.js";
+import marketRoutes from "./routes/Market.js";
 //import projectRoutes from "./routes/Project.js";
 
 dotenv.config(); 
@@ -45,32 +45,13 @@ app.use("/api/auth", userRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/subscription", subscriptionRoutes);
+app.use("/api/market", marketRoutes);
 
 
 app.get('/', (req, res) => {   
   res.send('<h1>Server is Running</h1>');
 });
 
-app.get("/test", async (req, res) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.MAIL_HOST,
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
-    });
-
-    await transporter.verify();
-
-    res.send("SMTP OK");
-  } catch (err) {
-    console.error(err);
-    res.send(err.message);
-  }
-});
 const PORT=process.env.PORT || 3000;
 
 

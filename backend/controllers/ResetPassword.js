@@ -7,29 +7,27 @@ import baseEmailTemplate from "../mail/templates/baseEmailTemplate.js";
 export const resetPasswordToken = async (req, res) => {
 	try {
 		const email = req.body.email;
-		const frontendUrl = req.body.frontendUrl || process.env.FRONTEND_URL || "http://localhost:3001";
+		// Never build the link from client input, or it could point at an attacker's site
+		const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
 		const user = await User.findOne({ email: email });
 		if (!user) {
-			return res.json({
+			return res.status(404).json({
 				success: false,
 				message: `This Email: ${email} is not Registered With Us Enter a Valid Email `,
 			});
 		}
 		const token = crypto.randomBytes(20).toString("hex");
 
-		const updatedDetails = await User.findOneAndUpdate(
+		await User.findOneAndUpdate(
 			{ email: email },
 			{
 				token: token,
 				resetPasswordExpires: Date.now() + 3600000,
-			},
-			{ new: true }
+			}
 		);
-		console.log("DETAILS", updatedDetails);
 
 		const url = `${frontendUrl.replace(/\/$/, "")}/update-password/${token}`;
 
-console.log("Reset URL:", url);
 
 		// await mailSender(
 		// 	email,
@@ -62,8 +60,8 @@ console.log("Reset URL:", url);
 				"Email Sent Successfully, Please Check Your Email to Continue Further",
 		});
 	} catch (error) {
-		return res.json({
-			error: error.message,
+		console.error("Error in resetPasswordToken:", error);
+		return res.status(500).json({
 			success: false,
 			message: `Some Error in Sending the Reset Message`,
 		});
@@ -74,15 +72,21 @@ export const resetPassword = async (req, res) => {
 	try {
 		const { password, confirmPassword, token } = req.body;
 
+		if (!password || !token) {
+			return res.status(400).json({
+				success: false,
+				message: "All fields are required",
+			});
+		}
 		if (confirmPassword !== password) {
-			return res.json({
+			return res.status(400).json({
 				success: false,
 				message: "Password and Confirm Password Does not Match",
 			});
 		}
 		const userDetails = await User.findOne({ token: token });
 		if (!userDetails) {
-			return res.json({
+			return res.status(400).json({
 				success: false,
 				message: "Token is Invalid",
 			});
@@ -94,18 +98,21 @@ export const resetPassword = async (req, res) => {
 			});
 		}
 		const encryptedPassword = await bcrypt.hash(password, 10);
+		// Clear the token so the reset link can't be used again
 		await User.findOneAndUpdate(
 			{ token: token },
-			{ password: encryptedPassword },
-			{ new: true }
+			{
+				password: encryptedPassword,
+				$unset: { token: 1, resetPasswordExpires: 1 },
+			}
 		);
 		res.json({
 			success: true,
 			message: `Password Reset Successful`,
 		});
 	} catch (error) {
-		return res.json({
-			error: error.message,
+		console.error("Error in resetPassword:", error);
+		return res.status(500).json({
 			success: false,
 			message: `Some Error in Updating the Password`,
 		});

@@ -97,12 +97,15 @@ const Dashboard = () => {
       setError(null);
       setStockData(null);
 
-      const API_KEY = "73b158b9a1f149acb0aeb5c6ce64df55";
       const response = await axios.get(
-        `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${timeframe}&outputsize=500&apikey=${API_KEY}`
+        `${process.env.REACT_APP_API_URL}/api/market/time-series`,
+        {
+          params: { symbol, interval: timeframe },
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
-      if (response.data.status !== "ok") {
+      if (!response.data.success) {
         throw new Error("Failed to fetch stock data");
       }
 
@@ -171,9 +174,15 @@ const Dashboard = () => {
       return;
     }
     try {
-      const response = await axios.get(`https://api.twelvedata.com/symbol_search?symbol=${query}`);
-      if (response.data && response.data.data) {
-        setSearchResults(response.data.data.slice(0, 6));
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/market/search`,
+        {
+          params: { q: query },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (response.data && response.data.results) {
+        setSearchResults(response.data.results);
         setShowDropdown(true);
       }
     } catch (err) {

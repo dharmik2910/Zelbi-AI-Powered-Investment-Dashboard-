@@ -12,6 +12,11 @@ export const populateUserImage = async (userDoc) => {
   // Convert Mongoose document to plain JS object to safely modify properties
   const user = userDoc.toObject ? userDoc.toObject() : { ...userDoc };
 
+  // Never send credentials or reset tokens to the client
+  delete user.password;
+  delete user.token;
+  delete user.resetPasswordExpires;
+
   if (user.image) {
     // Generate pre-signed S3 URL (if it's a key, not a full external URL)
     const signedUrl = await generateSignedUrl(user.image);
