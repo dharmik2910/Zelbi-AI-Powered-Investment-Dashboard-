@@ -62,10 +62,15 @@ jobs:
       # -------------------------
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.2
+        env:
+          # Full contents of each .env file, stored as multi-line repository secrets
+          BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
+          FRONTEND_ENV: ${{ secrets.FRONTEND_ENV }}
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
+          envs: BACKEND_ENV,FRONTEND_ENV
           script: |
             set -e
 
@@ -74,6 +79,22 @@ jobs:
 
             echo "Pull latest code..."
             git pull origin main
+
+            # Write .env files from GitHub secrets. If a secret is empty, keep the
+            # existing file on the server rather than wiping production config.
+            echo "Write environment files..."
+            umask 077
+            if [ -n "$BACKEND_ENV" ]; then
+              printf '%s\n' "$BACKEND_ENV" > backend/.env
+            else
+              echo "BACKEND_ENV secret is empty, keeping existing backend/.env"
+            fi
+            if [ -n "$FRONTEND_ENV" ]; then
+              printf '%s\n' "$FRONTEND_ENV" > frontend/.env
+            else
+              echo "FRONTEND_ENV secret is empty, keeping existing frontend/.env"
+            fi
+            umask 022
 
             echo "Backend..."
             cd backend
