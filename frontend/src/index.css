@@ -2,6 +2,76 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-black font-inter text-white antialiased;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide,
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar,
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #3f3f46 transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    visibility: visible;
+    background-color: #3f3f46;
+    border-radius: 9999px;
+  }
+}
+
+/* Markdown output from the AI (no typography plugin installed) */
+.prose h1,
+.prose h2,
+.prose h3 {
+  @apply mb-2 mt-5 font-semibold text-white;
+}
+
+.prose h3 {
+  @apply text-lg text-primary;
+}
+
+.prose p {
+  @apply mb-3 text-gray-300;
+}
+
+.prose ul,
+.prose ol {
+  @apply mb-3 space-y-1 pl-5 text-gray-300;
+}
+
+.prose ul {
+  @apply list-disc;
+}
+
+.prose ol {
+  @apply list-decimal;
+}
+
+.prose strong {
+  @apply text-white;
+}
+
+.prose code {
+  @apply rounded bg-white/10 px-1 py-0.5 font-mono text-sm;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

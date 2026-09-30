@@ -195,7 +195,7 @@ function LoginForm() {
           <button
             type="button"
             onClick={() => googleLogin()}
-            className="w-[390px] h-12 rounded-md bg-white text-black flex items-center justify-center gap-3 font-medium hover:bg-gray-100 transition"
+            className="w-full max-w-[390px] h-12 rounded-md bg-white text-black flex items-center justify-center gap-3 font-medium hover:bg-gray-100 transition"
           >
             <img
               src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRscLXqCZkzakBL-YSFMx6ehxwqB71B8OCV2iB-W8SJA&s=10"

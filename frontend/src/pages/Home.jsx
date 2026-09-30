@@ -25,20 +25,24 @@ const Home = () => {
     <div className='scrollbar-hide'>
       {/* Hero Section */}
       <div className='flex flex-col w-full h-fit mt-[80px] bg-black'>
-        <div className='fixed md:left-[183px] left-[40px] bg-cover bg-center z-0'>
-          <img src={img} className='w-[1552px] md:h-[280px] h-[200px] pt-6 mx-auto' alt="banner" />
-          {/* <img src={img} className='w-[500px] h-[280px] lg:w-[1552px] mx-auto' alt="banner" /> */}
-          <div className='flex justify-between text-sm'>
+        {/* On md+ the logo stays fixed while the screenshot scrolls over it */}
+        <div className='relative md:fixed md:inset-x-0 z-0 w-full max-w-[1150px] mx-auto px-6'>
+          <img src={img} className='w-full h-auto pt-6' alt="Zelbi" />
+          <div className='flex justify-between gap-4 text-xs sm:text-sm'>
             <div className='text-white mt-3 font-edu-sa tracking-tighter'>AI ENHANCED TRADING</div>
-            <div className='text-white mt-3 font-edu-sa tracking-tighter'>PREDICT TOP COURSES</div>
+            <div className='text-white mt-3 font-edu-sa tracking-tighter text-right'>SMARTER MARKET INSIGHTS</div>
           </div>
           <div className='flex justify-end'>
-            <div className='text-[#3affa3] mt-3 text-sm font-extrabold tracking-tight'>$ 11 232 195 873</div>
+            <div className='text-primary mt-3 text-sm font-extrabold tracking-tight'>$ 11 232 195 873</div>
           </div>
         </div>
 
-        <div className='mt-[250px]'>
-          <img src={img1} className='mx-auto relative w-[1030px] h-[700px] z-40' alt="feature" />
+        <div className='mt-8 md:mt-[250px] px-4'>
+          <img
+            src={img1}
+            className='mx-auto relative w-full max-w-[1030px] h-auto z-40'
+            alt="Zelbi dashboard showing a stock price chart and AI market analysis"
+          />
         </div>
       </div>
 
@@ -46,7 +50,7 @@ const Home = () => {
         <img
           src={img2}
           className="w-full h-[500px] object-cover absolute brightness-90"
-          alt="investment"
+          alt=""
         />
 
         <div className="relative flex justify-center lg:justify-end pt-16 lg:pt-[200px] px-6 lg:pr-[220px]">
@@ -154,7 +158,7 @@ const Home = () => {
       />
 
       {/* News Section */}
-      <div className="bg-[#141414] relative z-40 py-20 bg-black">
+      <div className="bg-[#141414] relative z-40 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold text-center text-white mb-16">Latest Updates</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
