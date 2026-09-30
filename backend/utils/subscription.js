@@ -10,6 +10,8 @@ export const getPromptLimit = (plan) => findPlan(plan).promptLimit;
 
 export const getHoldingLimit = (plan) => findPlan(plan).holdingLimit;
 
+export const getAlertLimit = (plan) => findPlan(plan).alertLimit;
+
 /**
  * Downgrades expired paid plans and resets the monthly AI prompt count.
  * Saves the user only if something changed.

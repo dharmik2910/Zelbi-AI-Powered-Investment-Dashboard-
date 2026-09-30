@@ -13,6 +13,7 @@ import Blog from './pages/Blog.jsx';
 import ZelbiAssistant from './pages/ZelbiAssistant.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Portfolio from './pages/Portfolio.jsx';
+import Alerts from './pages/Alerts.jsx';
 import TaxCalculator from './pages/TaxCalculator.jsx';
 import Pricing from './pages/Pricing.jsx';
 import Profile from './pages/Profile.jsx';
@@ -57,6 +58,7 @@ function App() {
              <Route path="/" element={<Home/>} />
              <Route path="/dashboard" element={<ProtectedRoute><Dashboard/></ProtectedRoute>} />
             <Route path="/portfolio" element={<ProtectedRoute><Portfolio/></ProtectedRoute>} />
+            <Route path="/alerts" element={<ProtectedRoute><Alerts/></ProtectedRoute>} />
              <Route path="/tax-calculator" element={<ProtectedRoute><TaxCalculator/></ProtectedRoute>} />
              <Route path="/signup" element={<Signup />} />
              <Route path="/login" element={<Login />} />

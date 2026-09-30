@@ -13,6 +13,7 @@ export const PLANS = [
       "Basic market insights",
       "Dashboard access",
       "Track up to 3 holdings",
+      "3 price alerts",
       "Tax calculator",
     ],
   },
@@ -29,6 +30,7 @@ export const PLANS = [
       "100 AI prompts per month",
       "Advanced market analysis",
       "Unlimited portfolio tracking",
+      "25 price alerts",
       "Priority support",
     ],
   },
@@ -42,6 +44,7 @@ export const PLANS = [
     features: [
       "All Pro features",
       "Unlimited AI prompts",
+      "100 price alerts",
       "Real-time AI insights",
       "Custom trading strategies",
       "Dedicated support",

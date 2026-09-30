@@ -110,6 +110,8 @@ FRONTEND_URL=https://your-frontend-domain      # used for CORS and password rese
 GOOGLE_CLIENT_ID=your_google_oauth_client_id   # same value as REACT_APP_GOOGLE_CLIENT_ID
 TWELVEDATA_API_KEY=your_twelvedata_api_key     # market data is proxied through /api/market
 NODE_ENV=production                            # enables secure cookies (requires HTTPS)
+ALERT_CHECK_INTERVAL_MS=300000                 # optional, how often price alerts are checked
+ALERT_SYMBOLS_PER_RUN=8                        # optional, symbols checked per run (TwelveData rate limit)
 ```
 
 

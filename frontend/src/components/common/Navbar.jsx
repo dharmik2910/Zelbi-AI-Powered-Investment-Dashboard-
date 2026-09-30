@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  FaBell,
   FaCalculator,
   FaChartLine,
   FaNewspaper,
@@ -125,6 +126,24 @@ const Navbar = () => {
                 ></span>              </Link>
               <Link to="/portfolio" className="relative group py-1">
                 Portfolio
+                <span
+                  className="
+    absolute
+    left-0
+    bottom-0
+    h-[2px]
+    w-full
+    bg-[#3affa3]
+    origin-left
+    scale-x-0
+    transition-transform
+    duration-300
+    ease-out
+    group-hover:scale-x-[1]
+  "
+                ></span>              </Link>
+              <Link to="/alerts" className="relative group py-1">
+                Alerts
                 <span
                   className="
     absolute
@@ -313,6 +332,19 @@ const Navbar = () => {
                 >
                   <FaWallet />
                   Portfolio
+                </Link>
+
+                <Link
+                  to="/alerts"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all ${
+                    isActive("/alerts")
+                      ? "bg-[#3affa3] text-black"
+                      : "text-white hover:bg-white/10"
+                  }`}
+                >
+                  <FaBell />
+                  Alerts
                 </Link>
 
                 <Link

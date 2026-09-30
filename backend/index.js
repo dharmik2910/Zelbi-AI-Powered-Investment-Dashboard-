@@ -10,9 +10,11 @@ import userRoutes from "./routes/User.js";
 import subscriptionRoutes from "./routes/Subscription.js";
 import marketRoutes from "./routes/Market.js";
 import portfolioRoutes from "./routes/Portfolio.js";
+import alertRoutes from "./routes/Alert.js";
+import { startAlertChecker } from "./services/alertChecker.service.js";
 
 dotenv.config(); 
-dbConnect();
+dbConnect().then(startAlertChecker);
 const app=express();
 
 const frontendOrigin = process.env.FRONTEND_URL || "http://localhost:3001";
@@ -45,6 +47,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/market", marketRoutes);
 app.use("/api/portfolio", portfolioRoutes);
+app.use("/api/alerts", alertRoutes);
 
 
 app.get('/', (req, res) => {   

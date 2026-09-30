@@ -4,7 +4,8 @@ import debounce from 'lodash/debounce';
 import { useEffect, useMemo, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import ReactMarkdown from 'react-markdown';
-import { FaArrowDown, FaArrowUp, FaChartLine, FaRegStar, FaRobot, FaSearch, FaStar } from 'react-icons/fa';
+import { FaArrowDown, FaArrowUp, FaBell, FaChartLine, FaRegStar, FaRobot, FaSearch, FaStar } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import { ImStatsBars } from 'react-icons/im';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../slices/profileSlice';
@@ -724,11 +725,21 @@ const Dashboard = () => {
             <div className="flex items-center space-x-3">
               <h2 className="text-xl sm:text-2xl font-bold">{selectedStock}</h2>
               <button
+                type="button"
                 onClick={() => toggleFavorite(selectedStock)}
+                aria-label={isFavorite(selectedStock) ? `Remove ${selectedStock} from watchlist` : `Add ${selectedStock} to watchlist`}
                 className="text-yellow-500 hover:text-yellow-400"
               >
                 {isFavorite(selectedStock) ? <FaStar /> : <FaRegStar />}
               </button>
+              <Link
+                to={`/alerts?symbol=${encodeURIComponent(selectedStock)}`}
+                aria-label={`Set a price alert for ${selectedStock}`}
+                title="Set a price alert"
+                className="text-gray-400 hover:text-primary"
+              >
+                <FaBell />
+              </Link>
             </div>
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3 md:shrink-0">
               <button
