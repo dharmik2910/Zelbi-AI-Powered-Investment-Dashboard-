@@ -173,3 +173,50 @@ export const getUserDetails = async (req, res) => {
     })
   }
 }
+
+const MAX_WATCHLIST_SIZE = 50
+const WATCHLIST_SYMBOL_PATTERN = /^[A-Za-z0-9.:\-/]{1,20}$/
+
+export const getWatchlist = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("watchlist")
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" })
+    }
+    return res.status(200).json({ success: true, watchlist: user.watchlist || [] })
+  } catch (error) {
+    console.error("Error in getWatchlist:", error)
+    return res.status(500).json({ success: false, message: "Could not load watchlist" })
+  }
+}
+
+export const updateWatchlist = async (req, res) => {
+  try {
+    const { symbols } = req.body
+    if (!Array.isArray(symbols)) {
+      return res.status(400).json({ success: false, message: "symbols must be an array" })
+    }
+
+    const watchlist = [...new Set(
+      symbols
+        .filter((symbol) => typeof symbol === "string" && WATCHLIST_SYMBOL_PATTERN.test(symbol.trim()))
+        .map((symbol) => symbol.trim().toUpperCase())
+    )]
+
+    if (watchlist.length > MAX_WATCHLIST_SIZE) {
+      return res.status(400).json({
+        success: false,
+        message: `Your watchlist can hold up to ${MAX_WATCHLIST_SIZE} symbols`,
+      })
+    }
+
+    const user = await User.findByIdAndUpdate(req.user.id, { watchlist }, { new: true }).select("watchlist")
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" })
+    }
+    return res.status(200).json({ success: true, watchlist: user.watchlist })
+  } catch (error) {
+    console.error("Error in updateWatchlist:", error)
+    return res.status(500).json({ success: false, message: "Could not update watchlist" })
+  }
+}

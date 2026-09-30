@@ -77,6 +77,12 @@ const userSchema = new mongoose.Schema({
         default: null,
     },
 
+    // Symbols starred on the dashboard
+    watchlist: {
+        type: [String],
+        default: [],
+    },
+
     // When aiPromptCount was last reset; it resets every 30 days
     promptCountResetAt: {
         type: Date,
