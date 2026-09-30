@@ -1,7 +1,11 @@
 import Profile from "../models/Profile.js"
 import User from "../models/User.js"
+import Holding from "../models/Holding.js"
+import Alert from "../models/Alert.js"
+import Transaction from "../models/Transaction.js"
 import { uploadFile, deleteFile } from "../utils/s3Uploader.js"
 import { populateUserImage } from "../utils/userHelper.js"
+import { refreshSubscriptionState } from "../utils/subscription.js"
 import mongoose from "mongoose"
 
 export const updateProfile = async (req, res) => {
@@ -79,6 +83,10 @@ export const deleteAccount = async (req, res) => {
       _id: new mongoose.Types.ObjectId(user.additionalDetails),
     })
     
+    await Holding.deleteMany({ userId: id })
+    await Alert.deleteMany({ userId: id })
+    await Transaction.deleteMany({ userId: id })
+
     // Now Delete User
     await User.findByIdAndDelete({ _id: id })
     
@@ -155,6 +163,7 @@ export const getUserDetails = async (req, res) => {
         message: "User not found",
       })
     }
+    await refreshSubscriptionState(userDetailsDoc)
     const userDetails = await populateUserImage(userDetailsDoc)
     return res.status(200).json({
       success: true,
@@ -166,5 +175,52 @@ export const getUserDetails = async (req, res) => {
       success: false,
       message: error.message,
     })
+  }
+}
+
+const MAX_WATCHLIST_SIZE = 50
+const WATCHLIST_SYMBOL_PATTERN = /^[A-Za-z0-9.:\-/]{1,20}$/
+
+export const getWatchlist = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("watchlist")
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" })
+    }
+    return res.status(200).json({ success: true, watchlist: user.watchlist || [] })
+  } catch (error) {
+    console.error("Error in getWatchlist:", error)
+    return res.status(500).json({ success: false, message: "Could not load watchlist" })
+  }
+}
+
+export const updateWatchlist = async (req, res) => {
+  try {
+    const { symbols } = req.body
+    if (!Array.isArray(symbols)) {
+      return res.status(400).json({ success: false, message: "symbols must be an array" })
+    }
+
+    const watchlist = [...new Set(
+      symbols
+        .filter((symbol) => typeof symbol === "string" && WATCHLIST_SYMBOL_PATTERN.test(symbol.trim()))
+        .map((symbol) => symbol.trim().toUpperCase())
+    )]
+
+    if (watchlist.length > MAX_WATCHLIST_SIZE) {
+      return res.status(400).json({
+        success: false,
+        message: `Your watchlist can hold up to ${MAX_WATCHLIST_SIZE} symbols`,
+      })
+    }
+
+    const user = await User.findByIdAndUpdate(req.user.id, { watchlist }, { new: true }).select("watchlist")
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" })
+    }
+    return res.status(200).json({ success: true, watchlist: user.watchlist })
+  } catch (error) {
+    console.error("Error in updateWatchlist:", error)
+    return res.status(500).json({ success: false, message: "Could not update watchlist" })
   }
 }

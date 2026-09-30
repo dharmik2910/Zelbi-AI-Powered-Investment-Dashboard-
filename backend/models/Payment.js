@@ -57,4 +57,14 @@ const paymentSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+// A Razorpay order or payment can only be redeemed once
+paymentSchema.index(
+    { razorpay_order_id: 1 },
+    { unique: true, partialFilterExpression: { status: "success" } }
+);
+paymentSchema.index(
+    { razorpay_payment_id: 1 },
+    { unique: true, partialFilterExpression: { status: "success" } }
+);
+
 export default mongoose.model("Payment", paymentSchema);

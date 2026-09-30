@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
+import axios from "axios";
+import { getPromptLimit } from "../data/plans";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
@@ -123,6 +125,20 @@ export default function Profile() {
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  // Billing history, loaded when the subscription tab is opened
+  const [payments, setPayments] = useState(null);
+  const [paymentsError, setPaymentsError] = useState(false);
+
+  useEffect(() => {
+    if (activeTab !== "subscription" || payments !== null || !token) return;
+    axios
+      .get(`${process.env.REACT_APP_API_URL}/api/subscription/payment-history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(({ data }) => setPayments(data.payments || []))
+      .catch(() => setPaymentsError(true));
+  }, [activeTab, payments, token]);
 
   // Edit Profile Form State
   const [profileData, setProfileData] = useState({
@@ -285,9 +301,8 @@ useEffect(() => {
     }
   };
 
-  const planLimits = { free: 5, pro: 100, elite: Infinity };
   const currentPlan = user?.subscriptionPlan || "free";
-  const promptLimit = planLimits[currentPlan] || 5;
+  const promptLimit = getPromptLimit(currentPlan);
   const promptCount = user?.aiPromptCount || 0;
   const usagePercentage = Math.min((promptCount / promptLimit) * 100, 100);
 
@@ -663,6 +678,16 @@ useEffect(() => {
                         <span className="text-xl font-bold uppercase tracking-wider text-white capitalize">{currentPlan} Plan</span>
                         {currentPlan !== "free" && <span className="bg-[#3affa3]/10 text-[#3affa3] text-xs font-bold px-2 py-0.5 rounded-full border border-[#3affa3]/20">Active</span>}
                       </div>
+                      {currentPlan !== "free" && user?.subscriptionExpiry && (
+                        <p className="text-sm text-gray-300 mt-1">
+                          Active until{" "}
+                          {new Date(user.subscriptionExpiry).toLocaleDateString(undefined, {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </p>
+                      )}
                       <p className="text-gray-400 text-sm mt-1">
                         {currentPlan === "free" && "Upgrade to unlock advanced analytics and unlimited Zelbi assistant queries."}
                         {currentPlan === "pro" && "Your Pro tier covers up to 100 Zelbi Assistant calls monthly."}
@@ -699,11 +724,47 @@ useEffect(() => {
                     </div>
 
                     <p className="text-xs text-gray-500 mt-2">
-                      {currentPlan === "free"
-                        ? "Free plan users are limited to 5 AI prompts in total. Upgrade for higher limits."
-                        : `Your usage resets at the end of the billing period.`
-                      }
+                      Your prompt count resets every 30 days.
+                      {currentPlan === "free" && " Upgrade for higher limits."}
                     </p>
+                  </div>
+
+                  {/* Billing History */}
+                  <div className="bg-[#1a1a1a] border border-white/5 rounded-2xl p-6">
+                    <h4 className="text-white font-semibold mb-4">Billing History</h4>
+                    {paymentsError ? (
+                      <p className="text-sm text-gray-400">Couldn't load your billing history. Please try again later.</p>
+                    ) : payments === null ? (
+                      <p className="text-sm text-gray-400">Loading…</p>
+                    ) : payments.length === 0 ? (
+                      <p className="text-sm text-gray-400">No payments yet.</p>
+                    ) : (
+                      <ul className="divide-y divide-white/5">
+                        {payments.map((payment) => (
+                          <li key={payment._id} className="flex items-center justify-between gap-4 py-3 text-sm">
+                            <div className="min-w-0">
+                              <p className="text-white capitalize">
+                                {payment.plan} · {payment.billingCycle}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                {new Date(payment.createdAt).toLocaleDateString()} · {payment.razorpay_order_id}
+                              </p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-white">
+                                {new Intl.NumberFormat(undefined, {
+                                  style: "currency",
+                                  currency: payment.currency || "INR",
+                                }).format(payment.amount / 100)}
+                              </p>
+                              <p className={`text-xs ${payment.status === "success" ? "text-green-400" : "text-red-400"}`}>
+                                {payment.status === "success" ? "Paid" : "Failed"}
+                              </p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 </div>
               </div>

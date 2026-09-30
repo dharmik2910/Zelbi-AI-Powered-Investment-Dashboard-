@@ -1,12 +1,15 @@
 import axios from 'axios';
+import { getPromptLimit } from "../data/plans";
 import debounce from 'lodash/debounce';
 import { useEffect, useMemo, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import ReactMarkdown from 'react-markdown';
-import { FaArrowDown, FaArrowUp, FaChartLine, FaRegStar, FaRobot, FaSearch, FaStar } from 'react-icons/fa';
+import { FaArrowDown, FaArrowUp, FaBalanceScale, FaBell, FaChartLine, FaRegStar, FaRobot, FaSearch, FaStar } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import { ImStatsBars } from 'react-icons/im';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../slices/profileSlice';
+import { toast } from 'react-hot-toast';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -14,8 +17,7 @@ const Dashboard = () => {
   const { token } = useSelector((state) => state.auth);
   const promptCount = user?.aiPromptCount || 0;
   const currentPlan = user?.subscriptionPlan || "free";
-  const planLimits = { free: 5, pro: 100, elite: Infinity };
-  const promptLimit = planLimits[currentPlan] || 5;
+  const promptLimit = getPromptLimit(currentPlan);
 
   const [stockData, setStockData] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,10 +28,7 @@ const Dashboard = () => {
   const [timeframe, setTimeframe] = useState("1day");
   const [selectedStock, setSelectedStock] = useState("AAPL");
 
-  const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem('favoriteStocks');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [favorites, setFavorites] = useState([]);
   const [showMAs, setShowMAs] = useState({
     ma50: true,
     ma200: false
@@ -50,19 +49,58 @@ const Dashboard = () => {
   const chartHeight = isMobile ? 320 : 600;
   const candlestickHeight = isMobile ? 260 : 350;
 
-  // Save favorites to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('favoriteStocks', JSON.stringify(favorites));
-  }, [favorites]);
+  const watchlistUrl = `${process.env.REACT_APP_API_URL}/api/profile/watchlist`;
 
-  const toggleFavorite = (symbol) => {
-    setFavorites(prev => {
-      if (prev.includes(symbol)) {
-        return prev.filter(s => s !== symbol);
-      } else {
-        return [...prev, symbol];
+  // Load the watchlist from the account, moving any old browser-only favorites over once
+  useEffect(() => {
+    let cancelled = false;
+    const headers = { Authorization: `Bearer ${token}` };
+
+    const loadWatchlist = async () => {
+      try {
+        const { data } = await axios.get(watchlistUrl, { headers });
+        let watchlist = data.watchlist || [];
+
+        let legacy = [];
+        try {
+          legacy = JSON.parse(localStorage.getItem('favoriteStocks') || '[]');
+        } catch {
+          legacy = [];
+        }
+        if (Array.isArray(legacy) && legacy.length) {
+          const merged = [...new Set([...watchlist, ...legacy])];
+          if (merged.length !== watchlist.length) {
+            const res = await axios.put(watchlistUrl, { symbols: merged }, { headers });
+            watchlist = res.data.watchlist;
+          }
+          localStorage.removeItem('favoriteStocks');
+        }
+
+        if (!cancelled) setFavorites(watchlist);
+      } catch (err) {
+        console.error("Failed to load watchlist", err);
       }
-    });
+    };
+
+    loadWatchlist();
+    return () => {
+      cancelled = true;
+    };
+  }, [token, watchlistUrl]);
+
+  const toggleFavorite = async (symbol) => {
+    const previous = favorites;
+    const next = previous.includes(symbol)
+      ? previous.filter(s => s !== symbol)
+      : [...previous, symbol];
+
+    setFavorites(next);
+    try {
+      await axios.put(watchlistUrl, { symbols: next }, { headers: { Authorization: `Bearer ${token}` } });
+    } catch (err) {
+      setFavorites(previous);
+      toast.error(err.response?.data?.message || "Couldn't update your watchlist");
+    }
   };
 
   const isFavorite = (symbol) => favorites.includes(symbol);
@@ -97,12 +135,15 @@ const Dashboard = () => {
       setError(null);
       setStockData(null);
 
-      const API_KEY = "73b158b9a1f149acb0aeb5c6ce64df55";
       const response = await axios.get(
-        `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${timeframe}&outputsize=500&apikey=${API_KEY}`
+        `${process.env.REACT_APP_API_URL}/api/market/time-series`,
+        {
+          params: { symbol, interval: timeframe },
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
-      if (response.data.status !== "ok") {
+      if (!response.data.success) {
         throw new Error("Failed to fetch stock data");
       }
 
@@ -171,9 +212,15 @@ const Dashboard = () => {
       return;
     }
     try {
-      const response = await axios.get(`https://api.twelvedata.com/symbol_search?symbol=${query}`);
-      if (response.data && response.data.data) {
-        setSearchResults(response.data.data.slice(0, 6));
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/market/search`,
+        {
+          params: { q: query },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (response.data && response.data.results) {
+        setSearchResults(response.data.results);
         setShowDropdown(true);
       }
     } catch (err) {
@@ -591,7 +638,7 @@ const Dashboard = () => {
                 </div>
                 <button
                   type="submit"
-                  className="bg-[#32e092] hover:bg-[#3affa3] text-black px-4 sm:px-6 py-2.5 sm:py-3 rounded-r-xl hover:bg-cyan-700 transition-all duration-200 font-medium shadow-lg shadow-cyan-500/20 text-sm sm:text-base shrink-0"
+                  className="bg-primary hover:bg-primary-hover text-black px-4 sm:px-6 py-2.5 sm:py-3 rounded-r-xl transition-all duration-200 font-medium shadow-lg shadow-primary/20 text-sm sm:text-base shrink-0"
                 >
                   Search
                 </button>
@@ -604,26 +651,36 @@ const Dashboard = () => {
               <FaStar className="text-cyan-400 mr-2" />
               Favorites
             </h2>
-            <div className="flex flex-wrap gap-2">
-              {favorites.map(symbol => (
-                <div
-                  key={symbol}
-                  className="flex items-center space-x-2 bg-gray-700/50 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-gray-600 transition-all duration-200 cursor-pointer border border-gray-600"
-                  onClick={() => fetchStockData(symbol)}
-                >
-                  <span className="font-medium">{symbol}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(symbol);
-                    }}
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors"
+            {favorites.length === 0 ? (
+              <p className="text-sm text-gray-400">
+                Star a stock to add it here. Your watchlist is saved to your account.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {favorites.map(symbol => (
+                  <div
+                    key={symbol}
+                    className="flex items-center bg-gray-700/50 backdrop-blur-sm rounded-full hover:bg-gray-600 transition-all duration-200 border border-gray-600"
                   >
-                    <FaStar />
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <button
+                      type="button"
+                      onClick={() => fetchStockData(symbol)}
+                      className="font-medium pl-4 pr-2 py-2"
+                    >
+                      {symbol}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleFavorite(symbol)}
+                      aria-label={`Remove ${symbol} from watchlist`}
+                      className="text-cyan-400 hover:text-cyan-300 transition-colors pr-4 py-2"
+                    >
+                      <FaStar />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -668,11 +725,29 @@ const Dashboard = () => {
             <div className="flex items-center space-x-3">
               <h2 className="text-xl sm:text-2xl font-bold">{selectedStock}</h2>
               <button
+                type="button"
                 onClick={() => toggleFavorite(selectedStock)}
+                aria-label={isFavorite(selectedStock) ? `Remove ${selectedStock} from watchlist` : `Add ${selectedStock} to watchlist`}
                 className="text-yellow-500 hover:text-yellow-400"
               >
                 {isFavorite(selectedStock) ? <FaStar /> : <FaRegStar />}
               </button>
+              <Link
+                to={`/alerts?symbol=${encodeURIComponent(selectedStock)}`}
+                aria-label={`Set a price alert for ${selectedStock}`}
+                title="Set a price alert"
+                className="text-gray-400 hover:text-primary"
+              >
+                <FaBell />
+              </Link>
+              <Link
+                to={`/compare?symbols=${encodeURIComponent([selectedStock, ...favorites.filter((s) => s !== selectedStock)].slice(0, 4).join(","))}`}
+                aria-label={`Compare ${selectedStock} with other stocks`}
+                title="Compare with other stocks"
+                className="text-gray-400 hover:text-primary"
+              >
+                <FaBalanceScale />
+              </Link>
             </div>
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3 md:shrink-0">
               <button

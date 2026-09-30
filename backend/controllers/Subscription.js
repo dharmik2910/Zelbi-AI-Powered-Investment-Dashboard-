@@ -5,53 +5,14 @@ import crypto from 'crypto';
 import mailSender from '../utils/mailSender.js';
 import { paymentSuccessEmail } from '../mail/templates/paymentSuccessEmail.js';
 import { paymentFailureEmail } from '../mail/templates/paymentFailureEmail.js';
+import { refreshSubscriptionState } from '../utils/subscription.js';
+import { PLANS } from '../config/plans.js';
 
-const PLANS = [
-    {
-        id: "free",
-        name: "Free",
-        price: 0,
-        currency: "INR",
-        promptLimit: 5,
-        features: [
-            "5 AI prompts per month",
-            "Basic market insights",
-            "Dashboard access",
-            "Tax calculator",
-        ],
-    },
-    {
-        id: "pro",
-        name: "Pro",
-        price: 499,
-        yearlyPrice: 349,
-        currency: "INR",
-        promptLimit: 100,
-        features: [
-            "100 AI prompts per month",
-            "Advanced market analysis",
-            "Portfolio tracking",
-            "Priority support",
-            "All Free features",
-        ],
-    },
-    {
-        id: "elite",
-        name: "Elite",
-        price: 999,
-        yearlyPrice: 699,
-        currency: "INR",
-        promptLimit: Infinity,
-        features: [
-            "Unlimited AI prompts",
-            "Real-time AI insights",
-            "Custom trading strategies",
-            "Dedicated support",
-            "Early access to features",
-            "All Pro features",
-        ],
-    },
-];
+
+const getRazorpayInstance = () => new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY,
+    key_secret: process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET,
+});
 
 export const getPlans = async (req, res) => {
     try {
@@ -59,6 +20,7 @@ export const getPlans = async (req, res) => {
         const plansForClient = PLANS.map(p => ({
             ...p,
             promptLimit: p.promptLimit === Infinity ? -1 : p.promptLimit,
+            holdingLimit: p.holdingLimit === Infinity ? -1 : p.holdingLimit,
         }));
         return res.status(200).json({ success: true, plans: plansForClient });
     } catch (err) {
@@ -67,13 +29,17 @@ export const getPlans = async (req, res) => {
     }
 };
 
+// Paid plans can only be activated through verifyRazorpayPayment.
+// This endpoint only handles switching back to the free plan.
 export const upgradePlan = async (req, res) => {
     try {
         const { plan } = req.body;
 
-        const validPlans = ["free", "pro", "elite"];
-        if (!plan || !validPlans.includes(plan)) {
-            return res.status(400).json({ success: false, error: "Invalid plan selected" });
+        if (plan !== "free") {
+            return res.status(400).json({
+                success: false,
+                error: "Paid plans require payment",
+            });
         }
 
         const user = await User.findById(req.user.id);
@@ -81,31 +47,14 @@ export const upgradePlan = async (req, res) => {
             return res.status(404).json({ success: false, error: "User not found" });
         }
 
-        const currentPlanIndex = validPlans.indexOf(user.subscriptionPlan || "free");
-        const newPlanIndex = validPlans.indexOf(plan);
-
-        if (newPlanIndex <= currentPlanIndex && plan !== "free") {
-            return res.status(400).json({
-                success: false,
-                error: "Cannot downgrade to a lower or same plan via this endpoint",
-            });
-        }
-
-        // Mock payment: just update the plan (30-day expiry)
-        const expiry = new Date();
-        expiry.setDate(expiry.getDate() + 30);
-
-        user.subscriptionPlan = plan;
-        user.subscriptionExpiry = plan === "free" ? null : expiry;
-
-        // Reset AI prompt count when upgrading
-        user.aiPromptCount = 0;
+        user.subscriptionPlan = "free";
+        user.subscriptionExpiry = null;
 
         await user.save();
 
         return res.status(200).json({
             success: true,
-            message: `Successfully upgraded to ${plan} plan`,
+            message: "Switched to free plan",
             subscriptionPlan: user.subscriptionPlan,
             subscriptionExpiry: user.subscriptionExpiry,
             aiPromptCount: user.aiPromptCount,
@@ -118,9 +67,7 @@ export const upgradePlan = async (req, res) => {
 
 export const getMyPlan = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select(
-            "subscriptionPlan subscriptionExpiry aiPromptCount"
-        );
+        const user = await refreshSubscriptionState(await User.findById(req.user.id));
         if (!user) {
             return res.status(404).json({ success: false, error: "User not found" });
         }
@@ -164,10 +111,7 @@ export const createRazorpayOrder = async (req, res) => {
             return res.status(400).json({ success: false, error: "Plan details not found" });
         }
 
-        const razorpayInstance = new Razorpay({
-            key_id: process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY,
-            key_secret: process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET,
-        });
+        const razorpayInstance = getRazorpayInstance();
 
         const amountInRupees = billingCycle === "yearly"
             ? (planDetails.yearlyPrice ?? planDetails.price)
@@ -176,7 +120,9 @@ export const createRazorpayOrder = async (req, res) => {
         const options = {
             amount: amountInRupees * 100, // amount in smallest currency unit (paise)
             currency: planDetails.currency || "INR",
-            receipt: `rcpt_${req.user.id.slice(-6)}_${Date.now()}` // Keeping it under 40 chars
+            receipt: `rcpt_${req.user.id.slice(-6)}_${Date.now()}`, // Keeping it under 40 chars
+            // The plan is read back from the order on verification, never from the client
+            notes: { userId: req.user.id, plan, billingCycle },
         };
 
         const order = await razorpayInstance.orders.create(options);
@@ -201,16 +147,29 @@ export const createRazorpayOrder = async (req, res) => {
 
 export const verifyRazorpayPayment = async (req, res) => {
     try {
-        const { plan, billingCycle = "monthly", razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !plan) {
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
             return res.status(400).json({ success: false, error: "Missing required fields" });
         }
 
-        const validBillingCycles = ["monthly", "yearly"];
-        if (!validBillingCycles.includes(billingCycle)) {
-            return res.status(400).json({ success: false, error: "Invalid billing cycle selected" });
+        // Plan, billing cycle and amount come from the order we created, not the request body
+        let order;
+        try {
+            order = await getRazorpayInstance().orders.fetch(razorpay_order_id);
+        } catch (fetchError) {
+            console.error("Failed to fetch Razorpay order:", fetchError);
+            return res.status(400).json({ success: false, error: "Payment verification failed" });
         }
+        const { plan, billingCycle = "monthly", userId } = order?.notes || {};
+        const planDetails = PLANS.find(p => p.id === plan);
+
+        if (!planDetails || userId !== req.user.id) {
+            return res.status(400).json({ success: false, error: "Payment verification failed" });
+        }
+
+        const amountInPaise = order.amount;
+        const amountInRupees = amountInPaise / 100;
 
         const secret = process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET;
 
@@ -219,23 +178,22 @@ export const verifyRazorpayPayment = async (req, res) => {
         hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
         const generatedSignature = hmac.digest("hex");
 
-        const planDetails = PLANS.find(p => p.id === plan);
-        const amountInRupees = planDetails
-            ? (billingCycle === "yearly" ? (planDetails.yearlyPrice ?? planDetails.price) : planDetails.price)
-            : 0;
-        const amountInPaise = amountInRupees * 100;
+        const signatureValid =
+            typeof razorpay_signature === "string" &&
+            generatedSignature.length === razorpay_signature.length &&
+            crypto.timingSafeEqual(Buffer.from(generatedSignature), Buffer.from(razorpay_signature));
 
         // --- Signature mismatch: log a failed payment and return error ---
-        if (generatedSignature !== razorpay_signature) {
+        if (!signatureValid) {
             await Payment.create({
                 userId: req.user.id,
                 plan,
                 billingCycle,
                 amount: amountInPaise,
-                currency: planDetails?.currency || "INR",
+                currency: order.currency || "INR",
                 razorpay_order_id,
                 razorpay_payment_id,
-                razorpay_signature,
+                razorpay_signature: String(razorpay_signature),
                 status: "failed",
             });
 
@@ -243,11 +201,9 @@ export const verifyRazorpayPayment = async (req, res) => {
             try {
                 const user = await User.findById(req.user.id);
                 if (user) {
-                    const planName = planDetails?.name || plan;
-                    const amountInRupees = amountInPaise / 100;
                     const failureEmail = paymentFailureEmail(
                         user.firstName || "User",
-                        planName,
+                        planDetails.name,
                         amountInRupees,
                         razorpay_order_id
                     );
@@ -258,6 +214,35 @@ export const verifyRazorpayPayment = async (req, res) => {
             }
 
             return res.status(400).json({ success: false, error: "Payment verification failed" });
+        }
+
+        // Each order can only be redeemed once
+        const alreadyUsed = await Payment.exists({
+            $or: [{ razorpay_order_id }, { razorpay_payment_id }],
+            status: "success",
+        });
+        if (alreadyUsed) {
+            return res.status(409).json({ success: false, error: "Payment already processed" });
+        }
+
+        // Record the payment first so the unique index rejects concurrent replays
+        try {
+            await Payment.create({
+                userId: req.user.id,
+                plan,
+                billingCycle,
+                amount: amountInPaise,
+                currency: order.currency || "INR",
+                razorpay_order_id,
+                razorpay_payment_id,
+                razorpay_signature,
+                status: "success",
+            });
+        } catch (err) {
+            if (err.code === 11000) {
+                return res.status(409).json({ success: false, error: "Payment already processed" });
+            }
+            throw err;
         }
 
         // Payment is valid — upgrade the user's plan
@@ -273,21 +258,9 @@ export const verifyRazorpayPayment = async (req, res) => {
         user.subscriptionPlan = plan;
         user.subscriptionExpiry = expiry;
         user.aiPromptCount = 0; // Reset prompt count
+        user.promptCountResetAt = new Date();
 
         await user.save();
-
-        // --- Persist the successful payment record ---
-        await Payment.create({
-            userId: req.user.id,
-            plan,
-            billingCycle,
-            amount: amountInPaise,
-            currency: planDetails?.currency || "INR",
-            razorpay_order_id,
-            razorpay_payment_id,
-            razorpay_signature,
-            status: "success",
-        });
 
         // Send payment success email
         try {
@@ -331,4 +304,3 @@ export const getPaymentHistory = async (req, res) => {
     }
 };
 
-export { PLANS };

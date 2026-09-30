@@ -139,8 +139,7 @@ export function getPasswordResetToken(email, setEmailSent) {
   return async (dispatch) => {
     dispatch(setLoading(true))
     try {
-      const frontendUrl = process.env.REACT_APP_FRONTEND_URL || window.location.origin
-      const response = await apiConnector("POST", RESETPASSTOKEN_API, { email, frontendUrl })
+      const response = await apiConnector("POST", RESETPASSTOKEN_API, { email })
 
       console.log("RESET PASSWORD TOKEN RESPONSE....", response)
 
