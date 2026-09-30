@@ -6,53 +6,8 @@ import mailSender from '../utils/mailSender.js';
 import { paymentSuccessEmail } from '../mail/templates/paymentSuccessEmail.js';
 import { paymentFailureEmail } from '../mail/templates/paymentFailureEmail.js';
 import { refreshSubscriptionState } from '../utils/subscription.js';
+import { PLANS } from '../config/plans.js';
 
-const PLANS = [
-    {
-        id: "free",
-        name: "Free",
-        price: 0,
-        currency: "INR",
-        promptLimit: 5,
-        features: [
-            "5 AI prompts per month",
-            "Basic market insights",
-            "Dashboard access",
-            "Tax calculator",
-        ],
-    },
-    {
-        id: "pro",
-        name: "Pro",
-        price: 499,
-        yearlyPrice: 349,
-        currency: "INR",
-        promptLimit: 100,
-        features: [
-            "100 AI prompts per month",
-            "Advanced market analysis",
-            "Portfolio tracking",
-            "Priority support",
-            "All Free features",
-        ],
-    },
-    {
-        id: "elite",
-        name: "Elite",
-        price: 999,
-        yearlyPrice: 699,
-        currency: "INR",
-        promptLimit: Infinity,
-        features: [
-            "Unlimited AI prompts",
-            "Real-time AI insights",
-            "Custom trading strategies",
-            "Dedicated support",
-            "Early access to features",
-            "All Pro features",
-        ],
-    },
-];
 
 const getRazorpayInstance = () => new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY,
@@ -348,4 +303,3 @@ export const getPaymentHistory = async (req, res) => {
     }
 };
 
-export { PLANS };

@@ -7,12 +7,16 @@ import { HiSparkles, HiDotsVertical, HiTrash } from "react-icons/hi";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { setUser } from "../slices/profileSlice";
+import { getPromptLimit } from "../data/plans";
 
 // Initialize Speech Recognition
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-const PLAN_LIMITS = { free: 5, pro: 100, elite: -1 };
-const getPlanLimit = (plan) => PLAN_LIMITS[plan] ?? 5;
+// -1 means unlimited in this component
+const getPlanLimit = (plan) => {
+  const limit = getPromptLimit(plan);
+  return limit === Infinity ? -1 : limit;
+};
 
 const PLAN_STYLES = {
   free: { label: "Free", color: "#9ca3af", bg: "rgba(156,163,175,0.08)", ring: "rgba(156,163,175,0.25)" },

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getPromptLimit } from "../data/plans";
 import debounce from 'lodash/debounce';
 import { useEffect, useMemo, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
@@ -14,8 +15,7 @@ const Dashboard = () => {
   const { token } = useSelector((state) => state.auth);
   const promptCount = user?.aiPromptCount || 0;
   const currentPlan = user?.subscriptionPlan || "free";
-  const planLimits = { free: 5, pro: 100, elite: Infinity };
-  const promptLimit = planLimits[currentPlan] || 5;
+  const promptLimit = getPromptLimit(currentPlan);
 
   const [stockData, setStockData] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");

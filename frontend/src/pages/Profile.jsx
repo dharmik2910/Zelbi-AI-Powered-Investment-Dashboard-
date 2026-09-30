@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
+import { getPromptLimit } from "../data/plans";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
@@ -285,9 +286,8 @@ useEffect(() => {
     }
   };
 
-  const planLimits = { free: 5, pro: 100, elite: Infinity };
   const currentPlan = user?.subscriptionPlan || "free";
-  const promptLimit = planLimits[currentPlan] || 5;
+  const promptLimit = getPromptLimit(currentPlan);
   const promptCount = user?.aiPromptCount || 0;
   const usagePercentage = Math.min((promptCount / promptLimit) * 100, 100);
 

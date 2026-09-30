@@ -1,12 +1,11 @@
-const PROMPT_LIMITS = {
-    free: 5,
-    pro: 100,
-    elite: Infinity,
-};
+import { PLANS } from "../config/plans.js";
 
 const PROMPT_RESET_INTERVAL_MS = 30 * 24 * 60 * 60 * 1000;
 
-export const getPromptLimit = (plan) => PROMPT_LIMITS[plan] ?? PROMPT_LIMITS.free;
+const FREE_PLAN = PLANS.find(p => p.id === "free");
+
+export const getPromptLimit = (plan) =>
+    (PLANS.find(p => p.id === plan) ?? FREE_PLAN).promptLimit;
 
 /**
  * Downgrades expired paid plans and resets the monthly AI prompt count.

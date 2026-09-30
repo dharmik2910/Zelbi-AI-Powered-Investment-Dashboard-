@@ -3,14 +3,12 @@ import cors from 'cors';
 import dotenv from "dotenv";
 import express from 'express';
 import fileUpload from "express-fileupload";
-import { cloudinaryConnect } from "./config/cloudinary.js";
 import dbConnect from './config/db.js';
 import aiRoutes from "./routes/Ai.js";
 import profileRoutes from "./routes/Profile.js";
 import userRoutes from "./routes/User.js";
 import subscriptionRoutes from "./routes/Subscription.js";
 import marketRoutes from "./routes/Market.js";
-//import projectRoutes from "./routes/Project.js";
 
 dotenv.config(); 
 dbConnect();
@@ -28,7 +26,6 @@ app.use(
     credentials: true,
   })
 );
-cloudinaryConnect();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

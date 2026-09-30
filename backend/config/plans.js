@@ -1,0 +1,48 @@
+// Single source of truth for plan pricing and AI prompt limits.
+// Keep frontend/src/data/plans.js in sync when changing prices or limits.
+export const PLANS = [
+    {
+        id: "free",
+        name: "Free",
+        price: 0,
+        currency: "INR",
+        promptLimit: 5,
+        features: [
+            "5 AI prompts per month",
+            "Basic market insights",
+            "Dashboard access",
+            "Tax calculator",
+        ],
+    },
+    {
+        id: "pro",
+        name: "Pro",
+        price: 499,
+        yearlyPrice: 349,
+        currency: "INR",
+        promptLimit: 100,
+        features: [
+            "100 AI prompts per month",
+            "Advanced market analysis",
+            "Portfolio tracking",
+            "Priority support",
+            "All Free features",
+        ],
+    },
+    {
+        id: "elite",
+        name: "Elite",
+        price: 999,
+        yearlyPrice: 699,
+        currency: "INR",
+        promptLimit: Infinity,
+        features: [
+            "Unlimited AI prompts",
+            "Real-time AI insights",
+            "Custom trading strategies",
+            "Dedicated support",
+            "Early access to features",
+            "All Pro features",
+        ],
+    },
+];
