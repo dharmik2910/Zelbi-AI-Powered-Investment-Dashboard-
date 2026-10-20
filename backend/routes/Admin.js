@@ -1,0 +1,62 @@
+import express from "express";
+import {
+    clearLogs,
+    createUser,
+    deleteEmailLog,
+    deleteUser,
+    deployNow,
+    deleteUserAlert,
+    exportPayments,
+    exportUsers,
+    getAiUsage,
+    getPageViews,
+    getServer,
+    getServerLogs,
+    getStats,
+    getUser,
+    listAuditLog,
+    listEmails,
+    listPayments,
+    listUsers,
+    restartBackend,
+    sendUserPasswordReset,
+    updateUser,
+} from "../controllers/Admin.js";
+import { isAdmin } from "../middleware/admin.js";
+import { auth } from "../middleware/auth.js";
+
+const router = express.Router();
+
+// Every admin route requires a signed-in user with the admin role
+router.use(auth, isAdmin);
+
+router.get("/stats", getStats);
+
+router.get("/users", listUsers);
+router.get("/users/export", exportUsers);
+router.post("/users", createUser);
+router.get("/users/:id", getUser);
+router.patch("/users/:id", updateUser);
+router.delete("/users/:id", deleteUser);
+router.post("/users/:id/password-reset", sendUserPasswordReset);
+router.delete("/users/:id/alerts/:alertId", deleteUserAlert);
+
+router.get("/payments", listPayments);
+router.get("/payments/export", exportPayments);
+
+router.get("/emails", listEmails);
+router.delete("/emails/:id", deleteEmailLog);
+router.get("/ai-usage", getAiUsage);
+router.get("/page-views", getPageViews);
+
+// Bulk delete: /logs/emails, /logs/ai-usage or /logs/page-views with ?olderThanDays=N or ?all=true
+router.delete("/logs/:kind", clearLogs);
+
+router.get("/server", getServer);
+router.get("/server/logs", getServerLogs);
+router.post("/server/restart", restartBackend);
+router.post("/server/deploy", deployNow);
+
+router.get("/audit-log", listAuditLog);
+
+export default router;

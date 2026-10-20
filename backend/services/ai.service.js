@@ -80,6 +80,15 @@ const toGeminiHistory = (history = []) => {
     return turns;
 };
 
+// Adds one Gemini response's token counts to a running total. Thinking tokens are billed as output.
+const addUsage = (total, response) => {
+    const meta = response?.usageMetadata;
+    if (!meta) return;
+    total.promptTokens += meta.promptTokenCount || 0;
+    total.outputTokens += (meta.candidatesTokenCount || 0) + (meta.thoughtsTokenCount || 0);
+    total.totalTokens += meta.totalTokenCount || 0;
+};
+
 /**
  * Generates an AI response. Throws if the model call fails.
  * @param {Object} options
@@ -87,6 +96,7 @@ const toGeminiHistory = (history = []) => {
  * @param {Array} [options.history] - Earlier messages as { role, text }
  * @param {"chat" | "analysis"} [options.mode]
  * @param {Array} [options.extraTools] - More { declaration, execute } tools, e.g. per-user data
+ * @returns {Promise<{ text: string, model: string, usage: Object, toolCalls: string[] }>}
  */
 export const generateResult = async ({ prompt, history = [], mode = "chat", extraTools = [] }) => {
     const tools = [getStockQuoteTool, ...extraTools];
@@ -99,12 +109,17 @@ export const generateResult = async ({ prompt, history = [], mode = "chat", extr
         tools: [{ functionDeclarations: tools.map((tool) => tool.declaration) }],
     });
 
+    const usage = { promptTokens: 0, outputTokens: 0, totalTokens: 0 };
+    const toolCalls = [];
+
     const chat = model.startChat({ history: toGeminiHistory(history) });
     let result = await chat.sendMessage(prompt);
+    addUsage(usage, result.response);
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
         const calls = result.response.functionCalls();
         if (!calls || calls.length === 0) break;
+        toolCalls.push(...calls.map((call) => call.name));
 
         const responses = await Promise.all(
             calls.map(async (call) => {
@@ -121,7 +136,13 @@ export const generateResult = async ({ prompt, history = [], mode = "chat", extr
         );
 
         result = await chat.sendMessage(responses);
+        addUsage(usage, result.response);
     }
 
-    return result.response.text() || "No response generated";
+    return {
+        text: result.response.text() || "No response generated",
+        model: MODEL_NAME,
+        usage,
+        toolCalls,
+    };
 };

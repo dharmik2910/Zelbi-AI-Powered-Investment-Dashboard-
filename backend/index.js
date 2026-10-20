@@ -1,3 +1,4 @@
+import "./utils/installLogBuffer.js";
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from "dotenv";
@@ -11,6 +12,9 @@ import subscriptionRoutes from "./routes/Subscription.js";
 import marketRoutes from "./routes/Market.js";
 import portfolioRoutes from "./routes/Portfolio.js";
 import alertRoutes from "./routes/Alert.js";
+import adminRoutes from "./routes/Admin.js";
+import webhookRoutes from "./routes/Webhook.js";
+import analyticsRoutes from "./routes/Analytics.js";
 import { startAlertChecker } from "./services/alertChecker.service.js";
 
 dotenv.config(); 
@@ -25,7 +29,7 @@ app.use(
       "http://localhost:3001",
       frontendOrigin
     ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
@@ -48,6 +52,9 @@ app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/market", marketRoutes);
 app.use("/api/portfolio", portfolioRoutes);
 app.use("/api/alerts", alertRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/webhooks", webhookRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 
 app.get('/', (req, res) => {   

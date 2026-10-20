@@ -89,6 +89,8 @@ npm run dev
 ### Frontend (.env)
 ```
 REACT_APP_API_URL=your_backend_url
+REACT_APP_GOOGLE_CLIENT_ID=your_google_oauth_client_id
+REACT_APP_GTM_ID=GTM-XXXXXXX     # optional, Google Tag Manager container for Google Analytics
 ```
 
 ### Backend (.env)
@@ -112,6 +114,32 @@ TWELVEDATA_API_KEY=your_twelvedata_api_key     # market data is proxied through 
 NODE_ENV=production                            # enables secure cookies (requires HTTPS)
 ALERT_CHECK_INTERVAL_MS=300000                 # optional, how often price alerts are checked
 ALERT_SYMBOLS_PER_RUN=8                        # optional, symbols checked per run (TwelveData rate limit)
+MAIL_FROM=you@yourdomain.com                   # optional, sender address for emails
+BREVO_WEBHOOK_SECRET=long_random_string        # optional, enables delivery status in the admin email log
+GEMINI_INPUT_USD_PER_M=0.30                    # optional, AI cost estimate (USD per million input tokens)
+GEMINI_OUTPUT_USD_PER_M=2.50                   # optional, AI cost estimate (USD per million output tokens)
+GITHUB_REPO=owner/repo                         # optional, enables "Deploy now" in the admin Server section
+GITHUB_DEPLOY_TOKEN=github_pat_xxx             # optional, fine-grained token with Actions read/write on that repo
 ```
+
+### Email delivery tracking (optional)
+
+The admin panel logs every email Zelbi sends. To also see whether emails were delivered, bounced or opened:
+
+1. Set `BREVO_WEBHOOK_SECRET` in the backend `.env` to a long random string and restart the backend.
+2. In Brevo, go to **Transactional > Settings > Webhook** and add
+   `http://<your-site>/api/webhooks/brevo?token=<BREVO_WEBHOOK_SECRET>`.
+3. Select the events: delivered, opened, clicked, soft bounce, hard bounce, blocked, spam, invalid email, deferred, error.
+
+### Deploy from the admin panel (optional)
+
+The admin **Server** section shows server health, backend logs and a restart button. To also enable **Deploy now**:
+
+1. On GitHub, create a fine-grained personal access token (Settings > Developer settings > Fine-grained tokens) for this repository only, with **Actions: Read and write**.
+2. Add to the backend `.env` (and the `BACKEND_ENV` secret): `GITHUB_REPO=owner/repo` and `GITHUB_DEPLOY_TOKEN=<token>`.
+
+### Admin access
+
+Make a user an admin from the `backend` folder: `npm run make-admin -- someone@example.com` (add `--remove` to undo).
 
 
