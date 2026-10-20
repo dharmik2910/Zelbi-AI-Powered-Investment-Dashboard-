@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  # Lets the admin panel's "Deploy now" button start a deploy
+  workflow_dispatch:
 
 concurrency:
   group: production

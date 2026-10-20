@@ -14,6 +14,14 @@ import Transaction from "../models/Transaction.js";
 import User from "../models/User.js";
 import { PLANS } from "../config/plans.js";
 import mailSender from "../utils/mailSender.js";
+import { getRecentLogs } from "../utils/logBuffer.js";
+import {
+    canRestart,
+    getRecentDeploys,
+    getServerHealth,
+    isDeployConfigured,
+    triggerDeploy,
+} from "../services/server.service.js";
 import { deleteFile } from "../utils/s3Uploader.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -894,5 +902,72 @@ export const deleteEmailLog = async (req, res) => {
     } catch (err) {
         console.error("Error in admin deleteEmailLog:", err);
         return res.status(500).json({ success: false, message: "Could not delete log entry" });
+    }
+};
+
+export const getServer = async (req, res) => {
+    try {
+        const health = await getServerHealth();
+        let deploys = null;
+        let deployError = null;
+        if (isDeployConfigured()) {
+            try {
+                deploys = await getRecentDeploys();
+            } catch (err) {
+                deployError = err.response?.status === 401 || err.response?.status === 403
+                    ? "GitHub rejected the token. Check GITHUB_DEPLOY_TOKEN has Actions read and write access to the repository."
+                    : "Couldn't load recent deploys from GitHub.";
+            }
+        }
+        return res.status(200).json({
+            success: true,
+            health,
+            canRestart: canRestart(),
+            deployConfigured: isDeployConfigured(),
+            deploys,
+            deployError,
+        });
+    } catch (err) {
+        console.error("Error in admin getServer:", err);
+        return res.status(500).json({ success: false, message: "Could not read server status" });
+    }
+};
+
+export const getServerLogs = (req, res) => {
+    const level = ["error", "warn"].includes(req.query.level) ? req.query.level : undefined;
+    const limit = Math.min(1000, Math.max(50, parseInt(req.query.limit, 10) || 300));
+    return res.status(200).json({ success: true, logs: getRecentLogs({ limit, level }) });
+};
+
+export const restartBackend = async (req, res) => {
+    if (!canRestart()) {
+        return res.status(400).json({
+            success: false,
+            message: "Restart only works on the server, where pm2 starts the backend again. Locally, restart it in your terminal.",
+        });
+    }
+    await logAction(req, "restart_backend", null, {});
+    res.status(202).json({ success: true, message: "Restarting. The admin panel will reconnect in a few seconds." });
+    // Exit after the response is sent; pm2 starts the process again
+    setTimeout(() => process.exit(0), 500);
+};
+
+export const deployNow = async (req, res) => {
+    if (!isDeployConfigured()) {
+        return res.status(400).json({ success: false, message: "Set GITHUB_DEPLOY_TOKEN and GITHUB_REPO to enable deploys from here." });
+    }
+    try {
+        await triggerDeploy();
+        await logAction(req, "trigger_deploy", null, { branch: "main" });
+        return res.status(202).json({ success: true, message: "Deploy started. It usually takes a few minutes." });
+    } catch (err) {
+        console.error("Error in admin deployNow:", err.response?.data || err.message);
+        const status = err.response?.status;
+        const message = status === 401 || status === 403
+            ? "GitHub rejected the token. It needs Actions read and write access to the repository."
+            : status === 404 || status === 422
+                ? "GitHub couldn't start the workflow. Make sure deploy.yml on main includes the workflow_dispatch trigger."
+                : "Couldn't start the deploy.";
+        return res.status(502).json({ success: false, message });
     }
 };

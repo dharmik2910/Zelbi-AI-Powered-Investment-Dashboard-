@@ -4,17 +4,21 @@ import {
     createUser,
     deleteEmailLog,
     deleteUser,
+    deployNow,
     deleteUserAlert,
     exportPayments,
     exportUsers,
     getAiUsage,
     getPageViews,
+    getServer,
+    getServerLogs,
     getStats,
     getUser,
     listAuditLog,
     listEmails,
     listPayments,
     listUsers,
+    restartBackend,
     sendUserPasswordReset,
     updateUser,
 } from "../controllers/Admin.js";
@@ -47,6 +51,11 @@ router.get("/page-views", getPageViews);
 
 // Bulk delete: /logs/emails, /logs/ai-usage or /logs/page-views with ?olderThanDays=N or ?all=true
 router.delete("/logs/:kind", clearLogs);
+
+router.get("/server", getServer);
+router.get("/server/logs", getServerLogs);
+router.post("/server/restart", restartBackend);
+router.post("/server/deploy", deployNow);
 
 router.get("/audit-log", listAuditLog);
 

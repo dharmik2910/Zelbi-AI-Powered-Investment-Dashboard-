@@ -3,7 +3,7 @@ import debounce from "lodash/debounce";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import { toast } from "react-hot-toast";
-import { FaArrowLeft, FaChartBar, FaCreditCard, FaDownload, FaEnvelope, FaEye, FaHistory, FaRobot, FaSearch, FaSignOutAlt, FaTrash, FaUserPlus, FaUsers } from "react-icons/fa";
+import { FaArrowLeft, FaChartBar, FaCreditCard, FaDownload, FaEnvelope, FaEye, FaHistory, FaServer, FaRobot, FaSearch, FaSignOutAlt, FaTrash, FaUserPlus, FaUsers } from "react-icons/fa";
 import { BsPinAngle, BsPinAngleFill } from "react-icons/bs";
 import { FiExternalLink } from "react-icons/fi";
 import { SiGoogleanalytics, SiGoogletagmanager } from "react-icons/si";
@@ -22,6 +22,7 @@ const TABS = [
   { id: "payments", label: "Payments", icon: FaCreditCard },
   { id: "emails", label: "Emails", icon: FaEnvelope },
   { id: "ai", label: "AI usage", icon: FaRobot },
+  { id: "server", label: "Server", icon: FaServer },
   { id: "activity", label: "Activity log", icon: FaHistory },
 ];
 
@@ -1296,6 +1297,251 @@ const AiUsage = () => {
   );
 };
 
+/* ----------------------------------- Server ----------------------------------- */
+
+const bytes = (n) => {
+  if (!n && n !== 0) return "—";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = n;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit++;
+  }
+  return `${value.toFixed(value < 10 && unit > 0 ? 1 : 0)} ${units[unit]}`;
+};
+
+const duration = (seconds) => {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return d > 0 ? `${d}d ${h}h` : h > 0 ? `${h}h ${m}m` : `${m}m`;
+};
+
+const UsageBar = ({ percent: value }) => (
+  <div className="mt-3 h-2 rounded-full bg-white/5 overflow-hidden">
+    <div
+      className={`h-full rounded-full ${value >= 90 ? "bg-red-400" : value >= 75 ? "bg-yellow-300" : "bg-primary"}`}
+      style={{ width: `${Math.min(100, value)}%` }}
+    />
+  </div>
+);
+
+const DEPLOY_STYLE = {
+  success: "text-green-300",
+  failure: "text-red-300",
+  cancelled: "text-gray-400",
+};
+
+const LOG_STYLE = { error: "text-red-300", warn: "text-yellow-200", info: "text-gray-300" };
+
+const Server = () => {
+  const api = useAdminApi();
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [logs, setLogs] = useState([]);
+  const [logLevel, setLogLevel] = useState("");
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  const loadStatus = useCallback(() => {
+    api.get("/server")
+      .then((d) => {
+        setData(d);
+        setError(null);
+      })
+      .catch((err) => setError(errorMessage(err, "Couldn't reach the backend")));
+  }, [api]);
+
+  const loadLogs = useCallback(() => {
+    api.get("/server/logs", { level: logLevel || undefined }).then((d) => setLogs(d.logs)).catch(() => {});
+  }, [api, logLevel]);
+
+  useEffect(() => {
+    loadStatus();
+    loadLogs();
+  }, [loadStatus, loadLogs]);
+
+  // Refresh every 10 seconds while the page is open
+  useEffect(() => {
+    if (!autoRefresh) return undefined;
+    const timer = setInterval(() => {
+      loadStatus();
+      loadLogs();
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [autoRefresh, loadStatus, loadLogs]);
+
+  const restart = async () => {
+    if (!window.confirm("Restart the backend? Requests in progress will fail and users may see errors for a few seconds.")) return;
+    setBusy(true);
+    try {
+      const d = await api.post("/server/restart");
+      toast.success(d.message);
+      setTimeout(loadStatus, 6000);
+    } catch (err) {
+      toast.error(errorMessage(err, "Couldn't restart the backend"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const deploy = async () => {
+    if (!window.confirm("Deploy the latest main branch to the live site now? The backend restarts during the deploy.")) return;
+    setBusy(true);
+    try {
+      const d = await api.post("/server/deploy");
+      toast.success(d.message);
+      setTimeout(loadStatus, 5000);
+    } catch (err) {
+      toast.error(errorMessage(err, "Couldn't start the deploy"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const downloadLogs = () => {
+    const text = logs.map((l) => `${l.at} [${l.level}] ${l.text}`).join("\n");
+    const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `zelbi-backend-logs-${new Date().toISOString().slice(0, 19)}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (error && !data) {
+    return <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>;
+  }
+  if (!data) return <div className="h-64 rounded-2xl bg-[#0a0a0a] animate-pulse" aria-busy="true" />;
+
+  const h = data.health;
+
+  return (
+    <div className="space-y-6">
+      {error && (
+        <p className="rounded-xl border border-yellow-400/30 bg-yellow-400/10 px-4 py-3 text-sm text-yellow-100">
+          Lost connection to the backend. It may be restarting; this page retries every 10 seconds.
+        </p>
+      )}
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-gray-400">
+          {h.hostname} · {h.platform} · {h.backend.environment}
+        </p>
+        <label className="inline-flex items-center gap-2 text-sm text-gray-300">
+          <input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} className="accent-[#3affa3]" />
+          Refresh every 10 seconds
+        </label>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <p className="text-xs uppercase tracking-wide text-gray-400">CPU load</p>
+          <p className="mt-2 text-2xl font-semibold">{h.cpu.loadPercent}%</p>
+          <p className="mt-1 text-sm text-gray-400">{h.cpu.cores} cores · 5 min {h.cpu.load["5m"].toFixed(2)}</p>
+          <UsageBar percent={h.cpu.loadPercent} />
+        </Card>
+        <Card>
+          <p className="text-xs uppercase tracking-wide text-gray-400">Memory</p>
+          <p className="mt-2 text-2xl font-semibold">{h.memory.usedPercent}%</p>
+          <p className="mt-1 text-sm text-gray-400">{bytes(h.memory.totalBytes - h.memory.freeBytes)} of {bytes(h.memory.totalBytes)}</p>
+          <UsageBar percent={h.memory.usedPercent} />
+        </Card>
+        <Card>
+          <p className="text-xs uppercase tracking-wide text-gray-400">Disk</p>
+          <p className="mt-2 text-2xl font-semibold">{h.disk ? `${h.disk.usedPercent}%` : "—"}</p>
+          <p className="mt-1 text-sm text-gray-400">{h.disk ? `${bytes(h.disk.freeBytes)} free of ${bytes(h.disk.totalBytes)}` : "Not available"}</p>
+          {h.disk && <UsageBar percent={h.disk.usedPercent} />}
+        </Card>
+        <Card>
+          <p className="text-xs uppercase tracking-wide text-gray-400">Uptime</p>
+          <p className="mt-2 text-2xl font-semibold">{duration(h.backend.uptimeSeconds)}</p>
+          <p className="mt-1 text-sm text-gray-400">Backend · server up {duration(h.systemUptimeSeconds)}</p>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <h2 className="text-lg font-semibold mb-3">Backend</h2>
+          <dl className="grid grid-cols-2 gap-y-2 text-sm">
+            <dt className="text-gray-400">Node.js</dt><dd>{h.backend.nodeVersion}</dd>
+            <dt className="text-gray-400">Memory used</dt><dd>{bytes(h.backend.memoryBytes)}</dd>
+            <dt className="text-gray-400">Process manager</dt><dd>{h.backend.managedByPm2 ? "pm2" : "Not pm2 (local)"}</dd>
+            {h.backend.restarts !== null && (<><dt className="text-gray-400">pm2 restarts</dt><dd>{h.backend.restarts}</dd></>)}
+          </dl>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button type="button" disabled={busy || !data.canRestart} onClick={restart} className={secondaryButton} title={data.canRestart ? undefined : "Only available on the server"}>
+              Restart backend
+            </button>
+          </div>
+          {!data.canRestart && <p className="mt-2 text-xs text-gray-500">Restart works on the live server, where pm2 runs the backend.</p>}
+        </Card>
+
+        <Card>
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <h2 className="text-lg font-semibold">Deploys</h2>
+            <button type="button" disabled={busy || !data.deployConfigured} onClick={deploy} className={primaryButton}>
+              Deploy now
+            </button>
+          </div>
+          {!data.deployConfigured ? (
+            <p className="text-sm text-gray-400">
+              Add <code>GITHUB_REPO</code> and <code>GITHUB_DEPLOY_TOKEN</code> to the backend settings to deploy from here (see the README).
+            </p>
+          ) : data.deployError ? (
+            <p className="text-sm text-red-300">{data.deployError}</p>
+          ) : data.deploys?.length ? (
+            <ul className="divide-y divide-[#1a1a1a] text-sm">
+              {data.deploys.map((run) => (
+                <li key={run.id} className="flex items-center justify-between gap-3 py-2">
+                  <span className="min-w-0">
+                    <a href={run.url} target="_blank" rel="noopener noreferrer" className="block truncate hover:text-primary">{run.commitMessage || "Deploy"}</a>
+                    <span className="block text-xs text-gray-500">{dateTime(run.startedAt)} · {run.event === "workflow_dispatch" ? "manual" : "push"}</span>
+                  </span>
+                  <span className={`shrink-0 capitalize ${DEPLOY_STYLE[run.conclusion] || "text-yellow-200"}`}>
+                    {run.conclusion || run.status.replace("_", " ")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-gray-400">No deploys yet.</p>
+          )}
+        </Card>
+      </div>
+
+      <Card>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <h2 className="text-lg font-semibold">Backend logs</h2>
+          <div className="flex flex-wrap gap-2">
+            <label htmlFor="log-level" className="sr-only">Log level</label>
+            <select id="log-level" value={logLevel} onChange={(e) => setLogLevel(e.target.value)} className="bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-sm">
+              <option value="">All</option>
+              <option value="warn">Warnings and errors</option>
+              <option value="error">Errors only</option>
+            </select>
+            <button type="button" onClick={loadLogs} className={secondaryButton}>Refresh</button>
+            <button type="button" onClick={downloadLogs} disabled={logs.length === 0} className={secondaryButton}><FaDownload /> Download</button>
+          </div>
+        </div>
+        {logs.length === 0 ? (
+          <p className="text-sm text-gray-400">No log lines yet.</p>
+        ) : (
+          <pre className="max-h-[480px] overflow-auto custom-scrollbar rounded-xl bg-black border border-[#1a1a1a] p-3 text-xs leading-relaxed">
+            {[...logs].reverse().map((line, i) => (
+              <div key={`${line.at}-${i}`} className={LOG_STYLE[line.level]}>
+                <span className="text-gray-600">{line.at.slice(11, 19)}</span> {line.text}
+              </div>
+            ))}
+          </pre>
+        )}
+        <p className="mt-2 text-xs text-gray-500">Newest first. Shows the last 1,000 lines since the backend started; older logs are in pm2 on the server.</p>
+      </Card>
+    </div>
+  );
+};
+
 /* -------------------------------- Activity log -------------------------------- */
 
 const ACTION_LABELS = {
@@ -1307,6 +1553,11 @@ const ACTION_LABELS = {
   send_password_reset: "sent a password reset to",
   delete_alert: "deleted an alert for",
   delete_email_log: "deleted an email log entry for",
+};
+
+const SYSTEM_ACTIONS = {
+  restart_backend: "restarted the backend",
+  trigger_deploy: "started a deploy of main",
 };
 
 const describeChange = (entry) => {
@@ -1359,6 +1610,8 @@ const Activity = () => {
                     <span className="font-medium">{entry.adminEmail}</span>{" "}
                     {entry.action === "clear_logs" ? (
                       <>cleared {entry.details?.scope} {entry.details?.log}</>
+                    ) : SYSTEM_ACTIONS[entry.action] ? (
+                      <>{SYSTEM_ACTIONS[entry.action]}</>
                     ) : (
                       <>
                         {ACTION_LABELS[entry.action] || entry.action}{" "}
@@ -1582,6 +1835,7 @@ const Admin = () => {
           {tab === "payments" && <Payments />}
           {tab === "emails" && <Emails />}
           {tab === "ai" && <AiUsage />}
+          {tab === "server" && <Server />}
           {tab === "activity" && <Activity />}
         </div>
       </main>
