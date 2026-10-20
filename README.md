@@ -118,6 +118,8 @@ MAIL_FROM=you@yourdomain.com                   # optional, sender address for em
 BREVO_WEBHOOK_SECRET=long_random_string        # optional, enables delivery status in the admin email log
 GEMINI_INPUT_USD_PER_M=0.30                    # optional, AI cost estimate (USD per million input tokens)
 GEMINI_OUTPUT_USD_PER_M=2.50                   # optional, AI cost estimate (USD per million output tokens)
+GA4_PROPERTY_ID=123456789                      # optional, numeric GA4 property id for the admin Google Analytics section
+GA4_SERVICE_ACCOUNT_JSON=base64_key            # optional, service account key (raw JSON or base64) with Viewer access
 ```
 
 ### Email delivery tracking (optional)
