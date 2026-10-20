@@ -1,5 +1,5 @@
 import "./App.css";
-import {Route, Routes, Navigate } from "react-router-dom";
+import {Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import Home from "./pages/Home.jsx"
 import Navbar from "./components/common/Navbar.jsx"
@@ -58,6 +58,8 @@ function App() {
   const { token } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  // The admin area has its own header instead of the site navbar
+  const isAdminArea = useLocation().pathname.startsWith("/admin");
   const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
 
   useEffect(() => {
@@ -87,7 +89,7 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
     <div className="w-screen min-h-screen bg-black flex flex-col font-inter">
-     <Navbar/>
+     {!isAdminArea && <Navbar/>}
 
      <main className="flex-grow">
          <Routes>

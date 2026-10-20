@@ -3,9 +3,11 @@ import debounce from "lodash/debounce";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import { toast } from "react-hot-toast";
-import { FaChartBar, FaCreditCard, FaDownload, FaHistory, FaSearch, FaTrash, FaUserPlus, FaUsers } from "react-icons/fa";
-import { useSelector } from "react-redux";
-import { useSearchParams } from "react-router-dom";
+import { FaArrowLeft, FaChartBar, FaCreditCard, FaDownload, FaHistory, FaSearch, FaSignOutAlt, FaTrash, FaUserPlus, FaUsers } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import logo from "../assets/Zelbi.png";
+import { logout } from "../services/operations/authAPI";
 
 const ADMIN_URL = `${process.env.REACT_APP_API_URL}/api/admin`;
 
@@ -790,6 +792,40 @@ const Activity = () => {
 
 /* ------------------------------------ Page ------------------------------------ */
 
+const AdminHeader = () => {
+  const { user } = useSelector((state) => state.profile);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  return (
+    <header className="sticky top-0 z-[100] h-16 bg-black border-b border-white/10">
+      <div className="max-w-6xl mx-auto h-full px-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link to="/admin" aria-label="Admin home">
+            <img src={logo} alt="Zelbi" className="h-7 w-auto" />
+          </Link>
+          <span className="px-2 py-0.5 rounded-md bg-yellow-400/15 text-yellow-300 text-xs font-semibold uppercase tracking-wide">
+            Admin
+          </span>
+        </div>
+        <div className="flex items-center gap-2 sm:gap-4 text-sm">
+          <span className="hidden md:block text-gray-400 truncate max-w-[220px]">{user?.email}</span>
+          <Link to="/dashboard" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">
+            <FaArrowLeft aria-hidden="true" /> <span className="hidden sm:inline">Back to site</span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => dispatch(logout(navigate))}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-gray-300 hover:text-red-300 hover:bg-white/5"
+          >
+            <FaSignOutAlt aria-hidden="true" /> <span className="hidden sm:inline">Sign out</span>
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+};
+
 const Admin = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = TABS.some((t) => t.id === searchParams.get("tab")) ? searchParams.get("tab") : "overview";
@@ -799,9 +835,10 @@ const Admin = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white pt-20 pb-16 px-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-6">Admin</h1>
+    <div className="min-h-screen bg-black text-white">
+      <AdminHeader />
+      <div className="max-w-6xl mx-auto px-4 pt-8 pb-16">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6">{TABS.find((t) => t.id === tab).label}</h1>
 
         <div className="flex gap-1 overflow-x-auto scrollbar-hide mb-6 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-1 w-fit max-w-full" role="tablist">
           {TABS.map(({ id, label, icon: Icon }) => (
