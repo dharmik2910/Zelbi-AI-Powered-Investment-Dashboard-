@@ -1,11 +1,14 @@
 import express from "express";
 import {
+    clearLogs,
     createUser,
+    deleteEmailLog,
     deleteUser,
     deleteUserAlert,
     exportPayments,
     exportUsers,
     getAiUsage,
+    getPageViews,
     getStats,
     getUser,
     listAuditLog,
@@ -38,7 +41,12 @@ router.get("/payments", listPayments);
 router.get("/payments/export", exportPayments);
 
 router.get("/emails", listEmails);
+router.delete("/emails/:id", deleteEmailLog);
 router.get("/ai-usage", getAiUsage);
+router.get("/page-views", getPageViews);
+
+// Bulk delete: /logs/emails, /logs/ai-usage or /logs/page-views with ?olderThanDays=N or ?all=true
+router.delete("/logs/:kind", clearLogs);
 
 router.get("/audit-log", listAuditLog);
 

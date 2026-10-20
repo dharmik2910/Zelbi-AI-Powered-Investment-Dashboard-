@@ -13,6 +13,7 @@ import portfolioRoutes from "./routes/Portfolio.js";
 import alertRoutes from "./routes/Alert.js";
 import adminRoutes from "./routes/Admin.js";
 import webhookRoutes from "./routes/Webhook.js";
+import analyticsRoutes from "./routes/Analytics.js";
 import { startAlertChecker } from "./services/alertChecker.service.js";
 
 dotenv.config(); 
@@ -52,6 +53,7 @@ app.use("/api/portfolio", portfolioRoutes);
 app.use("/api/alerts", alertRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/webhooks", webhookRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 
 app.get('/', (req, res) => {   

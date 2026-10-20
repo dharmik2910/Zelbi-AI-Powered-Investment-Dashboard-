@@ -5,6 +5,7 @@ import baseEmailTemplate from "../mail/templates/baseEmailTemplate.js";
 import AdminAuditLog from "../models/AdminAuditLog.js";
 import AiUsageLog from "../models/AiUsageLog.js";
 import EmailLog from "../models/EmailLog.js";
+import PageView from "../models/PageView.js";
 import Alert from "../models/Alert.js";
 import Holding from "../models/Holding.js";
 import Payment from "../models/Payment.js";
@@ -750,5 +751,148 @@ export const getAiUsage = async (req, res) => {
     } catch (err) {
         console.error("Error in admin getAiUsage:", err);
         return res.status(500).json({ success: false, message: "Could not load AI usage" });
+    }
+};
+
+export const getPageViews = async (req, res) => {
+    try {
+        const days = Math.min(90, Math.max(1, parseInt(req.query.days, 10) || 30));
+        const since = new Date(Date.now() - days * DAY_MS);
+        const match = { $match: { createdAt: { $gte: since } } };
+        const { page, skip, limit } = pageParams(req.query);
+
+        const recentFilter = {};
+        const path = String(req.query.path || "").trim().slice(0, 200);
+        if (path) recentFilter.path = path;
+
+        const [totals, byDay, topPages, referrers, devices, recent, recentTotal] = await Promise.all([
+            PageView.aggregate([
+                match,
+                {
+                    $group: {
+                        _id: null,
+                        views: { $sum: 1 },
+                        sessions: { $addToSet: "$sessionId" },
+                        users: { $addToSet: "$userId" },
+                        signedInViews: { $sum: { $cond: [{ $ifNull: ["$userId", false] }, 1, 0] } },
+                    },
+                },
+            ]),
+            PageView.aggregate([
+                match,
+                {
+                    $group: {
+                        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                        views: { $sum: 1 },
+                        sessions: { $addToSet: "$sessionId" },
+                    },
+                },
+                { $sort: { _id: 1 } },
+            ]),
+            PageView.aggregate([
+                match,
+                { $group: { _id: "$path", views: { $sum: 1 }, sessions: { $addToSet: "$sessionId" } } },
+                { $sort: { views: -1 } },
+                { $limit: 15 },
+            ]),
+            PageView.aggregate([
+                { $match: { createdAt: { $gte: since }, referrer: { $exists: true, $ne: null } } },
+                { $group: { _id: "$referrer", views: { $sum: 1 } } },
+                { $sort: { views: -1 } },
+                { $limit: 10 },
+            ]),
+            PageView.aggregate([match, { $group: { _id: "$device", views: { $sum: 1 } } }]),
+            PageView.find(recentFilter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate("userId", "email").lean(),
+            PageView.countDocuments(recentFilter),
+        ]);
+
+        const count = (values) => values.filter(Boolean).length;
+        const total = totals[0];
+
+        return res.status(200).json({
+            success: true,
+            days,
+            totals: {
+                views: total?.views || 0,
+                visitors: total ? count(total.sessions) : 0,
+                signedInUsers: total ? count(total.users) : 0,
+                signedInViews: total?.signedInViews || 0,
+            },
+            byDay: byDay.map((d) => ({ date: d._id, views: d.views, visitors: count(d.sessions) })),
+            topPages: topPages.map((p) => ({ path: p._id, views: p.views, visitors: count(p.sessions) })),
+            referrers: referrers.map((r) => ({ domain: r._id, views: r.views })),
+            devices: Object.fromEntries(devices.map((d) => [d._id || "unknown", d.views])),
+            recent: recent.map((v) => ({
+                _id: v._id,
+                at: v.createdAt,
+                path: v.path,
+                email: v.userId?.email || null,
+                device: v.device,
+                referrer: v.referrer,
+            })),
+            page,
+            pages: Math.max(1, Math.ceil(recentTotal / limit)),
+        });
+    } catch (err) {
+        console.error("Error in admin getPageViews:", err);
+        return res.status(500).json({ success: false, message: "Could not load page views" });
+    }
+};
+
+const LOG_MODELS = {
+    emails: { model: EmailLog, label: "email logs" },
+    "ai-usage": { model: AiUsageLog, label: "AI usage logs" },
+    "page-views": { model: PageView, label: "page view logs" },
+};
+
+/**
+ * Deletes logs in bulk: ?olderThanDays=N removes entries older than N days, ?all=true removes everything.
+ * The admin activity log can't be cleared, so admin actions stay accountable.
+ */
+export const clearLogs = async (req, res) => {
+    try {
+        const target = LOG_MODELS[req.params.kind];
+        if (!target) {
+            return res.status(404).json({ success: false, message: "Unknown log" });
+        }
+
+        let filter;
+        let description;
+        if (req.query.all === "true") {
+            filter = {};
+            description = "all";
+        } else {
+            const days = parseInt(req.query.olderThanDays, 10);
+            if (!Number.isFinite(days) || days < 1 || days > 3650) {
+                return res.status(400).json({ success: false, message: "Choose how old the logs must be, or all" });
+            }
+            filter = { createdAt: { $lt: new Date(Date.now() - days * DAY_MS) } };
+            description = `older than ${days} days`;
+        }
+
+        const result = await target.model.deleteMany(filter);
+        await logAction(req, "clear_logs", null, { log: target.label, scope: description, deleted: result.deletedCount });
+
+        return res.status(200).json({ success: true, deleted: result.deletedCount });
+    } catch (err) {
+        console.error("Error in admin clearLogs:", err);
+        return res.status(500).json({ success: false, message: "Could not clear logs" });
+    }
+};
+
+export const deleteEmailLog = async (req, res) => {
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return res.status(404).json({ success: false, message: "Log entry not found" });
+        }
+        const entry = await EmailLog.findByIdAndDelete(req.params.id).lean();
+        if (!entry) {
+            return res.status(404).json({ success: false, message: "Log entry not found" });
+        }
+        await logAction(req, "delete_email_log", { _id: entry.userId, email: entry.to }, { type: entry.type, sentAt: entry.createdAt });
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        console.error("Error in admin deleteEmailLog:", err);
+        return res.status(500).json({ success: false, message: "Could not delete log entry" });
     }
 };

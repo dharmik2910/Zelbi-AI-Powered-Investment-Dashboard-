@@ -30,6 +30,7 @@ import { toast } from "react-hot-toast";
 import { axiosInstance } from "./services/apiconnector";
 import { setToken } from "./slices/authSlice";
 import { setUser } from "./slices/profileSlice";
+import { trackPageView } from "./utils/analytics";
 import CookiePolicy from "./pages/CookiePolicy.jsx";
 
 const ProtectedRoute = ({ children }) => {
@@ -59,7 +60,14 @@ function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   // The admin area has its own header instead of the site navbar
-  const isAdminArea = useLocation().pathname.startsWith("/admin");
+  const { pathname } = useLocation();
+  const isAdminArea = pathname.startsWith("/admin");
+
+  // Record page views for the admin analytics; admin pages are left out so they don't skew the numbers
+  useEffect(() => {
+    if (!isAdminArea) trackPageView(pathname, token);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
   const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
 
   useEffect(() => {
