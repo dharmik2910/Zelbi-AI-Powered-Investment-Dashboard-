@@ -89,6 +89,8 @@ npm run dev
 ### Frontend (.env)
 ```
 REACT_APP_API_URL=your_backend_url
+REACT_APP_GOOGLE_CLIENT_ID=your_google_oauth_client_id
+REACT_APP_GTM_ID=GTM-XXXXXXX     # optional, Google Tag Manager container for Google Analytics
 ```
 
 ### Backend (.env)
