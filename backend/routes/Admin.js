@@ -8,7 +8,6 @@ import {
     exportPayments,
     exportUsers,
     getAiUsage,
-    getGoogleAnalytics,
     getPageViews,
     getStats,
     getUser,
@@ -45,7 +44,6 @@ router.get("/emails", listEmails);
 router.delete("/emails/:id", deleteEmailLog);
 router.get("/ai-usage", getAiUsage);
 router.get("/page-views", getPageViews);
-router.get("/google-analytics", getGoogleAnalytics);
 
 // Bulk delete: /logs/emails, /logs/ai-usage or /logs/page-views with ?olderThanDays=N or ?all=true
 router.delete("/logs/:kind", clearLogs);

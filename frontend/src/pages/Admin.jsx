@@ -5,7 +5,6 @@ import ReactApexChart from "react-apexcharts";
 import { toast } from "react-hot-toast";
 import { FaArrowLeft, FaChartBar, FaCreditCard, FaDownload, FaEnvelope, FaEye, FaHistory, FaRobot, FaSearch, FaSignOutAlt, FaTrash, FaUserPlus, FaUsers } from "react-icons/fa";
 import { BsPinAngle, BsPinAngleFill } from "react-icons/bs";
-import { SiGoogleanalytics } from "react-icons/si";
 import { HiMenu, HiX } from "react-icons/hi";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -17,7 +16,6 @@ const ADMIN_URL = `${process.env.REACT_APP_API_URL}/api/admin`;
 const TABS = [
   { id: "overview", label: "Overview", icon: FaChartBar },
   { id: "pages", label: "Page views", icon: FaEye },
-  { id: "ga", label: "Google Analytics", icon: SiGoogleanalytics },
   { id: "users", label: "Users", icon: FaUsers },
   { id: "payments", label: "Payments", icon: FaCreditCard },
   { id: "emails", label: "Emails", icon: FaEnvelope },
@@ -826,161 +824,6 @@ const Payments = () => {
   );
 };
 
-/* ------------------------------ Google Analytics ------------------------------ */
-
-const RankedList = ({ title, rows, valueKey, valueLabel }) => {
-  const max = Math.max(1, ...rows.map((r) => r[valueKey]));
-  return (
-    <Card>
-      <h2 className="text-lg font-semibold mb-3">{title}</h2>
-      {rows.length === 0 ? (
-        <p className="text-gray-400 text-sm">No data yet.</p>
-      ) : (
-        <ul className="space-y-2 text-sm">
-          {rows.map((row) => (
-            <li key={row.name || row.path}>
-              <div className="flex justify-between gap-3">
-                <span className="truncate">{row.name || row.path || "(not set)"}</span>
-                <span className="text-gray-300 shrink-0">{compact(row[valueKey])} {valueLabel}</span>
-              </div>
-              <div className="mt-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
-                <div className="h-full rounded-full bg-primary/70" style={{ width: `${(row[valueKey] / max) * 100}%` }} />
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Card>
-  );
-};
-
-const GoogleAnalyticsSetup = () => (
-  <Card>
-    <h2 className="text-lg font-semibold">Connect Google Analytics</h2>
-    <p className="text-sm text-gray-400 mt-1">
-      Tag Manager sends visits to Google Analytics. To show those reports here, the backend needs read access to your GA4 property.
-    </p>
-    <ol className="mt-4 space-y-2 text-sm text-gray-300 list-decimal pl-5">
-      <li>In Google Cloud Console, create or pick a project and enable the <strong>Google Analytics Data API</strong>.</li>
-      <li>Create a <strong>service account</strong>, open it, go to Keys, and add a JSON key. A file downloads.</li>
-      <li>In Google Analytics, go to Admin, then Property access management, and add the service account's email as a <strong>Viewer</strong>.</li>
-      <li>
-        In the backend <code>.env</code>, set <code>GA4_PROPERTY_ID</code> to the numeric property id (Admin, then Property details) and{" "}
-        <code>GA4_SERVICE_ACCOUNT_JSON</code> to the key file contents (base64 is easiest). Then restart the backend.
-      </li>
-    </ol>
-  </Card>
-);
-
-const GoogleAnalytics = () => {
-  const api = useAdminApi();
-  const [days, setDays] = useState(28);
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    setData(null);
-    setError(null);
-    api.get("/google-analytics", { days })
-      .then(setData)
-      .catch((err) => setError(errorMessage(err, "Couldn't load Google Analytics")));
-  }, [api, days]);
-
-  if (error) {
-    return <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>;
-  }
-  if (data && !data.configured) return <GoogleAnalyticsSetup />;
-
-  const chartOptions = data && {
-    chart: { type: "area", background: "transparent", toolbar: { show: false }, zoom: { enabled: false } },
-    colors: ["#3affa3", "#38bdf8"],
-    stroke: { width: 2, curve: "smooth" },
-    fill: { type: "gradient", gradient: { opacityFrom: 0.3, opacityTo: 0 } },
-    xaxis: { categories: data.byDay.map((d) => d.date.slice(5)), labels: { style: { colors: "#9ca3af" } } },
-    yaxis: { labels: { style: { colors: "#9ca3af" }, formatter: (v) => Math.round(v) } },
-    grid: { borderColor: "#1f1f1f" },
-    dataLabels: { enabled: false },
-    legend: { labels: { colors: "#d1d5db" } },
-    tooltip: { theme: "dark" },
-    theme: { mode: "dark" },
-  };
-
-  const minutes = (seconds) => `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {data?.realtimeUsers !== null && data?.realtimeUsers !== undefined ? (
-          <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/30 px-3 py-1.5 text-sm text-primary">
-            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" aria-hidden="true" />
-            {data.realtimeUsers} active in the last 30 minutes
-          </span>
-        ) : <span />}
-        <div className="flex gap-1 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-1" role="group" aria-label="Time range">
-          {[7, 28, 90].map((d) => (
-            <button
-              key={d}
-              type="button"
-              onClick={() => setDays(d)}
-              aria-pressed={days === d}
-              className={`px-3 py-1.5 rounded-lg text-sm ${days === d ? "bg-primary text-black font-medium" : "text-gray-300 hover:bg-white/5"}`}
-            >
-              {d} days
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {!data ? (
-        <div className="h-64 rounded-2xl bg-[#0a0a0a] animate-pulse" aria-busy="true" />
-      ) : (
-        <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Stat label="Users" value={compact(data.totals.activeUsers)} sub={`${compact(data.totals.newUsers)} new`} />
-            <Stat label="Sessions" value={compact(data.totals.sessions)} />
-            <Stat label="Page views" value={compact(data.totals.pageViews)} />
-            <Stat
-              label="Engagement"
-              value={`${(data.totals.engagementRate * 100).toFixed(0)}%`}
-              sub={`Avg session ${minutes(data.totals.avgSessionSeconds)}`}
-            />
-          </div>
-
-          <Card>
-            <h2 className="text-lg font-semibold mb-4">Users and page views</h2>
-            {data.byDay.length === 0 ? (
-              <p className="text-gray-400 text-sm">No data yet. New GA4 properties can take up to 48 hours to show reports.</p>
-            ) : (
-              <ReactApexChart
-                options={chartOptions}
-                series={[
-                  { name: "Users", data: data.byDay.map((d) => d.users) },
-                  { name: "Page views", data: data.byDay.map((d) => d.views) },
-                ]}
-                type="area"
-                height={260}
-              />
-            )}
-          </Card>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <RankedList title="Top pages" rows={data.topPages} valueKey="views" valueLabel="views" />
-            <RankedList title="Channels" rows={data.channels} valueKey="sessions" valueLabel="sessions" />
-            <RankedList title="Sources" rows={data.sources} valueKey="sessions" valueLabel="sessions" />
-            <RankedList title="Countries" rows={data.countries} valueKey="users" valueLabel="users" />
-          </div>
-
-          <RankedList title="Devices" rows={data.devices} valueKey="users" valueLabel="users" />
-
-          <p className="text-xs text-gray-500">
-            From Google Analytics, refreshed every 10 minutes (last {dateTime(data.fetchedAt)}). GA4 reports can lag by a few hours.
-          </p>
-        </>
-      )}
-    </div>
-  );
-};
-
 /* --------------------------------- Page views --------------------------------- */
 
 const PageViews = () => {
@@ -1697,7 +1540,6 @@ const Admin = () => {
 
           {tab === "overview" && <Overview />}
           {tab === "pages" && <PageViews />}
-          {tab === "ga" && <GoogleAnalytics />}
           {tab === "users" && <Users />}
           {tab === "payments" && <Payments />}
           {tab === "emails" && <Emails />}

@@ -14,12 +14,6 @@ import Transaction from "../models/Transaction.js";
 import User from "../models/User.js";
 import { PLANS } from "../config/plans.js";
 import mailSender from "../utils/mailSender.js";
-import {
-    getAnalyticsReport,
-    getRealtimeUsers,
-    isGoogleAnalyticsConfigured,
-    serviceAccountEmail,
-} from "../services/googleAnalytics.service.js";
 import { deleteFile } from "../utils/s3Uploader.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -900,29 +894,5 @@ export const deleteEmailLog = async (req, res) => {
     } catch (err) {
         console.error("Error in admin deleteEmailLog:", err);
         return res.status(500).json({ success: false, message: "Could not delete log entry" });
-    }
-};
-
-export const getGoogleAnalytics = async (req, res) => {
-    if (!isGoogleAnalyticsConfigured()) {
-        return res.status(200).json({ success: true, configured: false });
-    }
-
-    const days = [7, 28, 90].includes(Number(req.query.days)) ? Number(req.query.days) : 28;
-    try {
-        const [report, realtimeUsers] = await Promise.all([
-            getAnalyticsReport(days),
-            getRealtimeUsers().catch(() => null),
-        ]);
-        return res.status(200).json({ success: true, configured: true, days, realtimeUsers, ...report });
-    } catch (err) {
-        console.error("Error in admin getGoogleAnalytics:", err.message);
-        // gRPC code 7 is PERMISSION_DENIED: the service account hasn't been added to the property
-        const message = err.code === 7
-            ? `Google Analytics refused access. In GA4, go to Admin > Property access management and add ${serviceAccountEmail()} as a Viewer.`
-            : err.code === 5
-                ? "GA4 property not found. Check GA4_PROPERTY_ID is the numeric property id, not the G- measurement id."
-                : "Couldn't load Google Analytics. Check the backend logs for details.";
-        return res.status(502).json({ success: false, configured: true, message });
     }
 };
