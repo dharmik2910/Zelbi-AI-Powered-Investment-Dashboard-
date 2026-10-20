@@ -395,7 +395,8 @@ export const changePassword = async (req, res) => {
         passwordUpdated(
           updatedUserDetails.email,
           `Password updated successfully for ${updatedUserDetails.firstName} ${updatedUserDetails.lastName}`
-        )
+        ),
+        { type: "password_changed", userId: updatedUserDetails._id }
       )
       console.log("Email sent successfully:", emailResponse.response)
     } catch (error) {

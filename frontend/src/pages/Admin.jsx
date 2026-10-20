@@ -3,7 +3,7 @@ import debounce from "lodash/debounce";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import { toast } from "react-hot-toast";
-import { FaArrowLeft, FaChartBar, FaCreditCard, FaDownload, FaHistory, FaSearch, FaSignOutAlt, FaTrash, FaUserPlus, FaUsers } from "react-icons/fa";
+import { FaArrowLeft, FaChartBar, FaCreditCard, FaDownload, FaEnvelope, FaHistory, FaRobot, FaSearch, FaSignOutAlt, FaTrash, FaUserPlus, FaUsers } from "react-icons/fa";
 import { BsPinAngle, BsPinAngleFill } from "react-icons/bs";
 import { HiMenu, HiX } from "react-icons/hi";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,6 +17,8 @@ const TABS = [
   { id: "overview", label: "Overview", icon: FaChartBar },
   { id: "users", label: "Users", icon: FaUsers },
   { id: "payments", label: "Payments", icon: FaCreditCard },
+  { id: "emails", label: "Emails", icon: FaEnvelope },
+  { id: "ai", label: "AI usage", icon: FaRobot },
   { id: "activity", label: "Activity log", icon: FaHistory },
 ];
 
@@ -47,6 +49,39 @@ const fullName = (u) => [u?.firstName, u?.lastName].filter(Boolean).join(" ") ||
 const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 
 const isPlanActive = (u) => u.subscriptionPlan !== "free" && u.subscriptionExpiry && new Date(u.subscriptionExpiry) > new Date();
+
+const EMAIL_TYPE_LABELS = {
+  otp: "Sign-up OTP",
+  password_reset: "Password reset",
+  password_changed: "Password changed",
+  invite: "Account invite",
+  payment_success: "Payment success",
+  payment_failed: "Payment failed",
+  price_alert: "Price alert",
+  other: "Other",
+};
+
+const EMAIL_STATUS_STYLE = {
+  sent: "bg-sky-500/15 text-sky-300",
+  delivered: "bg-green-500/15 text-green-300",
+  opened: "bg-primary/15 text-primary",
+  clicked: "bg-primary/15 text-primary",
+  deferred: "bg-yellow-400/15 text-yellow-300",
+  failed: "bg-red-500/15 text-red-300",
+  bounced: "bg-red-500/15 text-red-300",
+  blocked: "bg-red-500/15 text-red-300",
+  invalid: "bg-red-500/15 text-red-300",
+  spam: "bg-red-500/15 text-red-300",
+};
+
+const EmailStatus = ({ status }) => (
+  <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${EMAIL_STATUS_STYLE[status] || "bg-white/10 text-gray-300"}`}>
+    {status}
+  </span>
+);
+
+const compact = (n) => new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(n || 0);
+const usd = (n) => `$${(n || 0).toFixed((n || 0) < 1 ? 4 : 2)}`;
 
 const errorMessage = (err, fallback) => err.response?.data?.message || fallback;
 
@@ -423,6 +458,34 @@ const UserDetail = ({ userId, onClose, onChanged }) => {
       </section>
 
       <section className="mt-6">
+        <h3 className="font-semibold mb-2">AI usage, last 30 days</h3>
+        <p className="text-sm text-gray-300">
+          {data.aiUsage30Days.requests} requests · {compact(data.aiUsage30Days.promptTokens + data.aiUsage30Days.outputTokens)} tokens ·
+          about {usd(data.aiUsage30Days.estimatedCostUsd)}
+          {data.aiUsage30Days.errors > 0 && <span className="text-red-300"> · {data.aiUsage30Days.errors} failed</span>}
+        </p>
+      </section>
+
+      <section className="mt-6">
+        <h3 className="font-semibold mb-2">Recent emails</h3>
+        {data.emails.length === 0 ? (
+          <p className="text-sm text-gray-400">No emails logged.</p>
+        ) : (
+          <ul className="divide-y divide-[#1a1a1a] text-sm max-h-56 overflow-y-auto custom-scrollbar">
+            {data.emails.map((e) => (
+              <li key={e._id} className="flex items-center justify-between gap-4 py-2">
+                <span className="min-w-0">
+                  <span className="block truncate">{EMAIL_TYPE_LABELS[e.type] || e.subject}</span>
+                  <span className="block text-xs text-gray-500">{dateTime(e.createdAt)}{e.error ? ` · ${e.error}` : ""}</span>
+                </span>
+                <EmailStatus status={e.status} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-6">
         <h3 className="font-semibold mb-2">Recent trades</h3>
         {data.trades.length === 0 ? (
           <p className="text-sm text-gray-400">No trades.</p>
@@ -721,6 +784,268 @@ const Payments = () => {
   );
 };
 
+/* ----------------------------------- Emails ----------------------------------- */
+
+const Emails = () => {
+  const api = useAdminApi();
+  const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState({ q: "", status: "", type: "", page: 1 });
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    api.get("/emails", {
+      q: filters.q || undefined,
+      status: filters.status || undefined,
+      type: filters.type || undefined,
+      page: filters.page,
+    })
+      .then(setData)
+      .catch(() => toast.error("Couldn't load email log"));
+  }, [api, filters]);
+
+  const updateSearch = useMemo(() => debounce((q) => setFilters((f) => ({ ...f, q, page: 1 })), 350), []);
+  const counts = data?.last30Days || {};
+  const sent30 = Object.values(counts).reduce((a, b) => a + b, 0);
+  const problems30 = ["failed", "bounced", "blocked", "spam", "invalid"].reduce((sum, key) => sum + (counts[key] || 0), 0);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Stat label="Emails (30 days)" value={sent30} />
+        <Stat label="Delivered or opened" value={(counts.delivered || 0) + (counts.opened || 0) + (counts.clicked || 0)} sub={data?.webhookEnabled ? undefined : "Needs the Brevo webhook"} />
+        <Stat label="Problems" value={problems30} sub="Failed, bounced, blocked or spam" />
+        <Stat label="Opened" value={(counts.opened || 0) + (counts.clicked || 0)} sub={data?.webhookEnabled ? undefined : "Needs the Brevo webhook"} />
+      </div>
+
+      {data && !data.webhookEnabled && (
+        <p className="text-sm text-yellow-100 rounded-xl border border-yellow-400/30 bg-yellow-400/10 px-4 py-3">
+          Emails show as "sent" when Brevo accepts them. To see delivered, bounced and opened, set <code>BREVO_WEBHOOK_SECRET</code> and add the
+          webhook in Brevo (see the README).
+        </p>
+      )}
+
+      <Card>
+        <div className="flex flex-col lg:flex-row gap-3 mb-4">
+          <div className="relative flex-1">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" aria-hidden="true" />
+            <label htmlFor="admin-email-search" className="sr-only">Search by recipient</label>
+            <input
+              id="admin-email-search"
+              type="search"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                updateSearch(e.target.value.trim());
+              }}
+              placeholder="Search by recipient email"
+              className={`${inputClass} pl-9`}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <label htmlFor="admin-email-type" className="sr-only">Filter by type</label>
+            <select id="admin-email-type" value={filters.type} onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value, page: 1 }))} className="bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white">
+              <option value="">All types</option>
+              {Object.entries(EMAIL_TYPE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+            <label htmlFor="admin-email-status" className="sr-only">Filter by status</label>
+            <select id="admin-email-status" value={filters.status} onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value, page: 1 }))} className="bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white">
+              <option value="">All statuses</option>
+              <option value="problems">Problems only</option>
+              {Object.keys(EMAIL_STATUS_STYLE).map((status) => <option key={status} value={status} className="capitalize">{status}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {!data ? (
+          <div className="h-40 rounded-xl bg-white/5 animate-pulse" aria-busy="true" />
+        ) : data.emails.length === 0 ? (
+          <p className="text-gray-400 py-6 text-center">No emails match.</p>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-400 border-b border-[#1a1a1a]">
+                    <th className="py-2 pr-3 font-medium">Sent</th>
+                    <th className="py-2 px-3 font-medium">Recipient</th>
+                    <th className="py-2 px-3 font-medium">Type</th>
+                    <th className="py-2 px-3 font-medium">Status</th>
+                    <th className="py-2 pl-3 font-medium">Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.emails.map((e) => (
+                    <tr key={e._id} className="border-b border-[#1a1a1a] last:border-0 align-top">
+                      <td className="py-2.5 pr-3 whitespace-nowrap text-gray-300">{dateTime(e.createdAt)}</td>
+                      <td className="py-2.5 px-3">{e.to}</td>
+                      <td className="py-2.5 px-3">
+                        <span className="block">{EMAIL_TYPE_LABELS[e.type] || "Other"}</span>
+                        <span className="block text-xs text-gray-500 truncate max-w-[220px]">{e.subject}</span>
+                      </td>
+                      <td className="py-2.5 px-3"><EmailStatus status={e.status} /></td>
+                      <td className="py-2.5 pl-3 text-xs text-gray-400 max-w-[260px]">
+                        {e.error || (e.events?.length ? `${e.events.length} delivery events, last ${dateTime(e.events[e.events.length - 1].at)}` : "—")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pager page={data.page} pages={data.pages} onPage={(page) => setFilters((f) => ({ ...f, page }))} />
+          </>
+        )}
+      </Card>
+    </div>
+  );
+};
+
+/* ---------------------------------- AI usage ---------------------------------- */
+
+const AiUsage = () => {
+  const api = useAdminApi();
+  const [days, setDays] = useState(30);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setData(null);
+    api.get("/ai-usage", { days }).then(setData).catch((err) => setError(errorMessage(err, "Couldn't load AI usage")));
+  }, [api, days]);
+
+  if (error) return <p className="text-red-300">{error}</p>;
+
+  const chartOptions = data && {
+    chart: { type: "bar", background: "transparent", toolbar: { show: false }, stacked: true },
+    colors: ["#3affa3", "#f87171"],
+    xaxis: { categories: data.byDay.map((d) => d.date.slice(5)), labels: { style: { colors: "#9ca3af" } } },
+    yaxis: { labels: { style: { colors: "#9ca3af" }, formatter: (v) => Math.round(v) } },
+    grid: { borderColor: "#1f1f1f" },
+    dataLabels: { enabled: false },
+    legend: { labels: { colors: "#d1d5db" } },
+    plotOptions: { bar: { borderRadius: 3, columnWidth: "60%" } },
+    tooltip: { theme: "dark" },
+    theme: { mode: "dark" },
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <div className="flex gap-1 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-1" role="group" aria-label="Time range">
+          {[7, 30, 90].map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setDays(d)}
+              aria-pressed={days === d}
+              className={`px-3 py-1.5 rounded-lg text-sm ${days === d ? "bg-primary text-black font-medium" : "text-gray-300 hover:bg-white/5"}`}
+            >
+              {d} days
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {!data ? (
+        <div className="h-64 rounded-2xl bg-[#0a0a0a] animate-pulse" aria-busy="true" />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Stat label="Requests" value={compact(data.totals.requests)} sub={`${data.totals.activeUsers} users · ${data.byMode.chat || 0} chat · ${data.byMode.analysis || 0} chart`} />
+            <Stat label="Estimated cost" value={usd(data.totals.estimatedCostUsd)} sub={`Gemini at $${data.pricing.inputUsdPerMillion}/$${data.pricing.outputUsdPerMillion} per 1M tokens`} />
+            <Stat label="Tokens" value={compact(data.totals.promptTokens + data.totals.outputTokens)} sub={`${compact(data.totals.promptTokens)} in · ${compact(data.totals.outputTokens)} out`} />
+            <Stat
+              label="Errors"
+              value={data.totals.errors}
+              sub={`${(data.totals.errorRate * 100).toFixed(1)}% of requests · avg ${(data.totals.avgDurationMs / 1000).toFixed(1)}s per answer`}
+            />
+          </div>
+
+          <Card>
+            <h2 className="text-lg font-semibold mb-4">Requests per day</h2>
+            {data.byDay.length === 0 ? (
+              <p className="text-gray-400 text-sm">No AI requests in this period.</p>
+            ) : (
+              <ReactApexChart
+                options={chartOptions}
+                series={[
+                  { name: "Successful", data: data.byDay.map((d) => d.requests - d.errors) },
+                  { name: "Failed", data: data.byDay.map((d) => d.errors) },
+                ]}
+                type="bar"
+                height={260}
+              />
+            )}
+          </Card>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <h2 className="text-lg font-semibold mb-3">Top users</h2>
+              {data.topUsers.length === 0 ? (
+                <p className="text-gray-400 text-sm">No usage yet.</p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-gray-400 border-b border-[#1a1a1a]">
+                      <th className="py-2 pr-3 font-medium">User</th>
+                      <th className="py-2 px-3 font-medium text-right">Requests</th>
+                      <th className="py-2 px-3 font-medium text-right">Tokens</th>
+                      <th className="py-2 pl-3 font-medium text-right">Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.topUsers.map((u) => (
+                      <tr key={u.userId || u.email} className="border-b border-[#1a1a1a] last:border-0">
+                        <td className="py-2 pr-3 truncate max-w-[180px]">{u.email}</td>
+                        <td className="py-2 px-3 text-right">{u.requests}</td>
+                        <td className="py-2 px-3 text-right">{compact(u.tokens)}</td>
+                        <td className="py-2 pl-3 text-right">{usd(u.estimatedCostUsd)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </Card>
+
+            <Card>
+              <h2 className="text-lg font-semibold mb-3">Data lookups by the AI</h2>
+              {data.tools.length === 0 ? (
+                <p className="text-gray-400 text-sm">The AI hasn't looked up any data yet.</p>
+              ) : (
+                <ul className="divide-y divide-[#1a1a1a] text-sm">
+                  {data.tools.map((t) => (
+                    <li key={t.name} className="flex justify-between py-2">
+                      <span className="font-mono text-gray-300">{t.name}</span>
+                      <span>{t.calls}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <h2 className="text-lg font-semibold mt-6 mb-3">Recent errors</h2>
+              {data.recentErrors.length === 0 ? (
+                <p className="text-gray-400 text-sm">No errors.</p>
+              ) : (
+                <ul className="divide-y divide-[#1a1a1a] text-sm">
+                  {data.recentErrors.map((e) => (
+                    <li key={e._id} className="py-2">
+                      <p className="text-red-300 break-words">{e.error}</p>
+                      <p className="text-xs text-gray-500">{e.email} · {e.mode} · {dateTime(e.at)}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          </div>
+
+          <p className="text-xs text-gray-500">
+            Costs are estimates from token counts. Check Google AI Studio billing for exact charges.
+          </p>
+        </>
+      )}
+    </div>
+  );
+};
+
 /* -------------------------------- Activity log -------------------------------- */
 
 const ACTION_LABELS = {
@@ -957,6 +1282,8 @@ const Admin = () => {
           {tab === "overview" && <Overview />}
           {tab === "users" && <Users />}
           {tab === "payments" && <Payments />}
+          {tab === "emails" && <Emails />}
+          {tab === "ai" && <AiUsage />}
           {tab === "activity" && <Activity />}
         </div>
       </main>

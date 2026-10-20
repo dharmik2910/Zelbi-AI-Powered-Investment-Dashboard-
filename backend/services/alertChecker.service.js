@@ -34,7 +34,10 @@ const sendAlertEmail = async (alert, price) => {
         footerNote: "You're receiving this because you set a price alert on Zelbi.",
     });
 
-    await mailSender(user.email, `Zelbi alert: ${alert.symbol} ${alert.condition} ${alert.targetPrice}`, html);
+    await mailSender(user.email, `Zelbi alert: ${alert.symbol} ${alert.condition} ${alert.targetPrice}`, html, {
+        type: "price_alert",
+        userId: user._id,
+    });
 };
 
 /**

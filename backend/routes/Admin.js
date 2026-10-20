@@ -5,9 +5,11 @@ import {
     deleteUserAlert,
     exportPayments,
     exportUsers,
+    getAiUsage,
     getStats,
     getUser,
     listAuditLog,
+    listEmails,
     listPayments,
     listUsers,
     sendUserPasswordReset,
@@ -34,6 +36,9 @@ router.delete("/users/:id/alerts/:alertId", deleteUserAlert);
 
 router.get("/payments", listPayments);
 router.get("/payments/export", exportPayments);
+
+router.get("/emails", listEmails);
+router.get("/ai-usage", getAiUsage);
 
 router.get("/audit-log", listAuditLog);
 

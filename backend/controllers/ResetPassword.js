@@ -51,7 +51,8 @@ export const resetPasswordToken = async (req, res) => {
 		await mailSender(
 			email,
 			"Password Reset",
-			htmlTemplate
+			htmlTemplate,
+			{ type: "password_reset", userId: user._id }
 		);
 
 		res.json({

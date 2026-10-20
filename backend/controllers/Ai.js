@@ -2,6 +2,11 @@ import * as ai from '../services/ai.service.js'
 import User from '../models/User.js';
 import { getPromptLimit, refreshSubscriptionState } from '../utils/subscription.js';
 import { getValuedPortfolio } from '../services/portfolio.service.js';
+import AiUsageLog from '../models/AiUsageLog.js';
+
+// Usage logging must never fail the user's request
+const logUsage = (entry) =>
+    AiUsageLog.create(entry).catch((err) => console.error('Failed to write AI usage log:', err.message));
 
 const MAX_PROMPT_CHARS = 8000;
 
@@ -69,9 +74,10 @@ const handleAiRequest = (mode) => async (req, res) => {
             });
         }
 
-        let result;
+        let generated;
+        const startedAt = Date.now();
         try {
-            result = await ai.generateResult({
+            generated = await ai.generateResult({
                 prompt,
                 history: Array.isArray(history) ? history : [],
                 mode,
@@ -80,11 +86,28 @@ const handleAiRequest = (mode) => async (req, res) => {
         } catch (err) {
             // Give the prompt back if the AI call failed
             await User.updateOne({ _id: user._id }, { $inc: { aiPromptCount: -1 } });
+            logUsage({
+                userId: user._id,
+                mode,
+                status: "error",
+                error: String(err.message || err).slice(0, 500),
+                durationMs: Date.now() - startedAt,
+            });
             throw err;
         }
 
+        logUsage({
+            userId: user._id,
+            mode,
+            model: generated.model,
+            status: "success",
+            ...generated.usage,
+            toolCalls: generated.toolCalls,
+            durationMs: Date.now() - startedAt,
+        });
+
         return res.status(200).json({
-            result,
+            result: generated.text,
             aiPromptCount: reserved.aiPromptCount,
             plan,
             promptLimit: limit === Infinity ? -1 : limit,

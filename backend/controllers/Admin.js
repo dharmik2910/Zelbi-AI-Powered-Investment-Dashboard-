@@ -3,6 +3,8 @@ import crypto from "crypto";
 import mongoose from "mongoose";
 import baseEmailTemplate from "../mail/templates/baseEmailTemplate.js";
 import AdminAuditLog from "../models/AdminAuditLog.js";
+import AiUsageLog from "../models/AiUsageLog.js";
+import EmailLog from "../models/EmailLog.js";
 import Alert from "../models/Alert.js";
 import Holding from "../models/Holding.js";
 import Payment from "../models/Payment.js";
@@ -23,6 +25,16 @@ const pageParams = (query) => {
     const page = Math.max(1, parseInt(query.page, 10) || 1);
     return { page, skip: (page - 1) * PAGE_SIZE, limit: PAGE_SIZE };
 };
+
+// Gemini prices in USD per million tokens. Defaults are gemini-2.5-flash list prices;
+// override with env vars if Google changes them or you switch models.
+const GEMINI_INPUT_USD_PER_M = Number(process.env.GEMINI_INPUT_USD_PER_M) || 0.30;
+const GEMINI_OUTPUT_USD_PER_M = Number(process.env.GEMINI_OUTPUT_USD_PER_M) || 2.50;
+
+const estimateCostUsd = (promptTokens, outputTokens) =>
+    Math.round(((promptTokens / 1e6) * GEMINI_INPUT_USD_PER_M + (outputTokens / 1e6) * GEMINI_OUTPUT_USD_PER_M) * 10000) / 10000;
+
+const EMAIL_STATUSES = ["sent", "failed", "delivered", "deferred", "bounced", "blocked", "spam", "invalid", "opened", "clicked"];
 
 const USER_LIST_FIELDS = "firstName lastName email role isBlocked subscriptionPlan subscriptionExpiry aiPromptCount googleId createdAt image";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -84,7 +96,10 @@ const sendPasswordLink = async (user, { invite = false } = {}) => {
         footerNote: "If you weren't expecting this email, you can safely ignore it.",
     });
 
-    await mailSender(user.email, invite ? "Your Zelbi account" : "Password Reset", html);
+    await mailSender(user.email, invite ? "Your Zelbi account" : "Password Reset", html, {
+        type: invite ? "invite" : "password_reset",
+        userId: user._id,
+    });
 };
 
 export const getStats = async (req, res) => {
@@ -217,12 +232,30 @@ export const getUser = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        const [payments, tradeCount, symbols, trades, alerts] = await Promise.all([
+        const since30 = new Date(Date.now() - 30 * DAY_MS);
+        const [payments, tradeCount, symbols, trades, alerts, emails, aiUsage] = await Promise.all([
             Payment.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50).select("-razorpay_signature -__v").lean(),
             Transaction.countDocuments({ userId: user._id }),
             Transaction.distinct("symbol", { userId: user._id }),
             Transaction.find({ userId: user._id }).sort({ date: -1, createdAt: -1 }).limit(25).lean(),
             Alert.find({ userId: user._id }).sort({ status: 1, createdAt: -1 }).limit(100).lean(),
+            EmailLog.find({ $or: [{ userId: user._id }, { to: user.email.toLowerCase() }] })
+                .sort({ createdAt: -1 })
+                .limit(20)
+                .select("-events")
+                .lean(),
+            AiUsageLog.aggregate([
+                { $match: { userId: user._id, createdAt: { $gte: since30 } } },
+                {
+                    $group: {
+                        _id: null,
+                        requests: { $sum: 1 },
+                        errors: { $sum: { $cond: [{ $eq: ["$status", "error"] }, 1, 0] } },
+                        promptTokens: { $sum: "$promptTokens" },
+                        outputTokens: { $sum: "$outputTokens" },
+                    },
+                },
+            ]),
         ]);
 
         return res.status(200).json({
@@ -236,6 +269,10 @@ export const getUser = async (req, res) => {
             trades,
             alerts,
             payments,
+            emails,
+            aiUsage30Days: aiUsage[0]
+                ? { ...aiUsage[0], _id: undefined, estimatedCostUsd: estimateCostUsd(aiUsage[0].promptTokens, aiUsage[0].outputTokens) }
+                : { requests: 0, errors: 0, promptTokens: 0, outputTokens: 0, estimatedCostUsd: 0 },
         });
     } catch (err) {
         console.error("Error in admin getUser:", err);
@@ -575,5 +612,143 @@ export const listAuditLog = async (req, res) => {
     } catch (err) {
         console.error("Error in admin listAuditLog:", err);
         return res.status(500).json({ success: false, message: "Could not load activity log" });
+    }
+};
+
+export const listEmails = async (req, res) => {
+    try {
+        const { page, skip, limit } = pageParams(req.query);
+        const filter = {};
+
+        const q = String(req.query.q || "").trim().slice(0, 100);
+        if (q) filter.to = new RegExp(escapeRegex(q), "i");
+        if (EMAIL_STATUSES.includes(req.query.status)) filter.status = req.query.status;
+        if (req.query.status === "problems") filter.status = { $in: ["failed", "bounced", "blocked", "spam", "invalid"] };
+        if (req.query.type && /^[a-z_]{1,30}$/.test(req.query.type)) filter.type = req.query.type;
+
+        const since30 = new Date(Date.now() - 30 * DAY_MS);
+        const [emails, total, statusCounts] = await Promise.all([
+            EmailLog.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+            EmailLog.countDocuments(filter),
+            EmailLog.aggregate([
+                { $match: { createdAt: { $gte: since30 } } },
+                { $group: { _id: "$status", count: { $sum: 1 } } },
+            ]),
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            emails,
+            page,
+            pages: Math.max(1, Math.ceil(total / limit)),
+            total,
+            last30Days: Object.fromEntries(statusCounts.map((c) => [c._id, c.count])),
+            webhookEnabled: Boolean(process.env.BREVO_WEBHOOK_SECRET),
+        });
+    } catch (err) {
+        console.error("Error in admin listEmails:", err);
+        return res.status(500).json({ success: false, message: "Could not load email log" });
+    }
+};
+
+export const getAiUsage = async (req, res) => {
+    try {
+        const days = Math.min(90, Math.max(7, parseInt(req.query.days, 10) || 30));
+        const since = new Date(Date.now() - days * DAY_MS);
+        const match = { $match: { createdAt: { $gte: since } } };
+
+        const [totals, byDay, byMode, topUsers, tools, recentErrors] = await Promise.all([
+            AiUsageLog.aggregate([
+                match,
+                {
+                    $group: {
+                        _id: null,
+                        requests: { $sum: 1 },
+                        errors: { $sum: { $cond: [{ $eq: ["$status", "error"] }, 1, 0] } },
+                        promptTokens: { $sum: "$promptTokens" },
+                        outputTokens: { $sum: "$outputTokens" },
+                        avgDurationMs: { $avg: "$durationMs" },
+                        users: { $addToSet: "$userId" },
+                    },
+                },
+            ]),
+            AiUsageLog.aggregate([
+                match,
+                {
+                    $group: {
+                        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                        requests: { $sum: 1 },
+                        errors: { $sum: { $cond: [{ $eq: ["$status", "error"] }, 1, 0] } },
+                        tokens: { $sum: "$totalTokens" },
+                    },
+                },
+                { $sort: { _id: 1 } },
+            ]),
+            AiUsageLog.aggregate([match, { $group: { _id: "$mode", requests: { $sum: 1 } } }]),
+            AiUsageLog.aggregate([
+                match,
+                {
+                    $group: {
+                        _id: "$userId",
+                        requests: { $sum: 1 },
+                        promptTokens: { $sum: "$promptTokens" },
+                        outputTokens: { $sum: "$outputTokens" },
+                    },
+                },
+                { $sort: { outputTokens: -1, requests: -1 } },
+                { $limit: 10 },
+                { $lookup: { from: "users", localField: "_id", foreignField: "_id", as: "user" } },
+                { $project: { requests: 1, promptTokens: 1, outputTokens: 1, email: { $first: "$user.email" } } },
+            ]),
+            AiUsageLog.aggregate([
+                match,
+                { $unwind: "$toolCalls" },
+                { $group: { _id: "$toolCalls", calls: { $sum: 1 } } },
+                { $sort: { calls: -1 } },
+            ]),
+            AiUsageLog.find({ status: "error", createdAt: { $gte: since } })
+                .sort({ createdAt: -1 })
+                .limit(10)
+                .populate("userId", "email")
+                .lean(),
+        ]);
+
+        const total = totals[0] || { requests: 0, errors: 0, promptTokens: 0, outputTokens: 0, avgDurationMs: 0, users: [] };
+
+        return res.status(200).json({
+            success: true,
+            days,
+            pricing: { inputUsdPerMillion: GEMINI_INPUT_USD_PER_M, outputUsdPerMillion: GEMINI_OUTPUT_USD_PER_M },
+            totals: {
+                requests: total.requests,
+                errors: total.errors,
+                errorRate: total.requests ? total.errors / total.requests : 0,
+                promptTokens: total.promptTokens,
+                outputTokens: total.outputTokens,
+                activeUsers: total.users.length,
+                avgDurationMs: Math.round(total.avgDurationMs || 0),
+                estimatedCostUsd: estimateCostUsd(total.promptTokens, total.outputTokens),
+            },
+            byDay: byDay.map((d) => ({ date: d._id, requests: d.requests, errors: d.errors, tokens: d.tokens })),
+            byMode: Object.fromEntries(byMode.map((m) => [m._id || "unknown", m.requests])),
+            topUsers: topUsers.map((u) => ({
+                userId: u._id,
+                email: u.email || "deleted user",
+                requests: u.requests,
+                tokens: u.promptTokens + u.outputTokens,
+                estimatedCostUsd: estimateCostUsd(u.promptTokens, u.outputTokens),
+            })),
+            tools: tools.map((t) => ({ name: t._id, calls: t.calls })),
+            recentErrors: recentErrors.map((e) => ({
+                _id: e._id,
+                at: e.createdAt,
+                email: e.userId?.email || "deleted user",
+                mode: e.mode,
+                error: e.error,
+            })),
+        });
+    } catch (err) {
+        console.error("Error in admin getAiUsage:", err);
+        return res.status(500).json({ success: false, message: "Could not load AI usage" });
     }
 };
