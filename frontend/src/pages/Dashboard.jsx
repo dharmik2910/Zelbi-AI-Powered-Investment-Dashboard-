@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getPromptLimit } from "../data/plans";
 import debounce from 'lodash/debounce';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import ReactMarkdown from 'react-markdown';
 import { FaArrowDown, FaArrowUp, FaBalanceScale, FaBell, FaChartLine, FaRegStar, FaRobot, FaSearch, FaStar } from 'react-icons/fa';
@@ -228,9 +228,12 @@ const Dashboard = () => {
     }
   };
 
-  // Debounced search handler
+  // Debounced search handler. The ref always points at the latest fetchSearchResults,
+  // so the debounced function is created once but still uses the current token.
+  const fetchSearchResultsRef = useRef(fetchSearchResults);
+  fetchSearchResultsRef.current = fetchSearchResults;
   const debouncedFetchResults = useMemo(
-    () => debounce((value) => fetchSearchResults(value), 400),
+    () => debounce((value) => fetchSearchResultsRef.current(value), 400),
     []
   );
 
