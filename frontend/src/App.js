@@ -15,6 +15,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import Portfolio from './pages/Portfolio.jsx';
 import Alerts from './pages/Alerts.jsx';
 import Compare from './pages/Compare.jsx';
+import Admin from './pages/Admin.jsx';
 import TaxCalculator from './pages/TaxCalculator.jsx';
 import Pricing from './pages/Pricing.jsx';
 import Profile from './pages/Profile.jsx';
@@ -33,6 +34,18 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" />;
   }
   
+  return children;
+};
+
+// The server checks the admin role on every request; this only hides the page from others
+const AdminRoute = ({ children }) => {
+  const { token } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.profile);
+
+  if (!token) return <Navigate to="/login" />;
+  if (!user) return null; // profile still loading
+  if (user.role !== "admin") return <Navigate to="/" />;
+
   return children;
 };
 
@@ -61,6 +74,7 @@ function App() {
             <Route path="/portfolio" element={<ProtectedRoute><Portfolio/></ProtectedRoute>} />
             <Route path="/alerts" element={<ProtectedRoute><Alerts/></ProtectedRoute>} />
             <Route path="/compare" element={<ProtectedRoute><Compare/></ProtectedRoute>} />
+            <Route path="/admin" element={<AdminRoute><Admin/></AdminRoute>} />
              <Route path="/tax-calculator" element={<ProtectedRoute><TaxCalculator/></ProtectedRoute>} />
              <Route path="/signup" element={<Signup />} />
              <Route path="/login" element={<Login />} />

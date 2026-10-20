@@ -25,6 +25,13 @@ const userSchema = new mongoose.Schema({
         },
     },
 
+    // "admin" unlocks the admin panel. Set with: npm run make-admin -- <email>
+    role: {
+        type: String,
+        enum: ["user", "admin"],
+        default: "user",
+    },
+
     acceptedTerms: {
         type: Boolean,
         default: false,
