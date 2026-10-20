@@ -5,6 +5,8 @@ import ReactApexChart from "react-apexcharts";
 import { toast } from "react-hot-toast";
 import { FaArrowLeft, FaChartBar, FaCreditCard, FaDownload, FaEnvelope, FaEye, FaHistory, FaRobot, FaSearch, FaSignOutAlt, FaTrash, FaUserPlus, FaUsers } from "react-icons/fa";
 import { BsPinAngle, BsPinAngleFill } from "react-icons/bs";
+import { FiExternalLink } from "react-icons/fi";
+import { SiGoogleanalytics, SiGoogletagmanager } from "react-icons/si";
 import { HiMenu, HiX } from "react-icons/hi";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -1430,6 +1432,40 @@ const AdminHeader = ({ onOpenMenu }) => {
   );
 };
 
+// Dashboards of outside services, opened in a new tab
+const EXTERNAL_TOOLS = [
+  {
+    label: "Google Analytics",
+    href: "https://analytics.google.com/analytics/web/#/a400739171p559734044/realtime/overview",
+    icon: SiGoogleanalytics,
+  },
+  {
+    label: "Tag Manager",
+    href: "https://tagmanager.google.com/#/container/accounts/6383673500/containers/267753129/workspaces/2",
+    icon: SiGoogletagmanager,
+  },
+];
+
+const ExternalTools = ({ expanded }) => (
+  <div className="px-2 pb-2">
+    <p className={`px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-gray-500 ${expanded ? "" : "sr-only"}`}>Tools</p>
+    {EXTERNAL_TOOLS.map(({ label, href, icon: Icon }) => (
+      <a
+        key={label}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={expanded ? undefined : `${label} (opens in a new tab)`}
+        className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white"
+      >
+        <Icon className="shrink-0 text-base" aria-hidden="true" />
+        <span className={`flex-1 whitespace-nowrap ${expanded ? "" : "sr-only"}`}>{label}</span>
+        {expanded && <FiExternalLink className="shrink-0 text-xs text-gray-500" aria-label="opens in a new tab" />}
+      </a>
+    ))}
+  </div>
+);
+
 const SidebarNav = ({ tab, onSelect, expanded }) => (
   <nav aria-label="Admin sections" className="flex-1 p-2 space-y-1">
     {TABS.map(({ id, label, icon: Icon }) => {
@@ -1504,6 +1540,7 @@ const Admin = () => {
         } ${!pinned && hovered ? "shadow-2xl shadow-black" : ""}`}
       >
         <SidebarNav tab={tab} onSelect={selectTab} expanded={expanded} />
+        <ExternalTools expanded={expanded} />
         <div className="p-2 border-t border-white/10">
           <button
             type="button"
@@ -1530,6 +1567,7 @@ const Admin = () => {
               </button>
             </div>
             <SidebarNav tab={tab} onSelect={selectTab} expanded />
+            <ExternalTools expanded />
           </aside>
         </div>
       )}
