@@ -129,6 +129,13 @@ export const login = async (req, res) => {
     }
 
     if (user.password && await bcrypt.compare(password, user.password)) {
+      if (user.isBlocked) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been suspended. Contact support.",
+      })
+      }
+
       await refreshSubscriptionState(user)
       const token = jwt.sign(
         { email: user.email, id: user._id, role: user.role },
@@ -297,6 +304,13 @@ export const googleAuth = async (req, res) => {
         acceptedTerms: Boolean(acceptedTerms),
         acceptedTermsAt: acceptedTerms ? new Date() : null,
         termsVersion: acceptedTerms ? "v1.0" : null,
+      });
+    }
+
+    if (user.isBlocked) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been suspended. Contact support.",
       });
     }
 

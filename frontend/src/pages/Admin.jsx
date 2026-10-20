@@ -3,7 +3,7 @@ import debounce from "lodash/debounce";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import { toast } from "react-hot-toast";
-import { FaChartBar, FaCreditCard, FaHistory, FaSearch, FaUsers } from "react-icons/fa";
+import { FaChartBar, FaCreditCard, FaDownload, FaHistory, FaSearch, FaTrash, FaUserPlus, FaUsers } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 
@@ -22,6 +22,13 @@ const PLAN_BADGE = {
   elite: "bg-yellow-400/15 text-yellow-300",
 };
 
+const inputClass =
+  "w-full bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-primary disabled:opacity-40";
+const secondaryButton =
+  "inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#141414] border border-[#2a2a2a] text-gray-200 hover:border-primary/50 disabled:opacity-40";
+const primaryButton =
+  "inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg bg-primary text-black font-medium hover:bg-primary-hover disabled:opacity-40";
+
 const money = (amount, currency = "INR") => {
   try {
     return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
@@ -33,8 +40,11 @@ const money = (amount, currency = "INR") => {
 const date = (value) => (value ? new Date(value).toLocaleDateString(undefined, { dateStyle: "medium" }) : "—");
 const dateTime = (value) => (value ? new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—");
 const fullName = (u) => [u?.firstName, u?.lastName].filter(Boolean).join(" ") || "—";
+const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 
 const isPlanActive = (u) => u.subscriptionPlan !== "free" && u.subscriptionExpiry && new Date(u.subscriptionExpiry) > new Date();
+
+const errorMessage = (err, fallback) => err.response?.data?.message || fallback;
 
 const Card = ({ children, className = "" }) => (
   <div className={`bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-5 ${className}`}>{children}</div>
@@ -52,6 +62,28 @@ const PlanBadge = ({ user }) => {
   const plan = isPlanActive(user) ? user.subscriptionPlan : "free";
   return <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${PLAN_BADGE[plan]}`}>{plan}</span>;
 };
+
+const Modal = ({ label, onClose, children, wide = true }) => (
+  <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-4" onClick={onClose} role="presentation">
+    <div
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.key === "Escape" && onClose()}
+      role="dialog"
+      aria-modal="true"
+      aria-label={label}
+      className={`w-full ${wide ? "max-w-2xl" : "max-w-md"} max-h-[90vh] overflow-y-auto custom-scrollbar bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6`}
+    >
+      {children}
+    </div>
+  </div>
+);
+
+const Field = ({ id, label, children }) => (
+  <div>
+    <label htmlFor={id} className="block text-sm text-gray-300 mb-1">{label}</label>
+    {children}
+  </div>
+);
 
 const Pager = ({ page, pages, onPage }) =>
   pages > 1 && (
@@ -72,10 +104,26 @@ const useAdminApi = () => {
     const config = { headers: { Authorization: `Bearer ${token}` } };
     return {
       get: (path, params) => axios.get(`${ADMIN_URL}${path}`, { ...config, params }).then((r) => r.data),
+      post: (path, body) => axios.post(`${ADMIN_URL}${path}`, body, config).then((r) => r.data),
       patch: (path, body) => axios.patch(`${ADMIN_URL}${path}`, body, config).then((r) => r.data),
+      del: (path, body) => axios.delete(`${ADMIN_URL}${path}`, { ...config, data: body }).then((r) => r.data),
+      // Downloads a CSV with the auth header, which a plain link can't send
+      download: async (path, filename) => {
+        const response = await axios.get(`${ADMIN_URL}${path}`, { ...config, responseType: "blob" });
+        const url = URL.createObjectURL(response.data);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      },
     };
   }, [token]);
 };
+
+/* ---------------------------------- Overview ---------------------------------- */
 
 const Overview = () => {
   const api = useAdminApi();
@@ -83,7 +131,7 @@ const Overview = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    api.get("/stats").then((d) => setStats(d.stats)).catch((err) => setError(err.response?.data?.message || "Couldn't load stats"));
+    api.get("/stats").then((d) => setStats(d.stats)).catch((err) => setError(errorMessage(err, "Couldn't load stats")));
   }, [api]);
 
   if (error) return <p className="text-red-300">{error}</p>;
@@ -129,17 +177,98 @@ const Overview = () => {
   );
 };
 
-const UserDetail = ({ userId, onClose, onSaved }) => {
+/* -------------------------------- Create user -------------------------------- */
+
+const CreateUser = ({ onClose, onCreated }) => {
+  const api = useAdminApi();
+  const [form, setForm] = useState({
+    firstName: "", lastName: "", email: "", password: "", subscriptionPlan: "free", subscriptionExpiry: "", role: "user",
+  });
+  const [saving, setSaving] = useState(false);
+  const update = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const body = { ...form };
+      if (!body.password) delete body.password;
+      if (body.subscriptionPlan === "free" || !body.subscriptionExpiry) delete body.subscriptionExpiry;
+      const data = await api.post("/users", body);
+      toast.success(
+        form.password ? "User created" : data.inviteSent ? "User created and invite email sent" : "User created, but the invite email failed. Send a password reset from their profile."
+      );
+      onCreated();
+    } catch (err) {
+      toast.error(errorMessage(err, "Couldn't create user"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal label="Add user" onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        <h2 className="text-xl font-semibold">Add user</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Field id="new-first" label="First name">
+            <input id="new-first" required value={form.firstName} onChange={update("firstName")} className={inputClass} />
+          </Field>
+          <Field id="new-last" label="Last name">
+            <input id="new-last" value={form.lastName} onChange={update("lastName")} className={inputClass} />
+          </Field>
+          <Field id="new-email" label="Email">
+            <input id="new-email" type="email" required value={form.email} onChange={update("email")} className={inputClass} />
+          </Field>
+          <Field id="new-password" label="Password (optional)">
+            <input id="new-password" type="password" minLength={8} autoComplete="new-password" value={form.password} onChange={update("password")} placeholder="Leave blank to email an invite" className={inputClass} />
+          </Field>
+          <Field id="new-plan" label="Plan">
+            <select id="new-plan" value={form.subscriptionPlan} onChange={update("subscriptionPlan")} className={inputClass}>
+              <option value="free">Free</option>
+              <option value="pro">Pro</option>
+              <option value="elite">Elite</option>
+            </select>
+          </Field>
+          <Field id="new-expiry" label="Plan active until">
+            <input id="new-expiry" type="date" min={tomorrow()} disabled={form.subscriptionPlan === "free"} value={form.subscriptionPlan === "free" ? "" : form.subscriptionExpiry} onChange={update("subscriptionExpiry")} className={`${inputClass} [color-scheme:dark]`} />
+          </Field>
+          <Field id="new-role" label="Role">
+            <select id="new-role" value={form.role} onChange={update("role")} className={inputClass}>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </Field>
+        </div>
+        <p className="text-xs text-gray-500">
+          Without a password, the user gets an email with a link (valid 7 days) to set one. Paid plans without a date get 30 days.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-gray-300 hover:bg-white/5">Cancel</button>
+          <button type="submit" disabled={saving} className={primaryButton}>{saving ? "Creating…" : "Create user"}</button>
+        </div>
+      </form>
+    </Modal>
+  );
+};
+
+/* -------------------------------- User detail -------------------------------- */
+
+const UserDetail = ({ userId, onClose, onChanged }) => {
   const api = useAdminApi();
   const { user: me } = useSelector((state) => state.profile);
   const [data, setData] = useState(null);
   const [form, setForm] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState("");
 
   const load = useCallback(() => {
     api.get(`/users/${userId}`).then((d) => {
       setData(d);
       setForm({
+        firstName: d.user.firstName || "",
+        lastName: d.user.lastName || "",
+        email: d.user.email,
         subscriptionPlan: d.user.subscriptionPlan || "free",
         subscriptionExpiry: d.user.subscriptionExpiry ? d.user.subscriptionExpiry.slice(0, 10) : "",
         role: d.user.role || "user",
@@ -151,167 +280,262 @@ const UserDetail = ({ userId, onClose, onSaved }) => {
     load();
   }, [load]);
 
-  const save = async (extra = {}) => {
-    const u = data.user;
-    const body = { ...extra };
-    if (form.subscriptionPlan !== (u.subscriptionPlan || "free")) body.subscriptionPlan = form.subscriptionPlan;
+  const run = async (action, success) => {
+    setBusy(true);
+    try {
+      await action();
+      if (success) toast.success(success);
+      load();
+      onChanged();
+      return true;
+    } catch (err) {
+      toast.error(errorMessage(err, "Something went wrong"));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!data || !form) {
+    return <Modal label="User details" onClose={onClose}><p className="text-gray-400">Loading…</p></Modal>;
+  }
+
+  const u = data.user;
+  const isSelf = String(u._id) === String(me?._id);
+
+  const save = () => {
+    const body = {};
+    ["firstName", "lastName", "email", "subscriptionPlan", "role"].forEach((field) => {
+      if (form[field] !== (u[field] || (field === "subscriptionPlan" ? "free" : field === "role" ? "user" : ""))) body[field] = form[field];
+    });
     if (form.subscriptionPlan !== "free" && form.subscriptionExpiry && form.subscriptionExpiry !== (u.subscriptionExpiry || "").slice(0, 10)) {
       body.subscriptionExpiry = form.subscriptionExpiry;
     }
-    if (form.role !== (u.role || "user")) body.role = form.role;
     if (Object.keys(body).length === 0) {
       toast("No changes to save");
       return;
     }
     if (body.role && !window.confirm(`Change ${u.email}'s role to ${body.role}?`)) return;
-
-    setSaving(true);
-    try {
-      await api.patch(`/users/${userId}`, body);
-      toast.success("User updated");
-      load();
-      onSaved();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Couldn't update user");
-    } finally {
-      setSaving(false);
-    }
+    run(() => api.patch(`/users/${userId}`, body), "User updated");
   };
 
-  const inputClass = "w-full bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary";
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const toggleBlock = () => {
+    const blocking = !u.isBlocked;
+    if (!window.confirm(blocking ? `Block ${u.email}? They'll be signed out and can't log in.` : `Unblock ${u.email}?`)) return;
+    run(() => api.patch(`/users/${userId}`, { isBlocked: blocking }), blocking ? "User blocked" : "User unblocked");
+  };
+
+  const remove = async () => {
+    const ok = await run(() => api.del(`/users/${userId}`, { confirmEmail }), `${u.email} was deleted`);
+    if (ok) onClose();
+  };
+
+  const update = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-4" onClick={onClose} role="presentation">
-      <div
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.key === "Escape" && onClose()}
-        role="dialog"
-        aria-modal="true"
-        aria-label="User details"
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6"
-      >
-        {!data || !form ? (
-          <p className="text-gray-400">Loading…</p>
+    <Modal label="User details" onClose={onClose}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h2 className="text-xl font-semibold truncate">{fullName(u)}</h2>
+          <p className="text-gray-400 text-sm truncate">{u.email}</p>
+          <p className="text-gray-500 text-xs mt-1">
+            Joined {date(u.createdAt)} · {u.googleId ? "Google sign-in" : "Email sign-in"}
+            {u.acceptedTerms ? "" : " · terms not accepted"}
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <PlanBadge user={u} />
+          {u.isBlocked && <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/15 text-red-300">Blocked</span>}
+          {u.role === "admin" && <span className="text-xs text-yellow-300">Admin</span>}
+        </div>
+      </div>
+
+      <dl className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+        {[
+          ["AI prompts used", u.aiPromptCount || 0],
+          ["Trades", data.activity.tradeCount],
+          ["Stocks traded", data.activity.symbolsTraded],
+          ["Active alerts", data.activity.activeAlerts],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-xl bg-[#141414] p-3">
+            <dt className="text-gray-400 text-xs">{label}</dt>
+            <dd className="text-white text-lg font-semibold">{value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <section className="mt-6">
+        <h3 className="font-semibold mb-3">Details and access</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Field id="edit-first" label="First name">
+            <input id="edit-first" value={form.firstName} onChange={update("firstName")} className={inputClass} />
+          </Field>
+          <Field id="edit-last" label="Last name">
+            <input id="edit-last" value={form.lastName} onChange={update("lastName")} className={inputClass} />
+          </Field>
+          <Field id="edit-email" label="Email">
+            <input id="edit-email" type="email" value={form.email} onChange={update("email")} className={inputClass} />
+          </Field>
+          <Field id="edit-role" label="Role">
+            <select id="edit-role" value={form.role} disabled={isSelf} onChange={update("role")} className={inputClass}>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </Field>
+          <Field id="edit-plan" label="Plan">
+            <select id="edit-plan" value={form.subscriptionPlan} onChange={update("subscriptionPlan")} className={inputClass}>
+              <option value="free">Free</option>
+              <option value="pro">Pro</option>
+              <option value="elite">Elite</option>
+            </select>
+          </Field>
+          <Field id="edit-expiry" label="Plan active until">
+            <input
+              id="edit-expiry"
+              type="date"
+              min={tomorrow()}
+              disabled={form.subscriptionPlan === "free"}
+              value={form.subscriptionPlan === "free" ? "" : form.subscriptionExpiry}
+              onChange={update("subscriptionExpiry")}
+              className={`${inputClass} [color-scheme:dark]`}
+            />
+          </Field>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">Changing a plan here doesn't charge or refund the user.</p>
+        <div className="flex flex-wrap justify-end gap-2 mt-4">
+          <button type="button" disabled={busy} onClick={() => window.confirm("Reset this user's AI prompt count to 0?") && run(() => api.patch(`/users/${userId}`, { resetPrompts: true }), "AI prompts reset")} className={secondaryButton}>
+            Reset AI prompts
+          </button>
+          <button type="button" disabled={busy} onClick={() => window.confirm(`Email a password reset link to ${u.email}?`) && run(() => api.post(`/users/${userId}/password-reset`), `Reset email sent to ${u.email}`)} className={secondaryButton}>
+            Send password reset
+          </button>
+          {!isSelf && (
+            <button type="button" disabled={busy} onClick={toggleBlock} className={`${secondaryButton} ${u.isBlocked ? "" : "text-red-300"}`}>
+              {u.isBlocked ? "Unblock" : "Block"}
+            </button>
+          )}
+          <button type="button" disabled={busy} onClick={save} className={primaryButton}>Save changes</button>
+        </div>
+      </section>
+
+      <section className="mt-6">
+        <h3 className="font-semibold mb-2">Recent trades</h3>
+        {data.trades.length === 0 ? (
+          <p className="text-sm text-gray-400">No trades.</p>
         ) : (
-          <>
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <h2 className="text-xl font-semibold truncate">{fullName(data.user)}</h2>
-                <p className="text-gray-400 text-sm truncate">{data.user.email}</p>
-                <p className="text-gray-500 text-xs mt-1">
-                  Joined {date(data.user.createdAt)} · {data.user.googleId ? "Google sign-in" : "Email sign-in"}
-                </p>
-              </div>
-              <PlanBadge user={data.user} />
-            </div>
+          <ul className="divide-y divide-[#1a1a1a] text-sm max-h-56 overflow-y-auto custom-scrollbar">
+            {data.trades.map((t) => (
+              <li key={t._id} className="flex justify-between gap-4 py-2">
+                <span>
+                  <span className={`uppercase font-semibold ${t.type === "buy" ? "text-green-400" : "text-red-400"}`}>{t.type}</span>{" "}
+                  {t.quantity} {t.symbol} @ {t.price}
+                </span>
+                <span className="text-gray-400">{date(t.date)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
-            <dl className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-              {[
-                ["AI prompts used", data.user.aiPromptCount || 0],
-                ["Trades", data.activity.tradeCount],
-                ["Stocks traded", data.activity.symbolsTraded],
-                ["Active alerts", data.activity.activeAlerts],
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-xl bg-[#141414] p-3">
-                  <dt className="text-gray-400 text-xs">{label}</dt>
-                  <dd className="text-white text-lg font-semibold">{value}</dd>
-                </div>
-              ))}
-            </dl>
-
-            <section className="mt-6">
-              <h3 className="font-semibold mb-3">Subscription and access</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label htmlFor="admin-plan" className="block text-sm text-gray-300 mb-1">Plan</label>
-                  <select id="admin-plan" value={form.subscriptionPlan} onChange={(e) => setForm({ ...form, subscriptionPlan: e.target.value })} className={inputClass}>
-                    <option value="free">Free</option>
-                    <option value="pro">Pro</option>
-                    <option value="elite">Elite</option>
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="admin-expiry" className="block text-sm text-gray-300 mb-1">Active until</label>
-                  <input
-                    id="admin-expiry"
-                    type="date"
-                    min={tomorrow}
-                    disabled={form.subscriptionPlan === "free"}
-                    value={form.subscriptionPlan === "free" ? "" : form.subscriptionExpiry}
-                    onChange={(e) => setForm({ ...form, subscriptionExpiry: e.target.value })}
-                    className={`${inputClass} [color-scheme:dark] disabled:opacity-40`}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="admin-role" className="block text-sm text-gray-300 mb-1">Role</label>
-                  <select
-                    id="admin-role"
-                    value={form.role}
-                    disabled={String(data.user._id) === String(me?._id)}
-                    onChange={(e) => setForm({ ...form, role: e.target.value })}
-                    className={`${inputClass} disabled:opacity-40`}
-                  >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Changing a plan here doesn't charge or refund the user. Paid plans without a date get 30 days.
-              </p>
-              <div className="flex flex-wrap justify-end gap-3 mt-4">
+      <section className="mt-6">
+        <h3 className="font-semibold mb-2">Price alerts</h3>
+        {data.alerts.length === 0 ? (
+          <p className="text-sm text-gray-400">No alerts.</p>
+        ) : (
+          <ul className="divide-y divide-[#1a1a1a] text-sm">
+            {data.alerts.map((a) => (
+              <li key={a._id} className="flex items-center justify-between gap-4 py-2">
+                <span>
+                  {a.symbol} {a.condition} {a.targetPrice} {a.currency}
+                  <span className={`ml-2 text-xs ${a.status === "active" ? "text-primary" : "text-gray-500"}`}>{a.status}</span>
+                </span>
                 <button
                   type="button"
-                  disabled={saving}
-                  onClick={() => window.confirm("Reset this user's AI prompt count to 0?") && save({ resetPrompts: true })}
-                  className="px-4 py-2 rounded-lg bg-[#141414] border border-[#2a2a2a] hover:border-primary/50 disabled:opacity-40"
+                  disabled={busy}
+                  onClick={() => window.confirm(`Delete the ${a.symbol} alert?`) && run(() => api.del(`/users/${userId}/alerts/${a._id}`), "Alert deleted")}
+                  aria-label={`Delete ${a.symbol} alert`}
+                  className="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-white/5"
                 >
-                  Reset AI prompts
+                  <FaTrash />
                 </button>
-                <button type="button" disabled={saving} onClick={() => save()} className="px-5 py-2 rounded-lg bg-primary text-black font-medium hover:bg-primary-hover disabled:opacity-40">
-                  {saving ? "Saving…" : "Save changes"}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-6">
+        <h3 className="font-semibold mb-2">Payments</h3>
+        {data.payments.length === 0 ? (
+          <p className="text-sm text-gray-400">No payments.</p>
+        ) : (
+          <ul className="divide-y divide-[#1a1a1a] text-sm">
+            {data.payments.map((p) => (
+              <li key={p._id} className="flex justify-between gap-4 py-2">
+                <span className="capitalize">{p.plan} · {p.billingCycle} · {date(p.createdAt)}</span>
+                <span className={p.status === "success" ? "text-green-400" : "text-red-400"}>
+                  {money(p.amount / 100, p.currency)} {p.status === "success" ? "" : "(failed)"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {!isSelf && (
+        <section className="mt-8 rounded-xl border border-red-500/30 bg-red-500/5 p-4">
+          <h3 className="font-semibold text-red-300">Delete user</h3>
+          {u.role === "admin" ? (
+            <p className="text-sm text-gray-400 mt-1">Change this user's role to User before deleting them.</p>
+          ) : (
+            <>
+              <p className="text-sm text-gray-400 mt-1">
+                Permanently deletes the account, portfolio, trades and alerts. Payment records are kept. This can't be undone.
+              </p>
+              <label htmlFor="confirm-delete" className="block text-sm text-gray-300 mt-3 mb-1">
+                Type <span className="font-mono text-white">{u.email}</span> to confirm
+              </label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input id="confirm-delete" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} autoComplete="off" className={inputClass} />
+                <button
+                  type="button"
+                  disabled={busy || confirmEmail.trim().toLowerCase() !== u.email.toLowerCase()}
+                  onClick={remove}
+                  className="shrink-0 px-4 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 disabled:opacity-40"
+                >
+                  Delete user
                 </button>
               </div>
-            </section>
+            </>
+          )}
+        </section>
+      )}
 
-            <section className="mt-6">
-              <h3 className="font-semibold mb-2">Payments</h3>
-              {data.payments.length === 0 ? (
-                <p className="text-sm text-gray-400">No payments.</p>
-              ) : (
-                <ul className="divide-y divide-[#1a1a1a] text-sm">
-                  {data.payments.map((p) => (
-                    <li key={p._id} className="flex justify-between gap-4 py-2">
-                      <span className="capitalize">{p.plan} · {p.billingCycle} · {date(p.createdAt)}</span>
-                      <span className={p.status === "success" ? "text-green-400" : "text-red-400"}>
-                        {money(p.amount / 100, p.currency)} {p.status === "success" ? "" : "(failed)"}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            <div className="flex justify-end pt-6">
-              <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-gray-300 hover:bg-white/5">Close</button>
-            </div>
-          </>
-        )}
+      <div className="flex justify-end pt-6">
+        <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-gray-300 hover:bg-white/5">Close</button>
       </div>
-    </div>
+    </Modal>
   );
 };
+
+/* ----------------------------------- Users ----------------------------------- */
 
 const Users = () => {
   const api = useAdminApi();
   const [query, setQuery] = useState("");
-  const [filters, setFilters] = useState({ q: "", plan: "", page: 1 });
+  const [filters, setFilters] = useState({ q: "", plan: "", status: "", page: 1 });
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState(null);
+  const [creating, setCreating] = useState(false);
 
   const load = useCallback(() => {
-    api.get("/users", { q: filters.q || undefined, plan: filters.plan || undefined, page: filters.page })
+    api.get("/users", {
+      q: filters.q || undefined,
+      plan: filters.plan || undefined,
+      status: filters.status || undefined,
+      role: filters.status === "admin" ? "admin" : undefined,
+      page: filters.page,
+    })
       .then(setData)
       .catch(() => toast.error("Couldn't load users"));
   }, [api, filters]);
@@ -322,9 +546,11 @@ const Users = () => {
 
   const updateSearch = useMemo(() => debounce((q) => setFilters((f) => ({ ...f, q, page: 1 })), 350), []);
 
+  const exportCsv = () => api.download("/users/export", "zelbi-users.csv").catch(() => toast.error("Couldn't export users"));
+
   return (
     <Card>
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      <div className="flex flex-col lg:flex-row gap-3 mb-4">
         <div className="relative flex-1">
           <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" aria-hidden="true" />
           <label htmlFor="admin-user-search" className="sr-only">Search users</label>
@@ -337,21 +563,26 @@ const Users = () => {
               updateSearch(e.target.value.trim());
             }}
             placeholder="Search by name or email"
-            className="w-full bg-[#141414] border border-[#2a2a2a] rounded-lg pl-9 pr-3 py-2 text-white focus:outline-none focus:border-primary"
+            className={`${inputClass} pl-9`}
           />
         </div>
-        <label htmlFor="admin-plan-filter" className="sr-only">Filter by plan</label>
-        <select
-          id="admin-plan-filter"
-          value={filters.plan}
-          onChange={(e) => setFilters((f) => ({ ...f, plan: e.target.value, page: 1 }))}
-          className="bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white"
-        >
-          <option value="">All plans</option>
-          <option value="free">Free</option>
-          <option value="pro">Pro</option>
-          <option value="elite">Elite</option>
-        </select>
+        <div className="flex flex-wrap gap-2">
+          <label htmlFor="admin-plan-filter" className="sr-only">Filter by plan</label>
+          <select id="admin-plan-filter" value={filters.plan} onChange={(e) => setFilters((f) => ({ ...f, plan: e.target.value, page: 1 }))} className="bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white">
+            <option value="">All plans</option>
+            <option value="free">Free</option>
+            <option value="pro">Pro</option>
+            <option value="elite">Elite</option>
+          </select>
+          <label htmlFor="admin-status-filter" className="sr-only">Filter by status</label>
+          <select id="admin-status-filter" value={filters.status} onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value, page: 1 }))} className="bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white">
+            <option value="">All users</option>
+            <option value="blocked">Blocked</option>
+            <option value="admin">Admins</option>
+          </select>
+          <button type="button" onClick={exportCsv} className={secondaryButton}><FaDownload /> Export</button>
+          <button type="button" onClick={() => setCreating(true)} className={primaryButton}><FaUserPlus /> Add user</button>
+        </div>
       </div>
 
       {!data ? (
@@ -367,6 +598,7 @@ const Users = () => {
                 <tr className="text-left text-gray-400 border-b border-[#1a1a1a]">
                   <th className="py-2 pr-3 font-medium">User</th>
                   <th className="py-2 px-3 font-medium">Plan</th>
+                  <th className="py-2 px-3 font-medium">Status</th>
                   <th className="py-2 px-3 font-medium text-right">AI prompts</th>
                   <th className="py-2 pl-3 font-medium text-right">Joined</th>
                 </tr>
@@ -387,6 +619,9 @@ const Users = () => {
                       <PlanBadge user={u} />
                       {isPlanActive(u) && <span className="block text-xs text-gray-500 mt-1">until {date(u.subscriptionExpiry)}</span>}
                     </td>
+                    <td className="py-2.5 px-3">
+                      {u.isBlocked ? <span className="text-red-300 text-xs">Blocked</span> : <span className="text-gray-400 text-xs">Active</span>}
+                    </td>
                     <td className="py-2.5 px-3 text-right">{u.aiPromptCount || 0}</td>
                     <td className="py-2.5 pl-3 text-right text-gray-400">{date(u.createdAt)}</td>
                   </tr>
@@ -398,10 +633,21 @@ const Users = () => {
         </>
       )}
 
-      {selected && <UserDetail userId={selected} onClose={() => setSelected(null)} onSaved={load} />}
+      {selected && <UserDetail userId={selected} onClose={() => setSelected(null)} onChanged={load} />}
+      {creating && (
+        <CreateUser
+          onClose={() => setCreating(false)}
+          onCreated={() => {
+            setCreating(false);
+            load();
+          }}
+        />
+      )}
     </Card>
   );
 };
+
+/* ---------------------------------- Payments ---------------------------------- */
 
 const Payments = () => {
   const api = useAdminApi();
@@ -414,9 +660,11 @@ const Payments = () => {
       .catch(() => toast.error("Couldn't load payments"));
   }, [api, filters]);
 
+  const exportCsv = () => api.download("/payments/export", "zelbi-payments.csv").catch(() => toast.error("Couldn't export payments"));
+
   return (
     <Card>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end gap-2 mb-4">
         <label htmlFor="admin-payment-status" className="sr-only">Filter by status</label>
         <select
           id="admin-payment-status"
@@ -428,6 +676,7 @@ const Payments = () => {
           <option value="success">Successful</option>
           <option value="failed">Failed</option>
         </select>
+        <button type="button" onClick={exportCsv} className={secondaryButton}><FaDownload /> Export</button>
       </div>
       {!data ? (
         <div className="h-40 rounded-xl bg-white/5 animate-pulse" aria-busy="true" />
@@ -468,15 +717,34 @@ const Payments = () => {
   );
 };
 
-const describeChange = (details) => {
-  const after = details?.after || {};
-  const before = details?.before || {};
+/* -------------------------------- Activity log -------------------------------- */
+
+const ACTION_LABELS = {
+  create_user: "created",
+  update_user: "updated",
+  block_user: "blocked",
+  unblock_user: "unblocked",
+  delete_user: "deleted",
+  send_password_reset: "sent a password reset to",
+  delete_alert: "deleted an alert for",
+};
+
+const describeChange = (entry) => {
+  const details = entry.details || {};
+  if (entry.action === "delete_alert" && details.alert) {
+    return `${details.alert.symbol} ${details.alert.condition} ${details.alert.targetPrice}`;
+  }
+  if (entry.action === "delete_user" && details.removed) {
+    return `removed ${details.removed.trades} trades and ${details.removed.alerts} alerts`;
+  }
+  const after = details.after || {};
+  const before = details.before || {};
   return Object.keys(after)
     .map((field) => {
       if (field === "aiPromptCount") return "reset AI prompts";
-      if (field === "promptCountResetAt") return null;
+      if (["promptCountResetAt", "isBlocked"].includes(field)) return null;
       const format = (v) => (field === "subscriptionExpiry" ? date(v) : v ?? "none");
-      return `${field}: ${format(before[field])} → ${format(after[field])}`;
+      return entry.action === "create_user" ? `${field}: ${format(after[field])}` : `${field}: ${format(before[field])} → ${format(after[field])}`;
     })
     .filter(Boolean)
     .join(", ");
@@ -500,15 +768,18 @@ const Activity = () => {
       ) : (
         <>
           <ul className="divide-y divide-[#1a1a1a] text-sm">
-            {data.entries.map((entry) => (
-              <li key={entry._id} className="py-3">
-                <p className="text-white">
-                  <span className="font-medium">{entry.adminEmail}</span> updated{" "}
-                  <span className="font-medium">{entry.targetEmail}</span>
-                </p>
-                <p className="text-gray-400 text-xs mt-0.5">{describeChange(entry.details)} · {dateTime(entry.createdAt)}</p>
-              </li>
-            ))}
+            {data.entries.map((entry) => {
+              const detail = describeChange(entry);
+              return (
+                <li key={entry._id} className="py-3">
+                  <p className="text-white">
+                    <span className="font-medium">{entry.adminEmail}</span> {ACTION_LABELS[entry.action] || entry.action}{" "}
+                    <span className="font-medium">{entry.targetEmail || "a user"}</span>
+                  </p>
+                  <p className="text-gray-400 text-xs mt-0.5">{detail ? `${detail} · ` : ""}{dateTime(entry.createdAt)}</p>
+                </li>
+              );
+            })}
           </ul>
           <Pager page={data.page} pages={data.pages} onPage={setPage} />
         </>
@@ -516,6 +787,8 @@ const Activity = () => {
     </Card>
   );
 };
+
+/* ------------------------------------ Page ------------------------------------ */
 
 const Admin = () => {
   const [searchParams, setSearchParams] = useSearchParams();

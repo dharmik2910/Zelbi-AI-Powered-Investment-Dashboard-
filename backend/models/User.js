@@ -32,6 +32,12 @@ const userSchema = new mongoose.Schema({
         default: "user",
     },
 
+    // Blocked users can't sign in, and their existing sessions stop working
+    isBlocked: {
+        type: Boolean,
+        default: false,
+    },
+
     acceptedTerms: {
         type: Boolean,
         default: false,

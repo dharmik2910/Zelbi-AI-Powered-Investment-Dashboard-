@@ -23,6 +23,15 @@ export const auth = async (req, res, next) => {
 				.status(401)
 				.json({ success: false, message: "token is invalid" });
 		}
+
+		// Checked on every request so blocking or deleting an account takes effect immediately
+		const account = await User.findById(req.user.id).select("isBlocked").lean();
+		if (!account) {
+			return res.status(401).json({ success: false, message: "Account not found" });
+		}
+		if (account.isBlocked) {
+			return res.status(403).json({ success: false, blocked: true, message: "Your account has been suspended. Contact support." });
+		}
 		next();
 	} catch (error) {
 		return res.status(401).json({

@@ -25,6 +25,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserDetails } from "./services/operations/SettingsAPI";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+import { axiosInstance } from "./services/apiconnector";
+import { setToken } from "./slices/authSlice";
+import { setUser } from "./slices/profileSlice";
 import CookiePolicy from "./pages/CookiePolicy.jsx";
 
 const ProtectedRoute = ({ children }) => {
@@ -61,6 +66,23 @@ function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  // Sign out straight away if an admin blocks this account while it's in use
+  useEffect(() => {
+    const onError = (error) => {
+      if (error.response?.status === 403 && error.response.data?.blocked) {
+        dispatch(setToken(null));
+        dispatch(setUser(null));
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        toast.error(error.response.data.message);
+        navigate("/login");
+      }
+      return Promise.reject(error);
+    };
+    const ids = [axios, axiosInstance].map((client) => [client, client.interceptors.response.use((r) => r, onError)]);
+    return () => ids.forEach(([client, id]) => client.interceptors.response.eject(id));
+  }, [dispatch, navigate]);
 
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
