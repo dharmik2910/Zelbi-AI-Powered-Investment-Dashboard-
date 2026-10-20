@@ -1478,6 +1478,7 @@ const Server = () => {
           {!data.canRestart && <p className="mt-2 text-xs text-gray-500">Restart works on the live server, where pm2 runs the backend.</p>}
         </Card>
 
+        {data.deployConfigured && (
         <Card>
           <div className="flex items-center justify-between gap-3 mb-3">
             <h2 className="text-lg font-semibold">Deploys</h2>
@@ -1509,6 +1510,7 @@ const Server = () => {
             <p className="text-sm text-gray-400">No deploys yet.</p>
           )}
         </Card>
+        )}
       </div>
 
       <Card>
