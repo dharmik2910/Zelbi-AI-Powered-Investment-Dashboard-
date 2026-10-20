@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import { toast } from "react-hot-toast";
 import { FaArrowLeft, FaChartBar, FaCreditCard, FaDownload, FaHistory, FaSearch, FaSignOutAlt, FaTrash, FaUserPlus, FaUsers } from "react-icons/fa";
+import { BsPinAngle, BsPinAngleFill } from "react-icons/bs";
+import { HiMenu, HiX } from "react-icons/hi";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "../assets/Zelbi.png";
@@ -792,15 +794,33 @@ const Activity = () => {
 
 /* ------------------------------------ Page ------------------------------------ */
 
-const AdminHeader = () => {
+const PIN_STORAGE_KEY = "zelbi:admin-sidebar-pinned";
+
+const readPinned = () => {
+  try {
+    return localStorage.getItem(PIN_STORAGE_KEY) !== "false";
+  } catch {
+    return true;
+  }
+};
+
+const AdminHeader = ({ onOpenMenu }) => {
   const { user } = useSelector((state) => state.profile);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-[100] h-16 bg-black border-b border-white/10">
-      <div className="max-w-6xl mx-auto h-full px-4 flex items-center justify-between gap-4">
+    <header className="fixed top-0 inset-x-0 z-[110] h-16 bg-black border-b border-white/10">
+      <div className="h-full px-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={onOpenMenu}
+            aria-label="Open admin menu"
+            className="md:hidden p-2 -ml-2 rounded-lg text-gray-300 hover:bg-white/5"
+          >
+            <HiMenu className="text-xl" />
+          </button>
           <Link to="/admin" aria-label="Admin home">
             <img src={logo} alt="Zelbi" className="h-7 w-auto" />
           </Link>
@@ -826,40 +846,120 @@ const AdminHeader = () => {
   );
 };
 
+const SidebarNav = ({ tab, onSelect, expanded }) => (
+  <nav aria-label="Admin sections" className="flex-1 p-2 space-y-1">
+    {TABS.map(({ id, label, icon: Icon }) => {
+      const active = tab === id;
+      return (
+        <button
+          key={id}
+          type="button"
+          onClick={() => onSelect(id)}
+          aria-current={active ? "page" : undefined}
+          title={expanded ? undefined : label}
+          className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+            active ? "bg-primary text-black font-medium" : "text-gray-300 hover:bg-white/5 hover:text-white"
+          }`}
+        >
+          <Icon className="shrink-0 text-base" aria-hidden="true" />
+          <span className={`whitespace-nowrap transition-opacity duration-150 ${expanded ? "opacity-100" : "opacity-0 sr-only"}`}>
+            {label}
+          </span>
+        </button>
+      );
+    })}
+  </nav>
+);
+
 const Admin = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = TABS.some((t) => t.id === searchParams.get("tab")) ? searchParams.get("tab") : "overview";
+  const [pinned, setPinned] = useState(readPinned);
+  const [hovered, setHovered] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     document.title = "Zelbi | Admin";
   }, []);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(PIN_STORAGE_KEY, String(pinned));
+    } catch {
+      // Storage can be unavailable (private mode); the sidebar still works for this visit
+    }
+  }, [pinned]);
+
+  useEffect(() => {
+    if (!mobileOpen) return undefined;
+    const onKey = (e) => e.key === "Escape" && setMobileOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileOpen]);
+
+  const selectTab = (id) => {
+    setSearchParams({ tab: id });
+    setMobileOpen(false);
+  };
+
+  // Unpinned, the sidebar shows icons only and widens over the content on hover or keyboard focus
+  const expanded = pinned || hovered;
+
   return (
     <div className="min-h-screen bg-black text-white">
-      <AdminHeader />
-      <div className="max-w-6xl mx-auto px-4 pt-8 pb-16">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-6">{TABS.find((t) => t.id === tab).label}</h1>
+      <AdminHeader onOpenMenu={() => setMobileOpen(true)} />
 
-        <div className="flex gap-1 overflow-x-auto scrollbar-hide mb-6 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-1 w-fit max-w-full" role="tablist">
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={tab === id}
-              onClick={() => setSearchParams({ tab: id })}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm whitespace-nowrap ${tab === id ? "bg-primary text-black font-medium" : "text-gray-300 hover:bg-white/5"}`}
-            >
-              <Icon aria-hidden="true" /> {label}
-            </button>
-          ))}
+      {/* Desktop sidebar */}
+      <aside
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onFocus={() => setHovered(true)}
+        onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setHovered(false)}
+        className={`hidden md:flex flex-col fixed top-16 bottom-0 left-0 z-[100] bg-[#050505] border-r border-white/10 transition-[width] duration-200 ${
+          expanded ? "w-60" : "w-16"
+        } ${!pinned && hovered ? "shadow-2xl shadow-black" : ""}`}
+      >
+        <SidebarNav tab={tab} onSelect={selectTab} expanded={expanded} />
+        <div className="p-2 border-t border-white/10">
+          <button
+            type="button"
+            onClick={() => setPinned((p) => !p)}
+            aria-pressed={pinned}
+            title={pinned ? "Unpin sidebar" : "Pin sidebar"}
+            className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white"
+          >
+            {pinned ? <BsPinAngleFill className="shrink-0 text-base text-primary" aria-hidden="true" /> : <BsPinAngle className="shrink-0 text-base" aria-hidden="true" />}
+            <span className={`whitespace-nowrap ${expanded ? "" : "sr-only"}`}>{pinned ? "Unpin sidebar" : "Pin sidebar"}</span>
+          </button>
         </div>
+      </aside>
 
-        {tab === "overview" && <Overview />}
-        {tab === "users" && <Users />}
-        {tab === "payments" && <Payments />}
-        {tab === "activity" && <Activity />}
-      </div>
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-[120]" role="dialog" aria-modal="true" aria-label="Admin menu">
+          <button type="button" aria-label="Close admin menu" className="absolute inset-0 bg-black/70" onClick={() => setMobileOpen(false)} />
+          <aside className="relative h-full w-64 max-w-[80vw] bg-[#050505] border-r border-white/10 flex flex-col">
+            <div className="h-16 px-4 flex items-center justify-between border-b border-white/10">
+              <span className="font-semibold">Admin</span>
+              <button type="button" onClick={() => setMobileOpen(false)} aria-label="Close admin menu" className="p-2 rounded-lg text-gray-300 hover:bg-white/5">
+                <HiX className="text-xl" />
+              </button>
+            </div>
+            <SidebarNav tab={tab} onSelect={selectTab} expanded />
+          </aside>
+        </div>
+      )}
+
+      <main className={`pt-16 transition-[margin] duration-200 ${pinned ? "md:ml-60" : "md:ml-16"}`}>
+        <div className="max-w-6xl mx-auto px-4 pt-8 pb-16">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-6">{TABS.find((t) => t.id === tab).label}</h1>
+
+          {tab === "overview" && <Overview />}
+          {tab === "users" && <Users />}
+          {tab === "payments" && <Payments />}
+          {tab === "activity" && <Activity />}
+        </div>
+      </main>
     </div>
   );
 };
